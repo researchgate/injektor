@@ -184,6 +184,14 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
             ),
         ));
 
+        array(
+            'keywords' => array(
+                123,
+                456
+            )
+        );
+
+
         $dic = new DependencyInjectionContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint');
@@ -239,8 +247,8 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $config = new Configuration(null);
         $config->setClassConfig('rg\injection\DICTestClassNoTypeHint', array(
             'params' => array(
-                'one' => array(
-                    'value' => 'foo',
+                'two' => array(
+                    'class' => 'rg\injection\DICTestClassOne'
                 ),
             ),
         ));
@@ -248,9 +256,7 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $dic = new DependencyInjectionContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint', array(
-            'two' => array(
-                'class' => 'rg\injection\DICTestClassOne'
-            )
+            'one' => 'foo'
         ));
 
         $this->assertInstanceOf('rg\injection\DICTestClassNoTypeHint', $instance);
@@ -282,6 +288,20 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
 
         $actual = $dic->callMethodOnObject($instance, 'getSomething');
+
+        $this->assertEquals('barfoo', $actual);
+    }
+
+    public function testCallMethodWithMixedParameters() {
+        $config = new Configuration(null);
+
+        $dic = new DependencyInjectionContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
+
+        $actual = $dic->callMethodOnObject($instance, 'getSomethingTwo', array(
+            'three' => new DICTestClassThree()
+        ));
 
         $this->assertEquals('barfoo', $actual);
     }
@@ -369,7 +389,7 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
 
     public function testNamedAnnotation() {
         $config = new Configuration(null);
-        $config->setClassConfig('rg\injection\DICTestNamed', array(
+        $config->setClassConfig('rg\injection\DICTestAnnotatedInterface', array(
             'named' => array(
                 'implOne' => 'rg\injection\DICTestAnnotatedInterfaceImplOne',
                 'implTwo' => 'rg\injection\DICTestAnnotatedInterfaceImplTwo'
@@ -380,6 +400,61 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
 
         $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceImplOne', $instance->one);
         $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceImplTwo', $instance->two);
+    }
+
+    public function testNamedAnnotationAtMethodCall() {
+        $config = new Configuration(null);
+        $config->setClassConfig('rg\injection\DICTestAnnotatedInterface', array(
+            'named' => array(
+                'implOne' => 'rg\injection\DICTestAnnotatedInterfaceImplTwo',
+                'implTwo' => 'rg\injection\DICTestAnnotatedInterfaceImplOne'
+            )
+        ));
+        $dic = new DependencyInjectionContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestNamed');
+
+        $returnValue = $dic->callMethodOnObject($instance, 'doSomething');
+
+        $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceImplTwo', $returnValue);
+    }
+
+    public function testAspects() {
+        $config = new Configuration(null);
+        $dic = new DependencyInjectionContainer($config);
+
+        $instance = new DICTestAspects();
+
+        $returnValue = $dic->callMethodOnObject($instance, 'aspectFunction', array(
+            'two' => 'some value'
+        ));
+
+        $expectedArgument = array(
+            array(
+                'some value',
+                array(
+                    'one' => '1',
+                    'two' => 'bar',
+                ),
+                'rg\\injection\\DICTestAspects',
+                'aspectFunction',
+            ),
+            array(
+            ),
+            'rg\\injection\\DICTestAspects',
+            'aspectFunction',
+        );
+        $this->assertEquals($expectedArgument, $instance->two);
+
+        $expectedReturnValue = array(
+            'foo',
+            array(
+                'foo' => 'bar'
+            ),
+            'rg\injection\DICTestAspects',
+            'aspectFunction'
+        );
+
+        $this->assertEquals($expectedReturnValue, $returnValue);
     }
 }
 
@@ -423,6 +498,16 @@ class DICTestClassOne {
      * @return string
      */
     public function getSomething(DICTestClassTwo $two, DICTestClassThree $three) {
+        return $two->getSomething() . $three->getSomething();
+    }
+
+    /**
+     * @inject
+     * @param DICTestClassTwo $two
+     * @param $three
+     * @return string
+     */
+    public function getSomethingTwo(DICTestClassTwo $two, $three) {
         return $two->getSomething() . $three->getSomething();
     }
 
@@ -567,6 +652,16 @@ class DICTestNamed {
     public function __construct(DICTestAnnotatedInterface $one) {
         $this->one = $one;
     }
+
+    /**
+     * @inject
+     * @param DICTestAnnotatedInterface $one
+     * @named implOne $one
+     * @return \rg\injection\DICTestAnnotatedInterface
+     */
+    public function doSomething(DICTestAnnotatedInterface $one) {
+        return $one;
+    }
 }
 
 class DICTestSingleton {
@@ -599,4 +694,48 @@ class DICTestSingleton {
  * @singleton
  */
 class DICTestAnnotatedSingleton {
+}
+
+class DICTestAspects {
+    public $one;
+    public $two;
+
+    /**
+     * @inject
+     * @param \rg\injection\DICTestAnnotatedSingleton $one
+     * @param $two
+     * @before \rg\injection\BeforeAspect one=1&two=bar
+     * @before \rg\injection\BeforeAspect
+     * @after \rg\injection\AfterAspect foo=bar
+     */
+    public function aspectFunction(DICTestAnnotatedSingleton $one, $two) {
+        $this->one = $one;
+        $this->two = $two;
+
+        return 'foo';
+    }
+}
+
+class BeforeAspect implements \rg\injection\aspects\Before {
+   public function execute($aspectArguments, $className, $functionName, $functionArguments) {
+       $functionArguments['two'] = array(
+           $functionArguments['two'],
+           $aspectArguments,
+           $className,
+           $functionName
+       );
+       return $functionArguments;
+   }
+}
+
+class AfterAspect implements \rg\injection\aspects\After {
+    public function execute($aspectArguments, $className, $functionName, $result) {
+        $result = array(
+            $result,
+            $aspectArguments,
+            $className,
+            $functionName
+        );
+        return $result;
+    }
 }

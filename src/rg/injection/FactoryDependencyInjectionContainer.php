@@ -29,18 +29,19 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
     /**
      * @param object $object
      * @param string $methodName
+     * @param array $additionalArguments
      * @return mixed
      * @throws InjectionException
      */
-    public function callMethodOnObject($object, $methodName) {
+    public function callMethodOnObject($object, $methodName, array $additionalArguments = array()) {
         $factoryClass = $this->getFactoryClassName(get_class($object));
 
         if (class_exists($factoryClass, true)) {
             $factoryMethod = $this->getFactoryMethodName($methodName);
-            return $factoryClass::$factoryMethod($object);
+            return $factoryClass::$factoryMethod($object, $additionalArguments);
         }
 
-        return parent::callMethodOnObject($object, $methodName);
+        return parent::callMethodOnObject($object, $methodName, $additionalArguments);
     }
 
     /**

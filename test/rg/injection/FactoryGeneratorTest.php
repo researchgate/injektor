@@ -174,10 +174,10 @@ class RgInjectionFGTestClassOneFactory
         return $object->getFour();
     }
 
-    public static function callGetSomething($object)
+    public static function callGetSomething($object, array $parameters = array())
     {
-        $two = rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance();
-        $three = rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
+        $two = isset($parameters[\'two\']) ? $parameters[\'two\'] : rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance();
+        $three = isset($parameters[\'three\']) ? $parameters[\'three\'] : rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
 
         return $object->getSomething($two, $three);
     }

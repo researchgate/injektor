@@ -89,7 +89,7 @@ class DependencyInjectionContainer {
             $this->instances[$fullClassName] = $instance;
         }
 
-        $instance = $this->injectProperties($classConfig, $classReflection, $instance);
+        $instance = $this->injectProperties($classReflection, $instance);
 
         return $instance;
     }
@@ -122,7 +122,7 @@ class DependencyInjectionContainer {
 
         $defaultConstructorArguments = $this->getDefaultArguments($classConfig, $defaultConstructorArguments);
 
-        return $this->getMethodArguments($classConfig,$methodReflection, $defaultConstructorArguments);
+        return $this->getMethodArguments($methodReflection, $defaultConstructorArguments);
     }
 
     /**
@@ -138,16 +138,15 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param array $classConfig
      * @param \ReflectionClass $classReflection
      * @param object $instance
      * @return object
      * @throws InjectionException
      */
-    private function injectProperties($classConfig, $classReflection, $instance) {
+    private function injectProperties($classReflection, $instance) {
         $properties = $this->getInjectableProperties($classReflection);
         foreach ($properties as $property) {
-            $this->injectProperty($classConfig, $property, $instance);
+            $this->injectProperty($property, $instance);
         }
         return $instance;
     }
@@ -174,13 +173,12 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param array $classConfig
      * @param \ReflectionProperty $property
      * @param object $instance
      * @throws InjectionException
      */
-    private function injectProperty(array $classConfig, $property, $instance) {
-        $fullClassName = $this->getClassFromVarTypeHint($classConfig, $property->getDocComment());
+    private function injectProperty($property, $instance) {
+        $fullClassName = $this->getClassFromVarTypeHint($property->getDocComment());
         $propertyInstance = $this->getInstanceOfClass($fullClassName);
         $property->setAccessible(true);
         $property->setValue($instance, $propertyInstance);
@@ -188,17 +186,18 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param array $classConfig
      * @param string $docComment
      * @return string
      * @throws InjectionException
      */
-    public function getClassFromVarTypeHint(array $classConfig, $docComment) {
-        $namedClass = $this->getNamedClassOfArgument($classConfig, $docComment);
+    public function getClassFromVarTypeHint($docComment) {
+        $class = trim($this->getClassFromTypeHint($docComment, '@var'), '\\');
+        $propertyClassConfig = $this->config->getClassConfig($class);
+        $namedClass = $this->getNamedClassOfArgument($propertyClassConfig, $docComment);
         if ($namedClass) {
             return $namedClass;
         }
-        return $this->getClassFromTypeHint($docComment, '@var');
+        return $class;
     }
 
     /**
@@ -288,10 +287,11 @@ class DependencyInjectionContainer {
     /**
      * @param object $object
      * @param string $methodName
+     * @param array $additionalArguments
      * @return mixed
      * @throws InjectionException
      */
-    public function callMethodOnObject($object, $methodName) {
+    public function callMethodOnObject($object, $methodName, array $additionalArguments = array()) {
         $fullClassName = get_class($object);
         if (substr($methodName, 0, 2) === '__') {
             throw new InjectionException('You are not allowed to call magic method ' . $methodName . ' on ' . $fullClassName);
@@ -302,9 +302,61 @@ class DependencyInjectionContainer {
 
         $this->checkAllowedHttpMethodAnnotation($methodReflection);
 
-        $arguments = $this->getMethodArguments(array(), $methodReflection);
+        $arguments = $this->getMethodArguments($methodReflection, $additionalArguments);
 
-        return $methodReflection->invokeArgs($object, $arguments);
+        $arguments = $this->executeBeforeAspects($methodReflection, $arguments);
+
+        $result = $methodReflection->invokeArgs($object, $arguments);
+
+        return $this->executeAfterAspects($methodReflection, $result);
+    }
+
+    private function executeBeforeAspects(\ReflectionMethod $methodReflection, $arguments) {
+        $aspects = $this->getAspects($methodReflection, 'before');
+
+        foreach ($aspects as $aspect) {
+            /** @var \rg\injection\aspects\Before $aspectInstance */
+            $aspectInstance = $this->getInstanceOfClass($aspect['class']);
+            $arguments = $aspectInstance->execute($aspect['aspectArguments'], $methodReflection->getDeclaringClass()->name, $methodReflection->name, $arguments);
+        }
+
+        return $arguments;
+    }
+
+    private function executeAfterAspects(\ReflectionMethod $methodReflection, $result) {
+        $aspects = $this->getAspects($methodReflection, 'after');
+
+        foreach ($aspects as $aspect) {
+            /** @var \rg\injection\aspects\After $aspectInstance */
+            $aspectInstance = $this->getInstanceOfClass($aspect['class']);
+            $result = $aspectInstance->execute($aspect['aspectArguments'], $methodReflection->getDeclaringClass()->name, $methodReflection->name, $result);
+        }
+
+        return $result;
+    }
+
+    private function getAspects(\ReflectionMethod $methodReflection, $type) {
+        $docComment = $methodReflection->getDocComment();
+        $matches = array();
+        $pattern = '@' . $type . '\s+([a-z0-9\\\]+)\s*([a-z0-9\\\=&]*)';
+        preg_match_all('/' . $pattern . '/i', $docComment, $matches);
+
+        $aspects = array();
+
+        if (isset($matches[1])) {
+            foreach ($matches[1] as $key => $aspectClass) {
+                $aspectArguments = array();
+                if (isset($matches[2][$key])) {
+                    parse_str($matches[2][$key], $aspectArguments);
+                }
+                $aspects[] = array(
+                    'class' => $aspectClass,
+                    'aspectArguments' => $aspectArguments,
+                );
+            }
+        }
+
+        return $aspects;
     }
 
     /**
@@ -357,12 +409,11 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param array $classConfig
      * @param \ReflectionMethod $methodReflection
      * @param array $defaultArguments
      * @return array
      */
-    public function getMethodArguments(array $classConfig, \ReflectionMethod $methodReflection, array $defaultArguments = array()) {
+    public function getMethodArguments(\ReflectionMethod $methodReflection, array $defaultArguments = array()) {
         $arguments = $methodReflection->getParameters();
 
         $methodIsMarkedInjectible = $this->isInjectable($methodReflection->getDocComment());
@@ -373,7 +424,7 @@ class DependencyInjectionContainer {
             if (isset($defaultArguments[$argument->name])) {
                $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$argument->name]);
             } else if ($methodIsMarkedInjectible) {
-                $argumentValues[$argument->name] = $this->getInstanceOfArgument($classConfig, $argument);
+                $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
             } else if (!$argument->isOptional()) {
                 throw new InjectionException('Parameter ' . $argument->name . ' in class ' . $methodReflection->class . ' is not injectable');
             }
@@ -386,7 +437,10 @@ class DependencyInjectionContainer {
      * @param array $argumentConfig
      * @return mixed
      */
-    private function getValueOfDefaultArgument(array $argumentConfig) {
+    private function getValueOfDefaultArgument($argumentConfig) {
+        if (! is_array($argumentConfig)) {
+            return $argumentConfig;
+        }
         if (isset($argumentConfig['value'])) {
             return $argumentConfig['value'];
         }
@@ -397,19 +451,19 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param array $classConfig
      * @param \ReflectionParameter $argument
      * @return object
      * @throws InjectionException
      */
-    private function getInstanceOfArgument($classConfig, \ReflectionParameter $argument) {
-        $namedClassName = $this->getNamedClassOfArgument($classConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
-        if ($namedClassName) {
-            return $this->getInstanceOfClass($namedClassName);
-        }
-
+    private function getInstanceOfArgument(\ReflectionParameter $argument) {
         if (!$argument->getClass()) {
             throw new InjectionException('Invalid argument without class typehint ' . $argument->name);
+        }
+
+        $argumentClassConfig = $this->config->getClassConfig($argument->getClass()->name);
+        $namedClassName = $this->getNamedClassOfArgument($argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
+        if ($namedClassName) {
+            return $this->getInstanceOfClass($namedClassName);
         }
 
         return $this->getInstanceOfClass($argument->getClass()->name);

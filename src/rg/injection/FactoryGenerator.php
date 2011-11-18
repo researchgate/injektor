@@ -103,7 +103,7 @@ abstract class FactoryGenerator {
         $injectableArguments = array();
         foreach ($injectableProperties as $injectableProperty) {
 
-            $propertyClass = $dic->getClassFromVarTypeHint($classConfig, $injectableProperty->getDocComment());
+            $propertyClass = $dic->getClassFromVarTypeHint($injectableProperty->getDocComment());
 
             $propertyName = $injectableProperty->name;
             $propertyFactory = $dic->getFullFactoryClassName($propertyClass);
@@ -158,7 +158,7 @@ abstract class FactoryGenerator {
                 $factoryMethod->setStatic(true);
 
                 try {
-                    $arguments = $dic->getMethodArguments($classConfig, $method);
+                    $arguments = $dic->getMethodArguments($method);
                 } catch (InjectionException $e) {
                     continue;
                 }
@@ -176,15 +176,19 @@ abstract class FactoryGenerator {
                 }
                 $constructorArgumentStringParts = array();
 
+                if (count($arguments) > 0) {
+                    $factoryMethod->setParameter(new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array()));
+                }
+
                 foreach ($arguments as $argumentName => $argument) {
                     if (is_object($argument)) {
                         $argument = get_class($argument);
                         $argumentFactory = $dic->getFullFactoryClassName($argument);
-                        $factoryMethodBody .= '$' . $argumentName . ' = ' . $argumentFactory . '::getInstance();' . PHP_EOL;
+                        $factoryMethodBody .= '$' . $argumentName . ' = isset($parameters[\'' . $argumentName . '\']) ? $parameters[\'' . $argumentName . '\'] : ' . $argumentFactory . '::getInstance();' . PHP_EOL;
 
                         $this->processFileForClass($argument);
                     } else {
-                        $factoryMethodBody .= '$' . $argumentName . ' = \'' . $argument . '\';' . PHP_EOL;
+                        $factoryMethodBody .= '$' . $argumentName . ' = isset($parameters[\'' . $argumentName . '\']) ? $parameters[\'' . $argumentName . '\'] : \'' . $argument . '\';' . PHP_EOL;
                     }
                     $constructorArgumentStringParts[] = '$' . $argumentName;
                 }
