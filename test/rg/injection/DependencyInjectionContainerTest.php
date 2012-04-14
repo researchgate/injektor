@@ -9,12 +9,14 @@
  */
 namespace rg\injection;
 
+include_once 'test_classes.php';
+
 class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
 
     public function testGetInstance() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
 
@@ -26,30 +28,10 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('rg\injection\DICTestClassThree', $instance->getFour());
     }
 
-    public function testGetInstanceWithInvalidParameterInjectionThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'Expected tag @var not found in doc comment.');
-
-        $config = new Configuration(null);
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $dic->getInstanceOfClass('rg\injection\DICTestClassNoParamTypeHint');
-    }
-
-    public function testGetInstanceWithPrivateParameterInjectionThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'Property two must not be private for property injection.');
-
-        $config = new Configuration(null);
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $dic->getInstanceOfClass('rg\injection\DICTestClassPrivateProperty');
-    }
-
     public function testGetInstanceWithParameterInjectionAndDoubledAnnotationTakesFirstOne() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassPropertyDoubledAnnotation');
 
@@ -58,31 +40,22 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testGetConfiguredInstance() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestAbstractClass', array(
             'class' => 'rg\injection\DICTestClassOneConfigured',
         ));
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestAbstractClass');
 
         $this->assertInstanceOf('rg\injection\DICTestClassOneConfigured', $instance);
     }
 
-    public function testAbstractInstanceThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'Can not instanciate abstract class rg\injection\DICTestAbstractClass');
-
-        $config = new Configuration(null);
-        $dic = new DependencyInjectionContainer($config);
-
-        $dic->getInstanceOfClass('rg\injection\DICTestAbstractClass');
-    }
-
     public function testGetDifferentInstancesWithTwoCalls() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instanceOne = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
         $instanceTwo = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
@@ -94,12 +67,12 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testDontGetSingletonInstance() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestClassOne', array(
             'singleton' => false
         ));
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instanceOne = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
         $instanceTwo = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
@@ -111,12 +84,12 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testGetSingletonInstance() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestClassOne', array(
             'singleton' => true
         ));
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instanceOne = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
         $instanceTwo = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
@@ -127,12 +100,32 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($instanceOne === $instanceTwo);
     }
 
+    public function testGetDifferentSingletonInstancesBecauseOfDifferentParameters() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $config->setClassConfig('rg\injection\DICTestClassNoTypeHint', array(
+            'singleton' => true
+        ));
+
+        $dic = $this->getContainer($config);
+
+        $instanceOne = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint', array('one' => 'one', 'two' => 'two'));
+        $instanceTwo = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint', array('one' => 'three', 'two' => 'four'));
+        $instanceThree = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint', array('one' => 'one', 'two' => 'two'));
+
+        $this->assertInstanceOf('rg\injection\DICTestClassNoTypeHint', $instanceOne);
+        $this->assertInstanceOf('rg\injection\DICTestClassNoTypeHint', $instanceTwo);
+        $this->assertInstanceOf('rg\injection\DICTestClassNoTypeHint', $instanceThree);
+
+        $this->assertFalse($instanceOne === $instanceTwo);
+        $this->assertTrue($instanceOne === $instanceThree);
+    }
+
     public function testGetInstanceOfRealSingleton() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestSingleton', array(
             'singleton' => true
         ));
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestSingleton');
 
         $this->assertInstanceOf('rg\injection\DICTestSingleton', $instance);
@@ -142,37 +135,17 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testGetInstanceWithoutConstructor() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassNoConstructor');
 
         $this->assertInstanceOf('rg\injection\DICTestClassNoConstructor', $instance);
     }
 
-    public function testGetInstanceOfNotInjectableClassThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'not injectable');
-
-        $config = new Configuration(null);
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $dic->getInstanceOfClass('rg\injection\DICTestClassNoInject');
-    }
-
-    public function testGetInstanceOfClassWithoNoTypeHintThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'Invalid argument without class typehint one');
-
-        $config = new Configuration(null);
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint');
-    }
-
     public function testGetInstanceWithConfiguredParameter() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestClassNoTypeHint', array(
             'params' => array(
                 'one' => array(
@@ -191,8 +164,7 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
             )
         );
 
-
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint');
 
@@ -202,7 +174,7 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testGetInstanceWithConfiguredClassParameter() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestClassNoTypeHint', array(
             'params' => array(
                 'one' => array(
@@ -214,7 +186,7 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
             ),
         ));
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint');
 
@@ -224,7 +196,7 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testGetInstanceWithConfiguredAndOptionalClassParameter() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestClassNoTypeHintOptionalArgument', array(
             'params' => array(
                 'one' => array(
@@ -233,7 +205,7 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
             ),
         ));
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHintOptionalArgument', array(
         ));
@@ -241,10 +213,33 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('rg\injection\DICTestClassNoTypeHintOptionalArgument', $instance);
         $this->assertEquals('foo', $instance->one);
         $this->assertEquals('bar', $instance->two);
+        $this->assertEquals(array(), $instance->ar);
+    }
+
+    public function testGetInstanceWithConfiguredAndOptionalClassParametersSomeGiven() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $config->setClassConfig('rg\injection\DICTestClassNoTypeHintOptionalArgument', array(
+            'params' => array(
+                'one' => array(
+                    'value' => 'foo',
+                ),
+            ),
+        ));
+
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHintOptionalArgument', array(
+            'ar' => array('abc')
+        ));
+
+        $this->assertInstanceOf('rg\injection\DICTestClassNoTypeHintOptionalArgument', $instance);
+        $this->assertEquals('foo', $instance->one);
+        $this->assertEquals('bar', $instance->two);
+        $this->assertEquals(array('abc'), $instance->ar);
     }
 
     public function testGetInstanceWithConfiguredAndDefaultClassParameter() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestClassNoTypeHint', array(
             'params' => array(
                 'two' => array(
@@ -253,7 +248,7 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
             ),
         ));
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint', array(
             'one' => 'foo'
@@ -264,26 +259,10 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('rg\injection\DICTestClassOne', $instance->two);
     }
 
-    public function testGetInstanceWithWrongConfiguredParameterThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'Invalid argument without class typehint two');
-        $config = new Configuration(null);
-        $config->setClassConfig('rg\injection\DICTestClassNoTypeHint', array(
-            'params' => array(
-                'one' => array(
-                    'value' => 'foo',
-                ),
-            ),
-        ));
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $dic->getInstanceOfClass('rg\injection\DICTestClassNoTypeHint');
-    }
-
     public function testCallMethodOnObject() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
 
@@ -293,9 +272,9 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testCallMethodWithMixedParameters() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
 
@@ -307,9 +286,9 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testCallMethodWithoutParametersOnObject() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
 
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassTwo');
 
@@ -318,57 +297,9 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('bar', $actual);
     }
 
-    public function testCallNotInjectableMethodThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'not injectable');
-
-        $config = new Configuration(null);
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
-
-        $dic->callMethodOnObject($instance, 'getSomethingNotInjectible');
-    }
-
-    public function testCallMethodWithoutTypehintOnObjectThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'not injectable');
-
-        $config = new Configuration(null);
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
-
-        $dic->callMethodOnObject($instance, 'noTypeHint');
-    }
-
-    public function testCallUndefinedMethodThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'Method undefined not found in rg\injection\DICTestClassOne');
-
-        $config = new Configuration(null);
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
-
-        $dic->callMethodOnObject($instance, 'undefined');
-    }
-
-    public function testCallMagicMethodThrowsException() {
-        $this->setExpectedException('rg\injection\InjectionException', 'not allowed to call magic method');
-
-        $config = new Configuration(null);
-
-        $dic = new DependencyInjectionContainer($config);
-
-        $instance = $dic->getInstanceOfClass('rg\injection\DICTestClassOne');
-
-        $dic->callMethodOnObject($instance, '__get');
-    }
-
     public function testAnnotatedSingleton() {
-        $config = new Configuration(null);
-        $dic = new DependencyInjectionContainer($config);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
 
         $instanceOne = $dic->getInstanceOfClass('rg\injection\DICTestAnnotatedSingleton');
         $instanceTwo = $dic->getInstanceOfClass('rg\injection\DICTestAnnotatedSingleton');
@@ -379,38 +310,56 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
     }
 
     public function testAnnotatedImplementedBy() {
-        $config = new Configuration(null);
-        $dic = new DependencyInjectionContainer($config);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestAnnotatedInterface');
 
         $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceImpl', $instance);
     }
 
+    public function testAnnotatedImplementedByDefault() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestAnnotatedInterfaceNamedConfig');
+
+        $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceNamedConfigImpl', $instance);
+    }
+
     public function testNamedAnnotation() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestAnnotatedInterface', array(
             'named' => array(
                 'implOne' => 'rg\injection\DICTestAnnotatedInterfaceImplOne',
                 'implTwo' => 'rg\injection\DICTestAnnotatedInterfaceImplTwo'
             )
         ));
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestNamed');
 
         $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceImplOne', $instance->one);
         $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceImplTwo', $instance->two);
     }
 
+    public function testNamedAnnotationWithAnnotationConfiguration() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestNamedConfig');
+
+        $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceNamedConfigImplOne', $instance->one);
+        $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceNamedConfigImplTwo', $instance->two);
+    }
+
     public function testNamedAnnotationAtMethodCall() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, __DIR__ . '/_factories');;
         $config->setClassConfig('rg\injection\DICTestAnnotatedInterface', array(
             'named' => array(
                 'implOne' => 'rg\injection\DICTestAnnotatedInterfaceImplTwo',
                 'implTwo' => 'rg\injection\DICTestAnnotatedInterfaceImplOne'
             )
         ));
-        $dic = new DependencyInjectionContainer($config);
+        $dic = $this->getContainer($config);
         $instance = $dic->getInstanceOfClass('rg\injection\DICTestNamed');
 
         $returnValue = $dic->callMethodOnObject($instance, 'doSomething');
@@ -418,11 +367,21 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceImplTwo', $returnValue);
     }
 
-    public function testAspects() {
-        $config = new Configuration(null);
-        $dic = new DependencyInjectionContainer($config);
+    public function testNamedAnnotationAtMethodCallWithConfiguration() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestNamedConfig');
 
-        $instance = new DICTestAspects();
+        $returnValue = $dic->callMethodOnObject($instance, 'doSomething');
+
+        $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceNamedConfigImplOne', $returnValue);
+    }
+
+    public function testMethodAspects() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+
+        $instance = new DICTestAspects(new DICTestAnnotatedSingleton(), null);
 
         $returnValue = $dic->callMethodOnObject($instance, 'aspectFunction', array(
             'two' => 'some value'
@@ -456,286 +415,225 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
 
         $this->assertEquals($expectedReturnValue, $returnValue);
     }
-}
 
-class DICTestClassOne {
-    /**
-     * @var \rg\injection\DICTestClassTwo
-     */
-    public $two;
-    /**
-     * @var \rg\injection\DICTestClassThree
-     */
-    public $three;
+    public function testConstructorAspects() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
 
-    /**
-     * @inject
-     * @var \rg\injection\DICTestClassThree
-     */
-    protected $four;
+        $instance = $dic->getInstanceOfClass('rg\\injection\\DICTestAspects', array(
+            'two' => 'some value'
+        ));
 
-    /**
-     * @return DICTestClassThree
-     */
-    public function getFour() {
-        return $this->four;
-    }
-
-    /**
-     * @inject
-     * @param DICTestClassTwo $two
-     * @param DICTestClassThree $three
-     */
-    public function __construct(DICTestClassTwo $two, DICTestClassThree $three) {
-        $this->two = $two;
-        $this->three = $three;
-    }
-
-    /**
-     * @inject
-     * @param DICTestClassTwo $two
-     * @param DICTestClassThree $three
-     * @return string
-     */
-    public function getSomething(DICTestClassTwo $two, DICTestClassThree $three) {
-        return $two->getSomething() . $three->getSomething();
-    }
-
-    /**
-     * @inject
-     * @param DICTestClassTwo $two
-     * @param $three
-     * @return string
-     */
-    public function getSomethingTwo(DICTestClassTwo $two, $three) {
-        return $two->getSomething() . $three->getSomething();
-    }
-
-    public function getSomethingNotInjectible(DICTestClassTwo $two, DICTestClassThree $three) {
-        return $two->getSomething() . $three->getSomething();
-    }
-
-    public function noTypeHint($foo) {
-
-    }
-}
-
-class DICTestClassOneConfigured extends DICTestAbstractClass implements DICTestInterface {
-
-}
-
-class DICTestClassTwo {
-    /**
-     * @var \rg\injection\DICTestClassThree
-     */
-    public $three;
-    /**
-     * @inject
-     * @param DICTestClassThree $three
-     */
-    public function __construct(DICTestClassThree $three) {
-        $this->three = $three;
-    }
-
-    public function getSomething() {
-        return 'bar';
-    }
-}
-
-class DICTestClassThree {
-
-    public function __construct() {
-
-    }
-
-    public function getSomething() {
-        return 'foo';
-    }
-}
-
-class DICTestClassNoInject {
-
-    public function __construct(DICTestClassThree $three) {
-
-    }
-}
-
-class DICTestClassNoTypeHint {
-
-    public $one;
-    public $two;
-
-    /**
-     * @inject
-     */
-    public function __construct($one, $two) {
-        $this->one = $one;
-        $this->two  = $two;
-    }
-}
-
-class DICTestClassNoTypeHintOptionalArgument {
-
-    public $one;
-    public $two;
-
-    public function __construct($one, $two = 'bar') {
-        $this->one = $one;
-        $this->two = $two;
-    }
-}
-
-class DICTestClassNoParamTypeHint {
-    /**
-     * @inject
-     */
-    public $two;
-}
-
-class DICTestClassPrivateProperty {
-    /**
-     * @inject
-     * @var DICTestClassNoConstructor
-     */
-    private $two;
-}
-
-class DICTestClassPropertyDoubledAnnotation {
-    /**
-     * @inject
-     * @var \rg\injection\DICTestClassNoConstructor
-     * @var \rg\injection\DICTestClassPrivateProperty
-     */
-    public $two;
-}
-
-class DICTestClassNoConstructor {
-}
-
-abstract class DICTestAbstractClass {
-}
-
-interface DICTestInterface {
-}
-
-/**
- * @implementedBy rg\injection\DICTestAnnotatedInterfaceImpl
- */
-interface DICTestAnnotatedInterface {
-}
-
-class DICTestAnnotatedInterfaceImpl implements DICTestAnnotatedInterface {
-
-}
-
-class DICTestAnnotatedInterfaceImplOne implements DICTestAnnotatedInterface {
-
-}
-class DICTestAnnotatedInterfaceImplTwo implements DICTestAnnotatedInterface {
-
-}
-
-class DICTestNamed {
-    public $one;
-    /**
-     * @inject
-     * @var \rg\injection\DICTestAnnotatedInterface
-     * @named implTwo
-     */
-    public $two;
-
-    /**
-     * @inject
-     * @param DICTestAnnotatedInterface $one
-     * @named implOne $one
-     */
-    public function __construct(DICTestAnnotatedInterface $one) {
-        $this->one = $one;
-    }
-
-    /**
-     * @inject
-     * @param DICTestAnnotatedInterface $one
-     * @named implOne $one
-     * @return \rg\injection\DICTestAnnotatedInterface
-     */
-    public function doSomething(DICTestAnnotatedInterface $one) {
-        return $one;
-    }
-}
-
-class DICTestSingleton {
-    public $foo;
-    public $instance;
-
-    /**
-     * @inject
-     * @var rg\injection\DICTestClassNoConstructor
-     */
-    public $injectedProperty;
-
-    private function __construct($foo, $instance) {
-        $this->foo = $foo;
-        $this->instance = $instance;
-    }
-
-    /**
-     * @inject
-     * @static
-     * @param DICTestClassNoConstructor $instance
-     * @return Singleton
-     */
-    public static function getInstance(DICTestClassNoConstructor $instance) {
-        return new DICTestSingleton('foo', $instance);
-    }
-}
-
-/**
- * @singleton
- */
-class DICTestAnnotatedSingleton {
-}
-
-class DICTestAspects {
-    public $one;
-    public $two;
-
-    /**
-     * @inject
-     * @param \rg\injection\DICTestAnnotatedSingleton $one
-     * @param $two
-     * @before \rg\injection\BeforeAspect one=1&two=bar
-     * @before \rg\injection\BeforeAspect
-     * @after \rg\injection\AfterAspect foo=bar
-     */
-    public function aspectFunction(DICTestAnnotatedSingleton $one, $two) {
-        $this->one = $one;
-        $this->two = $two;
-
-        return 'foo';
-    }
-}
-
-class BeforeAspect implements \rg\injection\aspects\Before {
-   public function execute($aspectArguments, $className, $functionName, $functionArguments) {
-       $functionArguments['two'] = array(
-           $functionArguments['two'],
-           $aspectArguments,
-           $className,
-           $functionName
-       );
-       return $functionArguments;
-   }
-}
-
-class AfterAspect implements \rg\injection\aspects\After {
-    public function execute($aspectArguments, $className, $functionName, $result) {
-        $result = array(
-            $result,
-            $aspectArguments,
-            $className,
-            $functionName
+        $expectedArgument = array(
+            0 =>
+            array(
+                0 => 'some value',
+                1 =>
+                array(
+                    'one' => '1',
+                    'two' => 'bar',
+                ),
+                2 => 'rg\\injection\\DICTestAspects',
+                3 => '__construct',
+            ),
+            1 =>
+            array(
+            ),
+            2 => 'rg\\injection\\DICTestAspects',
+            3 => '__construct',
         );
-        return $result;
+
+        $this->assertInstanceOf('rg\\injection\\DICTestAspects', $instance[0]);
+        $this->assertInstanceOf('rg\\injection\\DICTestAnnotatedSingleton', $instance[0]->cone);
+        $this->assertEquals($expectedArgument, $instance[0]->ctwo);
+        $this->assertEquals(array('foo' => 'bar'), $instance[1]);
+        $this->assertEquals('rg\\injection\\DICTestAspects', $instance[2]);
+        $this->assertEquals('__construct', $instance[3]);
+    }
+
+    public function testInterceptAspectsConstructor() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\\injection\\DICTestInterceptAspectClass', array(
+            'two' => 'some value'
+        ));
+
+        $this->assertInstanceOf('rg\injection\DICTestAnnotatedSingleton', $instance[0]['one']);
+        $this->assertEquals('some value', $instance[0]['two']);
+        $this->assertEquals(array(
+            'one' => 1,
+            'two' => 'bar'
+        ), $instance[1]);
+        $this->assertEquals('rg\injection\DICTestInterceptAspectClass', $instance[2]);
+        $this->assertEquals('__construct', $instance[3]);
+        $this->assertEquals(false, $instance[4]);
+    }
+
+    public function testInterceptAspectsMethod() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+        $instance = new DICTestInterceptAspectClass(new DICTestAnnotatedSingleton(), 'some value');
+        $result = $dic->callMethodOnObject($instance, 'aspectFunction', array(
+            'two' => 'some value'
+        ));
+
+        $this->assertInstanceOf('rg\injection\DICTestAnnotatedSingleton', $result[0]['one']);
+        $this->assertEquals('some value', $result[0]['two']);
+        $this->assertEquals(array(
+            'one' => 1,
+            'two' => 'bar'
+        ), $result[1]);
+        $this->assertEquals('rg\injection\DICTestInterceptAspectClass', $result[2]);
+        $this->assertEquals('aspectFunction', $result[3]);
+        $this->assertEquals(false, $result[4]);
+    }
+
+    public function testSimpleProvidedBy() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestSimpleProvidedInterfaceDependency $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestSimpleProvidedInterfaceDependency');
+
+        $this->assertInstanceOf('rg\injection\DICTestSimpleProvidedInterfaceDependency', $instance);
+        $this->assertInstanceOf('rg\injection\DICTestSimpleProvidedDecorator', $instance->dependency);
+
+        $this->assertNull($instance->dependency->getProvidedClass());
+    }
+
+    public function testSimpleProvidedByOfDependency() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestSimpleProvidedImplDependency $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestSimpleProvidedImplDependency');
+
+        $this->assertInstanceOf('rg\injection\DICTestSimpleProvidedImplDependency', $instance);
+        $this->assertInstanceOf('rg\injection\DICTestSimpleProvidedDecorator', $instance->providedInterface);
+
+        $this->assertNull($instance->providedInterface->getProvidedClass());
+    }
+
+    public function testSimpleProvidedByOfDependencyOnMethod() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestSimpleProvidedImplDependency $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestSimpleProvidedImplDependency');
+
+        $actual = $dic->callMethodOnObject($instance, 'someMethod');
+
+        $this->assertInstanceOf('rg\injection\DICTestSimpleProvidedDecorator', $actual);
+
+        $this->assertNull($actual->getProvidedClass());
+    }
+
+    public function testNamedProvidedBy() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestNamedProvidedImpl1Dependency $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestNamedProvidedImpl1Dependency');
+
+        $this->assertInstanceOf('rg\injection\DICTestNamedProvidedImpl1Dependency', $instance);
+        $this->assertInstanceOf('rg\injection\DICTestProvidedDecorator', $instance->providedInterface1);
+        $this->assertInstanceOf('rg\injection\DICTestProvidedDecorator', $instance->providedInterface2);
+        $this->assertInstanceOf('rg\injection\DICTestProvidedInterfaceImpl1', $instance->providedInterface1->getProvidedClass());
+        $this->assertInstanceOf('rg\injection\DICTestProvidedInterfaceImpl2', $instance->providedInterface2->getProvidedClass());
+
+    }
+
+    public function testNamedConfiguredProvidedBy() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $config->setClassConfig('rg\injection\DICTestProvidedInterface', array(
+            'namedProviders' => array(
+                'impl1' => array(
+                    'class' => 'rg\injection\DICTestProvider',
+                    'parameters' => array('name' => 'impl1'),
+                ),
+            ),
+        ));
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestInterfaceDependency $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestInterfaceDependencyTwo');
+
+        $this->assertInstanceOf('rg\injection\DICTestProvidedDecorator', $instance->dependency);
+        $this->assertInstanceOf('rg\injection\DICTestProvidedInterfaceImpl1', $instance->dependency->getProvidedClass());
+    }
+
+    public function testNamedConfiguredProvidedByNoAnnotation() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $config->setClassConfig('rg\injection\DICTestProvidedInterfaceNoConfig', array(
+            'namedProviders' => array(
+                'impl1' => array(
+                    'class' => 'rg\injection\DICTestProviderNoAnnotation',
+                    'parameters' => array('name' => 'impl1Param'),
+                ),
+            ),
+        ));
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestInterfaceDependency $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestInterfaceDependencyTwoNoAnnotation');
+
+        $this->assertInstanceOf('rg\injection\DICTestInterfaceDependencyTwoNoAnnotation', $instance);
+        $this->assertInstanceOf('rg\injection\DICTestProvidedInterfaceNoConfigImpl', $instance->dependency);
+        $this->assertEquals('impl1Param', $instance->dependency->name);
+    }
+
+    public function testConfiguredProvidedBy() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $config->setClassConfig('rg\injection\DICTestInterface', array(
+            'provider' => array(
+                'class' => 'rg\injection\DICSimpleTestProvider',
+            ),
+        ));
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestInterfaceDependency $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestInterfaceDependency');
+
+        $this->assertInstanceOf('rg\injection\DICTestSimpleProvidedDecorator', $instance->dependency);
+
+        $this->assertNull($instance->dependency->getProvidedClass());
+    }
+
+    public function testConfiguredProvidedByWithParameters() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $config->setClassConfig('rg\injection\DICTestInterface', array(
+            'provider' => array(
+                'class' => 'rg\injection\DICSimpleTestProvider',
+                'parameters' => array(
+                    'name' => 'impl1'
+                )
+            ),
+        ));
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestInterfaceDependency $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestInterfaceDependency');
+
+        $this->assertInstanceOf('rg\injection\DICTestSimpleProvidedDecorator', $instance->dependency);
+
+        $this->assertInstanceOf('rg\injection\DICTestProvidedInterfaceImpl1', $instance->dependency->getProvidedClass());
+    }
+
+    public function testDICTestAnnotatedInterfacePropertyInjection() {
+        $config = new Configuration(null, __DIR__ . '/_factories');;
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injection\DICTestAnnotatedInterfacePropertyInjection');
+
+        $this->assertInstanceOf('rg\injection\DICTestAnnotatedInterfaceImpl', $instance->dependency);
+    }
+
+    /**
+     * @param Configuration $config
+     * @return DependencyInjectionContainer
+     */
+    public function getContainer(Configuration $config) {
+        return new DependencyInjectionContainer($config);
     }
 }

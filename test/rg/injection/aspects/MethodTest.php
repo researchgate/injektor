@@ -5,7 +5,7 @@ class MethodTest extends \PHPUnit_Framework_TestCase {
     public function testMethodAnnotation() {
         $_SERVER['REQUEST_METHOD'] = 'post';
 
-        $config = new \rg\injection\Configuration(null);
+        $config = new \rg\injection\Configuration(null, '');
         $dic = new \rg\injection\DependencyInjectionContainer($config);
 
         $instance = new DICTestMethodAspects();
@@ -19,7 +19,7 @@ class MethodTest extends \PHPUnit_Framework_TestCase {
         $this->setExpectedException('\RuntimeException', 'a');
         $_SERVER['REQUEST_METHOD'] = 'get';
 
-        $config = new \rg\injection\Configuration(null);
+        $config = new \rg\injection\Configuration(null, '');
         $dic = new \rg\injection\DependencyInjectionContainer($config);
 
         $instance = new DICTestMethodAspects();

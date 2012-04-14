@@ -1,8 +1,8 @@
-rg\injection
+rg\\injection
 ============
 
-rg\injection is a sophisticated dependency injection container for PHP that was inspired by Guice.
-Unlike other reflection based containers rg\injection includes a factory class generator that you can use to prevent
+rg\\injection is a sophisticated dependency injection container for PHP that was inspired by Guice.
+Unlike other reflection based containers rg\\injection includes a factory class generator that you can use to prevent
 the use of reflection on production.
 
 Features
@@ -116,6 +116,97 @@ instead of using annotations
     'Bar' => array(
         'class' => 'BarImpl'
     )
+
+Using Provider Classes
+----------------------
+
+      class Foo {
+         /**
+          * @inject
+          * @var Bar
+          */
+         protected $bar;
+      }
+
+      /**
+       * @providedBy BarProvider
+       */
+      interface Bar {
+
+      }
+
+      class BarImpl implements Bar {
+
+      }
+
+      class BarProvider implements rg\injection\Provider {
+          public function get() {
+              return new BarImpl();
+          }
+      }
+
+      $dic->getInstanceOfClass('Foo');
+
+Instead of Bar, the return value of BarProvider's get Method (BarImpl) is injected into $bar. You can also
+configure this in the dependecy injection configuration instead of using annotations
+
+
+    'Bar' => array(
+        'provider' => array(
+            'class' => 'BarImpl'
+        )
+    )
+
+Passing fixed data to providers
+-------------------------------
+
+      class Foo {
+         /**
+          * @inject
+          * @var Bar
+          */
+         protected $bar;
+      }
+
+      /**
+       * @providedBy BarProvider {'foo' : 'bar'}
+       */
+      interface Bar {
+
+      }
+
+      class BarImpl implements Bar {
+
+      }
+
+      class BarProvider implements rg\injection\Provider {
+
+          /**
+           * @inject
+           */
+          public function __construct(SomeClass $someClass, $foo) {
+          }
+
+          public function get() {
+              return new BarImpl();
+          }
+      }
+
+      $dic->getInstanceOfClass('Foo');
+
+Here the provider gets an additional instance of SomeClass injected. The variable $foo is set to 'bar'. You can also
+configure this in the config:
+
+    'Bar' => array(
+        'provider' => array(
+            'class' => 'BarImpl',
+            'params' => array(
+                'foo' => 'bar',
+            )
+        )
+    )
+
+
 
 Inject as Singleton
 -------------------
@@ -241,15 +332,20 @@ Named injection
          * @inject
          * @param Bar $one
          * @param Bar $two
+         * @param Bar $default
          * @named barOne $one
          * @named barTwo $two
          */
-        public function __construct(Bar $one, Bar $two) {
+        public function __construct(Bar $one, Bar $two, Bar $default) {
 
         }
      }
 
      interface Bar {
+
+     }
+
+     class BarImplDefault implements Bar {
 
      }
 
@@ -266,11 +362,149 @@ Named injection
 Configuration:
 
      'Bar' => array(
+        'class' = > 'BarImplDefault'
         'named' => array(
             'barOne' => 'BarImplOne',
             'barTwo' => 'BarImplTwo'
         )
      )
+
+You can also configure this directly with annotations
+
+     /**
+      * @implementedBy BarImplDefault
+      * @implementedBy barOne BarImplOne
+      * @implementedBy barTwo BarImplTwo
+      */
+     interface Bar {
+
+     }
+
+     class BarImplDefault implements Bar {
+
+     }
+
+     class BarImplOne implements Bar {
+
+     }
+
+     class BarImplTwo implements Bar {
+
+     }
+
+It is also possible to name the default implementation, so that our configuration looks a bit cleaner. The result is the
+same:
+
+    /**
+      * @implementedBy default BarImplDefault
+      * @implementedBy barOne  BarImplOne
+      * @implementedBy barTwo  BarImplTwo
+      */
+     interface Bar {
+
+     }
+
+Named providers
+---------------
+
+     class Foo {
+
+        /**
+         * @var Bar
+         * @named barOne
+         */
+        protected $bar;
+
+        /**
+         * @inject
+         * @param Bar $one
+         * @param Bar $two
+         * @param Bar $default
+         * @named barOne $one
+         * @named barTwo $two
+         */
+        public function __construct(Bar $one, Bar $two, Bar $default) {
+
+        }
+     }
+
+     interface Bar {
+
+     }
+
+     $dic->getInstanceOfClass('Foo');
+
+Configuration:
+
+     'Bar' => array(
+        'provider' => array(
+            'class' => 'BarProvider'
+        )
+        'namedProviders' => array(
+            'barOne' => array(
+                'class' => 'BarProvider',
+                'parameters' => array('name' => 'barOne')
+            ),
+            'barTwo' => array(
+                'class' => 'BarProvider',
+                'parameters' => array('name' => 'barTwo')
+            )
+        )
+     )
+
+You can also configure this directly with annotations
+
+     /**
+      * @providedBy BarProvider
+      * @providedBy barOne BarProvider {"name" : "barOne"}
+      * @providedBy barTwo BarProvider {"name" : "barOne"}
+      */
+     interface Bar {
+
+     }
+
+     class BarProvider implements rg\injection\Provider {
+        private $name;
+
+        public function __construct($name) {
+            $this->name = $name;
+        }
+
+        public function get() {
+            switch ($this->name) {
+                case 'barOne':
+                    return new BarImplOne();
+                case 'barTwo':
+                    return new BarImplTwo();
+            }
+
+            return new BarImplDefault();
+        }
+     }
+
+     class BarImplDefault implements Bar {
+
+     }
+
+     class BarImplOne implements Bar {
+
+     }
+
+     class BarImplTwo implements Bar {
+
+     }
+
+It is also possible to name the default provider, so that our configuration looks a bit cleaner. The result is the
+same:
+
+    /**
+      * @providedBy default BarProvider
+      * @providedBy barOne BarProvider {"name" : "barOne"}
+      * @providedBy barTwo BarProvider {"name" : "barOne"}
+      */
+     interface Bar {
+
+     }
 
 Call method on object instance
 ------------------------------
@@ -314,4 +548,12 @@ It is also possible to add additional values to the method call, like with objec
      $foo = new Foo();
      $dic->callMethodOnObject($foo, 'doSomething', array('foo' => 'value'));
 
+Aspects
+-------
+When creating an instance or calling a method it is additionally possible to use one of the following aspects:
 
+* Before aspects will be executed before the function (or constructor) is called and you can manipulate the arguments
+* Intercept aspects will be executed before the funciton (or constructor) is called, if the interceptor returns false,
+  the method is going to be executed, if not, the method is not going to be executed but the container returns the
+  result from the aspect
+* After aspects will be executed after the function (or constructer) is called and can manipulate the function response

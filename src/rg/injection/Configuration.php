@@ -9,6 +9,9 @@
  */
 namespace rg\injection;
 
+/**
+ * @generator ignore
+ */
 class Configuration {
 
     /**
@@ -17,10 +20,16 @@ class Configuration {
     private $config = array();
 
     /**
+     * @var string
+     */
+    private $factoryPath;
+
+    /**
      * @param string $configurationFilePath
      */
-    public function __construct($configurationFilePath) {
-        $this->loadConfigFile($configurationFilePath);
+    public function __construct($configurationFilePath, $factoryPath) {
+        $this->addConfigFile($configurationFilePath);
+        $this->factoryPath = $factoryPath;
     }
 
     /**
@@ -28,7 +37,7 @@ class Configuration {
      * @return array
      */
     public function getClassConfig($fullClassName) {
-        if (! isset($this->config[$fullClassName])) {
+        if (!isset($this->config[$fullClassName])) {
             return array();
         }
 
@@ -46,9 +55,42 @@ class Configuration {
     /**
      * @param string $configurationFilePath
      */
-    private function loadConfigFile($configurationFilePath) {
+    public function addConfigFile($configurationFilePath) {
         if ($configurationFilePath && file_exists($configurationFilePath)) {
-            $this->config = require $configurationFilePath;
+            $additionalConfiguration = require $configurationFilePath;
+            if (!is_array($additionalConfiguration)) {
+                return;
+            }
+            $this->config = array_merge($this->config, $additionalConfiguration);
         }
     }
+
+    /**
+     * @param array $config
+     */
+    public function setConfig($config) {
+        $this->config = $config;
+    }
+
+    /**
+     * @return array
+     */
+    public function getConfig() {
+        return $this->config;
+    }
+
+    /**
+     * @param string $factoryPath
+     */
+    public function setFactoryPath($factoryPath) {
+        $this->factoryPath = $factoryPath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFactoryPath() {
+        return $this->factoryPath;
+    }
+
 }

@@ -12,19 +12,19 @@ namespace rg\injection;
 class ConfigurationTest extends \PHPUnit_Framework_TestCase {
 
     public function testLoadConfiguration() {
-        $config = new Configuration(__DIR__ . '/test_config.php');
+        $config = new Configuration(__DIR__ . '/test_config.php', '');
 
         $this->assertEquals('bar', $config->getClassConfig('foo'));
     }
 
     public function testGetInitialConfig() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, '');
 
         $this->assertEquals(array(), $config->getClassConfig('foo'));
     }
 
     public function testSetConfig() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, '');
 
         $config->setClassConfig('foo', array('bar'));
         $this->assertEquals(array('bar'), $config->getClassConfig('foo'));

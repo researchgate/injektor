@@ -9,21 +9,26 @@
  */
 namespace rg\injection;
 
+/**
+ * @generator ignore
+ */
 class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
+    public static $prefix = '';
 
     /**
      * @param string $fullClassName
      * @param array $constructorArguments
      * @return object
      */
-    public function getInstanceOfClass($fullClassName, array $constructorArguments = array()) {
-        $factoryClass = $this->getFullFactoryClassName($fullClassName);
+    public function getInstanceOfClass($className, array $constructorArguments = array()) {
+        $fullFactoryClassName = $this->getFullFactoryClassName($className);
+        $factoryClassName = $this->getFactoryClassName($className);
 
-        if (class_exists($factoryClass, true)) {
-            return $factoryClass::getInstance($constructorArguments);
+        if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
+            return $fullFactoryClassName::getInstance($constructorArguments);
         }
 
-        return parent::getInstanceOfClass($fullClassName, $constructorArguments);
+        return parent::getInstanceOfClass($className, $constructorArguments);
     }
 
     /**
@@ -34,11 +39,17 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
      * @throws InjectionException
      */
     public function callMethodOnObject($object, $methodName, array $additionalArguments = array()) {
-        $factoryClass = $this->getFactoryClassName(get_class($object));
+        $className = get_class($object);
+        $fullFactoryClassName = $this->getFullFactoryClassName($className);
+        $factoryClassName = $this->getFactoryClassName($className);
 
-        if (class_exists($factoryClass, true)) {
+        if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
             $factoryMethod = $this->getFactoryMethodName($methodName);
-            return $factoryClass::$factoryMethod($object, $additionalArguments);
+            if (! method_exists($fullFactoryClassName, $factoryMethod)) {
+                throw new InjectionException('Method ' . $factoryMethod . ' not found in class ' . $fullFactoryClassName);
+            }
+
+            return $fullFactoryClassName::$factoryMethod($object, $additionalArguments);
         }
 
         return parent::callMethodOnObject($object, $methodName, $additionalArguments);
@@ -57,7 +68,7 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
      * @return string
      */
     public function getFactoryClassName($fullClassName) {
-        return $this->getStrippedClassName($fullClassName) . 'Factory';
+        return self::$prefix . $this->getStrippedClassName($fullClassName) . 'Factory';
     }
 
     /**
@@ -65,7 +76,7 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
      * @return string
      */
     public function getProxyClassName($fullClassName) {
-        return $this->getStrippedClassName($fullClassName) . 'Proxy';
+        return self::$prefix . $this->getStrippedClassName($fullClassName) . 'Proxy';
     }
 
     /**
@@ -88,6 +99,27 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
     public function getFullFactoryClassName($fullClassName) {
         $factoryClass = 'rg\injection\generated\\' . $this->getFactoryClassName($fullClassName);
         return $factoryClass;
+    }
+
+    /**
+     * @param string $fullFactoryClassName
+     * @param string $factoryClassName
+     * @return bool
+     */
+    protected function factoryClassExists($fullFactoryClassName, $factoryClassName) {
+        if (class_exists($fullFactoryClassName)) {
+            return true;
+        }
+
+        $fileName = $this->config->getFactoryPath() . DIRECTORY_SEPARATOR . $factoryClassName . '.php';
+        if (file_exists($fileName)) {
+            require_once $fileName;
+            if (class_exists($fullFactoryClassName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

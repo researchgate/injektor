@@ -12,7 +12,7 @@ namespace rg\injection;
 class FactoryDependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
 
     public function testInjectionWithoutFactory() {
-        $config = new Configuration(null);
+        $config = new Configuration(null, '');
 
         $dic = new FactoryDependencyInjectionContainer($config);
 
@@ -25,7 +25,6 @@ class FactoryDependencyInjectionContainerTest extends \PHPUnit_Framework_TestCas
         $this->assertInstanceOf('rg\injection\FDICTestClassThree', $instance->two->three);
         $this->assertInstanceOf('rg\injection\FDICTestClassThree', $instance->getFour());
     }
-
 }
 
 class FDICTestClassOne {

@@ -24,10 +24,17 @@ abstract class FactoryGenerator {
     private $config;
 
     /**
-     * @param Configuration $config
+     * @var string
      */
-    public function __construct(Configuration $config) {
+    private $factoryPath;
+
+    /**
+     * @param Configuration $config
+     * @param string $path
+     */
+    public function __construct(Configuration $config, $path) {
         $this->config = $config;
+        $this->factoryPath = $path;
     }
 
     /**
@@ -48,22 +55,35 @@ abstract class FactoryGenerator {
             return;
         }
 
-        $this->generated[] = $fullClassName;
-
         $dic = new FactoryDependencyInjectionContainer($this->config);
 
         $classConfig = $this->config->getClassConfig($fullClassName);
         $factoryName = $dic->getFactoryClassName($fullClassName);
 
-        $factoryClass = new Generator\ClassGenerator($factoryName);
-        $instanceMethod = new Generator\MethodGenerator('getInstance');
-        $parameter = new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array());
-        $instanceMethod->setParameter($parameter);
         $classReflection = $dic->getClassReflection($fullClassName);
+
+        if (strpos($classReflection->getDocComment(), '@generator ignore') !== false) {
+            return;
+        }
+
+        $factoryClass = new \rg\injection\generators\FactoryClass($factoryName);
+        $instanceMethod = new \rg\injection\generators\InstanceMethod();
+
+        $arguments = array();
+
+        $usedFactories = array();
+
+        $constructorReflection = null;
         if ($dic->isSingleton($classReflection)) {
-            $arguments = $dic->getConstructorArguments($classReflection, $classConfig, array(), 'getInstance');
+            //$parameters = $dic->getConstructorArguments($classReflection, $classConfig, array(), 'getInstance');
+            $constructorReflection = $classReflection->getMethod('getInstance');
+            $arguments = $constructorReflection->getParameters();
         } else {
-            $arguments = $dic->getConstructorArguments($classReflection, $classConfig);
+            //$parameters = $dic->getConstructorArguments($classReflection, $classConfig);
+            if ($classReflection->hasMethod('__construct')) {
+                $constructorReflection = $classReflection->getMethod('__construct');
+                $arguments = $constructorReflection->getParameters();
+            }
         }
 
         $isSingleton = $dic->isConfiguredAsSingleton($classConfig, $classReflection);
@@ -71,27 +91,45 @@ abstract class FactoryGenerator {
         $body = '';
 
         if ($isSingleton) {
-            $property = new Generator\PropertyGenerator('instance', null, Generator\PropertyGenerator::FLAG_PRIVATE);
+            $property = new Generator\PropertyGenerator('instance', array(), Generator\PropertyGenerator::FLAG_PRIVATE);
             $property->setStatic(true);
             $factoryClass->setProperty($property);
 
-            $body .= 'if (self::$instance) {' . PHP_EOL;
-            $body .= '    return self::$instance;' . PHP_EOL;
-            $body .= '}' . PHP_EOL . PHP_EOL;
+            $instanceMethod->addSingletonSupport();
         }
         $constructorArgumentStringParts = array();
         $realConstructorArgumentStringParts = array();
         $constructorArguments = array();
+        $bottomBody = '';
 
-        foreach ($arguments as $argumentName => $argumentClass) {
-            if (is_object($argumentClass)) {
-                $argumentClass = get_class($argumentClass);
-                $argumentFactory = $dic->getFullFactoryClassName($argumentClass);
-                $body .= '$' . $argumentName . ' = isset($parameters[\'' . $argumentName . '\']) ? $parameters[\'' . $argumentName . '\'] : ' . $argumentFactory . '::getInstance();' . PHP_EOL;
+        $this->generated[] = $fullClassName;
 
-                $this->processFileForClass($argumentClass);
-            } else {
-                $body .= '$' . $argumentName . ' = isset($parameters[\'' . $argumentName . '\']) ? $parameters[\'' . $argumentName . '\'] : \'' . $argumentClass . '\';' . PHP_EOL;
+        foreach ($arguments as $argument) {
+            /** @var \ReflectionParameter $argument  */
+
+            $injectionParameter = new \rg\injection\generators\InjectionParameter(
+                $argument,
+                $classConfig,
+                $this->config,
+                $dic
+            );
+
+            $instanceMethod->addInstanceParameter($injectionParameter);
+
+            $argumentName = $argument->name;
+
+            $body .= $injectionParameter->getPreProcessingBody();
+            $bottomBody .= $injectionParameter->getPostProcessingBody();
+            try {
+                if ($injectionParameter->getParameterClassName()) {
+                    $this->processFileForClass($injectionParameter->getParameterClassName());
+                }
+                if ($injectionParameter->getParameterFactoryName()) {
+                    $usedFactories[] = $injectionParameter->getParameterFactoryName();
+                }
+            } catch (InjectionException $e) {
+                $body .= '$methodParameters[\'' . $argumentName . '\'] = isset($parameters[\'' . $argumentName . '\']) ? $parameters[\'' . $argumentName . '\'] : null;' . PHP_EOL;
+                $bottomBody .= '$' . $argumentName . ' = isset($methodParameters[\'' . $argumentName . '\']) ? $methodParameters[\'' . $argumentName . '\'] : null;' . PHP_EOL;
             }
             $constructorArguments[] = $argumentName;
             $constructorArgumentStringParts[] = '$' . $argumentName;
@@ -99,32 +137,111 @@ abstract class FactoryGenerator {
 
         }
 
-        $injectableProperties = $dic->getInjectableProperties($classReflection);
-        $injectableArguments = array();
-        foreach ($injectableProperties as $injectableProperty) {
+        $injectableProperties = array();
+        try {
+            $injectableProperties = $dic->getInjectableProperties($classReflection);
+            $injectableArguments = array();
+            foreach ($injectableProperties as $key => $injectableProperty) {
+                try {
+                    $propertyClass = $dic->getClassFromVarTypeHint($injectableProperty->getDocComment());
+                    if (!$propertyClass) {
+                        unset($injectableProperties[$key]);
+                        continue;
+                    }
 
-            $propertyClass = $dic->getClassFromVarTypeHint($injectableProperty->getDocComment());
+                    $propertyName = $injectableProperty->name;
 
-            $propertyName = $injectableProperty->name;
-            $propertyFactory = $dic->getFullFactoryClassName($propertyClass);
-            $body .= '$' . $propertyName . ' = ' . $propertyFactory . '::getInstance();' . PHP_EOL;
+                    if ($propertyClass === 'rg\injection\DependencyInjectionContainer') {
+                        $injectableArguments[] = $propertyName;
+                        $constructorArguments[] = $propertyName;
+                        $constructorArgumentStringParts[] = '$' . $propertyName;
 
-            $injectableArguments[] = $propertyName;
-            $constructorArguments[] = $propertyName;
-            $constructorArgumentStringParts[] = '$' . $propertyName;
+                        $body .= '$' . $propertyName . ' = \\' . $propertyClass . '::getInstance();' . PHP_EOL;
+                    } else {
+                        $providerClassName = $dic->getProviderClassName($this->config->getClassConfig($propertyClass), new \ReflectionClass($propertyClass), $dic->getImplementationName($injectableProperty->getDocComment(), $propertyName));
+                        if ($providerClassName && $providerClassName->getClassName()) {
+                            $propertyFactory = $dic->getFullFactoryClassName($providerClassName->getClassName());
+                            $this->processFileForClass($providerClassName->getClassName());
+                            $injectableArguments[] = $propertyName;
+                            $constructorArguments[] = $propertyName;
+                            $constructorArgumentStringParts[] = '$' . $propertyName;
 
-            $this->processFileForClass($propertyClass);
+                            $body .= '$' . $propertyName . ' = \\' . $propertyFactory . '::getInstance(' . var_export($providerClassName->getParameters(), true) . ')->get();' . PHP_EOL;
+                            $usedFactories[] = $propertyFactory;
+                        } else {
+                            $propertyClass = $dic->getRealConfiguredClassName($this->config->getClassConfig($propertyClass), new \ReflectionClass($propertyClass));
+
+                            $propertyFactory = $dic->getFullFactoryClassName($propertyClass);
+
+                            $this->processFileForClass($propertyClass);
+
+                            $injectableArguments[] = $propertyName;
+                            $constructorArguments[] = $propertyName;
+                            $constructorArgumentStringParts[] = '$' . $propertyName;
+
+                            $body .= '$' . $propertyName . ' = \\' . $propertyFactory . '::getInstance();' . PHP_EOL;
+                            $usedFactories[] = $propertyFactory;
+                        }
+                    }
+                } catch (InjectionException $e) {
+                    unset($injectableProperties[$key]);
+                }
+            }
+        } catch (InjectionException $e) {
         }
 
         $proxyClass = null;
+
+        $middleBody = '';
+        $endBody = '';
+        if ($constructorReflection) {
+            $beforeAspects = $dic->getAspects($constructorReflection, 'before');
+            foreach ($beforeAspects as $aspect) {
+                $aspect['class'] = trim($aspect['class'], '\\');
+                $aspectFactory = $dic->getFactoryClassName($aspect['class']);
+                $middleBody .= '$aspect = ' . $aspectFactory . '::getInstance();' . PHP_EOL;
+                $middleBody .= '$methodParameters = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $fullClassName . '\', \'' . $constructorReflection->name . '\', $methodParameters);' . PHP_EOL;
+
+                $usedFactories[] = $aspectFactory;
+                $this->processFileForClass($aspect['class']);
+            }
+
+            $interceptAspects = $dic->getAspects($constructorReflection, 'intercept');
+            if (count($interceptAspects) > 0) {
+                $middleBody .= '$result = false;' . PHP_EOL;
+                foreach ($interceptAspects as $aspect) {
+                    $aspect['class'] = trim($aspect['class'], '\\');
+                    $aspectFactory = $dic->getFactoryClassName($aspect['class']);
+                    $middleBody .= '$aspect = ' . $aspectFactory. '::getInstance();' . PHP_EOL;
+                    $middleBody .= '$result = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $fullClassName . '\', \'' . $constructorReflection->name . '\', $methodParameters, $result);' . PHP_EOL;
+                    $usedFactories[] = $aspectFactory;
+                    $this->processFileForClass($aspect['class']);
+                }
+                $middleBody .= 'if ($result !== false) {' . PHP_EOL;
+                $middleBody .= '    return $result;' . PHP_EOL;
+                $middleBody .= '}' . PHP_EOL;
+            }
+            $body .= $middleBody . $bottomBody;
+            $afterAspects = $dic->getAspects($constructorReflection, 'after');
+            foreach ($afterAspects as $aspect) {
+                $aspect['class'] = trim($aspect['class'], '\\');
+                $aspectFactory = $dic->getFactoryClassName($aspect['class']);
+                $endBody .= '$aspect = ' . $aspectFactory . '::getInstance();' . PHP_EOL;
+                $endBody .= '$instance = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $fullClassName . '\', \'' . $constructorReflection->name . '\', $instance);' . PHP_EOL;
+                $usedFactories[] = $aspectFactory;
+                $this->processFileForClass($aspect['class']);
+            }
+        } else {
+            $body .= $bottomBody;
+        }
 
         if (count($injectableProperties) > 0) {
             $proxyName = $dic->getProxyClassName($fullClassName);
             if ($dic->isSingleton($classReflection)) {
                 $proxyClass = $this->getStaticProxyClass($proxyName, $fullClassName, $constructorArguments, $injectableArguments, $realConstructorArgumentStringParts);
-                $body .= PHP_EOL . '$instance = ' . $proxyName . '::getInstance(' . implode(', ', $constructorArgumentStringParts) . ');' . PHP_EOL;
+                $body .= PHP_EOL . '$instance = ' . $proxyName . '::getProxyInstance(' . implode(', ', $constructorArgumentStringParts) . ');' . PHP_EOL;
             } else {
-                $proxyClass = $this->getProxyClass($proxyName, $fullClassName, $constructorArguments, $injectableArguments, $realConstructorArgumentStringParts);
+                $proxyClass = $this->getProxyClass($proxyName, $fullClassName, $constructorArguments, $injectableArguments, $realConstructorArgumentStringParts, $classReflection->hasMethod('__construct'));
                 $body .= PHP_EOL . '$instance = new ' . $proxyName . '(' . implode(', ', $constructorArgumentStringParts) . ');' . PHP_EOL;
             }
         } else {
@@ -136,8 +253,10 @@ abstract class FactoryGenerator {
 
         }
 
+        $body .= $endBody;
+
         if ($isSingleton) {
-            $body .= 'self::$instance = $instance;' . PHP_EOL;
+            $body .= 'self::$instance[$singletonKey] = $instance;' . PHP_EOL;
         }
 
         $body .= 'return $instance;' . PHP_EOL;
@@ -148,8 +267,9 @@ abstract class FactoryGenerator {
 
         $methods = $classReflection->getMethods();
         foreach ($methods as $method) {
+            /** @var \ReflectionMethod $method */
             if ($method->isPublic() &&
-                $method->name !== '__construct' &&
+                substr($method->name, 0, 2) !== '__' &&
                 !$method->isStatic()
             ) {
 
@@ -157,43 +277,88 @@ abstract class FactoryGenerator {
                 $factoryMethod->setParameter(new Generator\ParameterGenerator('object'));
                 $factoryMethod->setStatic(true);
 
-                try {
-                    $arguments = $dic->getMethodArguments($method);
-                } catch (InjectionException $e) {
-                    continue;
-                }
+                $arguments = $method->getParameters();
 
-                $factoryMethodBody = '';
+                $factoryMethodBody = '$methodParameters = array();' . PHP_EOL;
 
-                $allowedHttpMethod = $dic->getAllowedHttpMethod($method);
-
-                if ($allowedHttpMethod) {
-                    $factoryMethodBody .= 'if (isset($_SERVER["request_method"]) && strtolower($_SERVER["request_method"]) !== "'
-                        . strtolower($allowedHttpMethod) .'") {' . PHP_EOL;
-                    $factoryMethodBody .= '    throw new \RuntimeException("invalid http method " . $_SERVER["REQUEST_METHOD"] . " for '
-                        . $method->class . '::' . $method->name . '(), ' . $allowedHttpMethod . ' expected");' . PHP_EOL;
-                    $factoryMethodBody .= '}' . PHP_EOL . PHP_EOL;
-                }
                 $constructorArgumentStringParts = array();
 
                 if (count($arguments) > 0) {
                     $factoryMethod->setParameter(new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array()));
                 }
 
-                foreach ($arguments as $argumentName => $argument) {
-                    if (is_object($argument)) {
-                        $argument = get_class($argument);
-                        $argumentFactory = $dic->getFullFactoryClassName($argument);
-                        $factoryMethodBody .= '$' . $argumentName . ' = isset($parameters[\'' . $argumentName . '\']) ? $parameters[\'' . $argumentName . '\'] : ' . $argumentFactory . '::getInstance();' . PHP_EOL;
+                $topBody = '';
+                $bottomBody = '';
+                $middleBody = '';
+                foreach ($arguments as $argument) {
+                    /** @var \ReflectionParameter $argument */
 
-                        $this->processFileForClass($argument);
-                    } else {
-                        $factoryMethodBody .= '$' . $argumentName . ' = isset($parameters[\'' . $argumentName . '\']) ? $parameters[\'' . $argumentName . '\'] : \'' . $argument . '\';' . PHP_EOL;
+                    $injectionParameter = new \rg\injection\generators\InjectionParameter(
+                        $argument,
+                        $classConfig,
+                        $this->config,
+                        $dic
+                    );
+
+                    $argumentName = $argument->name;
+
+                    $topBody .= $injectionParameter->getPreProcessingBody();
+                    $bottomBody .= $injectionParameter->getPostProcessingBody();
+                    try {
+                        if ($injectionParameter->getParameterClassName()) {
+                            $this->processFileForClass($injectionParameter->getParameterClassName());
+                        }
+                        if ($injectionParameter->getParameterFactoryName()) {
+                            $usedFactories[] = $injectionParameter->getParameterFactoryName();
+                        }
+                    } catch (InjectionException $e) {
+                        $topBody .= '$methodParameters[\'' . $argumentName . '\'] = isset($parameters[\'' . $argumentName . '\']) ? $parameters[\'' . $argumentName . '\'] : null;' . PHP_EOL;
+                        $bottomBody .= '$' . $argumentName . ' = isset($methodParameters[\'' . $argumentName . '\']) ? $methodParameters[\'' . $argumentName . '\'] : null;' . PHP_EOL;
                     }
+
                     $constructorArgumentStringParts[] = '$' . $argumentName;
                 }
+                $beforeAspects = $dic->getAspects($method, 'before');
+                foreach ($beforeAspects as $aspect) {
+                    $aspect['class'] = trim($aspect['class'], '\\');
+                    $aspectFactory = $dic->getFactoryClassName($aspect['class']);
+                    $middleBody .= '$aspect = ' . $aspectFactory . '::getInstance();' . PHP_EOL;
+                    $middleBody .= '$methodParameters = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $fullClassName . '\', \'' . $method->name . '\', $methodParameters);' . PHP_EOL;
 
-                $factoryMethodBody .= PHP_EOL . 'return $object->' . $method->name . '(' . implode(', ', $constructorArgumentStringParts) . ');';
+                    $usedFactories[] = $aspectFactory;
+                    $this->processFileForClass($aspect['class']);
+                }
+
+                $interceptAspects = $dic->getAspects($method, 'intercept');
+                if (count($interceptAspects) > 0) {
+                    $middleBody .= '$result = false;' . PHP_EOL;
+                    foreach ($interceptAspects as $aspect) {
+                        $aspect['class'] = trim($aspect['class'], '\\');
+                        $aspectFactory = $dic->getFactoryClassName($aspect['class']);
+                        $middleBody .= '$aspect = ' . $aspectFactory . '::getInstance();' . PHP_EOL;
+                        $middleBody .= '$result = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $fullClassName . '\', \'' . $method->name . '\', $methodParameters, $result);' . PHP_EOL;
+                        $usedFactories[] = $aspectFactory;
+                        $this->processFileForClass($aspect['class']);
+                    }
+                    $middleBody .= 'if ($result !== false) {' . PHP_EOL;
+                    $middleBody .= '    return $result;' . PHP_EOL;
+                    $middleBody .= '}' . PHP_EOL;
+                }
+
+                $factoryMethodBody .= PHP_EOL . $topBody . PHP_EOL . $middleBody . PHP_EOL . $bottomBody . PHP_EOL;
+                $factoryMethodBody .= '$result = $object->' . $method->name . '(' . implode(', ', $constructorArgumentStringParts) . ');' . PHP_EOL . PHP_EOL;
+
+                $afterAspects = $dic->getAspects($method, 'after');
+                foreach ($afterAspects as $aspect) {
+                    $aspect['class'] = trim($aspect['class'], '\\');
+                    $aspectFactory = $dic->getFactoryClassName($aspect['class']);
+                    $factoryMethodBody .= '$aspect = ' . $aspectFactory . '::getInstance();' . PHP_EOL;
+                    $factoryMethodBody .= '$result = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $fullClassName . '\', \'' . $method->name . '\', $result);' . PHP_EOL;
+                    $usedFactories[] = $aspectFactory;
+                    $this->processFileForClass($aspect['class']);
+                }
+
+                $factoryMethodBody .= PHP_EOL . 'return $result;';
                 $factoryMethod->setBody($factoryMethodBody);
                 $factoryClass->setMethod($factoryMethod);
             }
@@ -201,6 +366,12 @@ abstract class FactoryGenerator {
 
         $file = new Generator\FileGenerator();
         $file->setNamespace('rg\injection\generated');
+        $usedFactories = array_unique($usedFactories);
+        foreach ($usedFactories as &$usedFactory) {
+            $usedFactory = str_replace('rg\injection\generated\\', '', $usedFactory);
+            $usedFactory = $this->factoryPath . DIRECTORY_SEPARATOR . $usedFactory . '.php';
+        }
+        $file->setRequiredFiles($usedFactories);
         $file->setClass($factoryClass);
         if ($proxyClass) {
             $file->setClass($proxyClass);
@@ -209,7 +380,7 @@ abstract class FactoryGenerator {
             $docblock = new Generator\DocblockGenerator('Generated by ' . get_class($this) . ' on ' . date('Y-m-d H:i:s'));
             $file->setDocblock($docblock);
         }
-        $file->setFilename(__DIR__ . '/generated/' . $factoryName . '.php');
+        $file->setFilename($this->factoryPath . DIRECTORY_SEPARATOR . $factoryName . '.php');
 
         return $file;
     }
@@ -222,7 +393,7 @@ abstract class FactoryGenerator {
      * @param array $realConstructorArgumentStringParts
      * @return \Zend\Code\Generator\ClassGenerator
      */
-    private function getProxyClass($proxyName, $fullClassName, $constructorArguments, $injectableArguments, $realConstructorArgumentStringParts) {
+    private function getProxyClass($proxyName, $fullClassName, $constructorArguments, $injectableArguments, $realConstructorArgumentStringParts, $hasConstructor) {
         $proxyClass = new Generator\ClassGenerator($proxyName);
         $proxyClass->setExtendedClass('\\' . $fullClassName);
         $constructor = new Generator\MethodGenerator('__construct');
@@ -234,7 +405,9 @@ abstract class FactoryGenerator {
         foreach ($injectableArguments as $injectableArgument) {
             $constructorBody .= '$this->' . $injectableArgument . ' = $' . $injectableArgument . ';' . PHP_EOL;
         }
-        $constructorBody .= 'parent::__construct(' . implode(', ', $realConstructorArgumentStringParts) . ');' . PHP_EOL;
+        if ($hasConstructor) {
+            $constructorBody .= 'parent::__construct(' . implode(', ', $realConstructorArgumentStringParts) . ');' . PHP_EOL;
+        }
         $constructor->setBody($constructorBody);
         $proxyClass->setMethod($constructor);
         return $proxyClass;
@@ -243,15 +416,16 @@ abstract class FactoryGenerator {
     private function getStaticProxyClass($proxyName, $fullClassName, $constructorArguments, $injectableArguments, $realConstructorArgumentStringParts) {
         $proxyClass = new Generator\ClassGenerator($proxyName);
         $proxyClass->setExtendedClass('\\' . $fullClassName);
-        $constructor = new Generator\MethodGenerator('getInstance');
+        $constructor = new Generator\MethodGenerator('getProxyInstance');
         $constructor->setStatic(true);
         foreach ($constructorArguments as $constructorArgument) {
             $parameter = new Generator\ParameterGenerator($constructorArgument);
             $constructor->setParameter($parameter);
         }
-        $constructorBody = '$instance = parent::getInstance(' . implode(', ', $realConstructorArgumentStringParts) . ');' . PHP_EOL;;
+        $constructorBody = '$instance = parent::getInstance(' . implode(', ', $realConstructorArgumentStringParts) . ');' . PHP_EOL;
+        ;
         foreach ($injectableArguments as $injectableArgument) {
-            $constructorBody .= '$this->' . $injectableArgument . ' = $' . $injectableArgument . ';' . PHP_EOL;
+            $constructorBody .= '$instance->' . $injectableArgument . ' = $' . $injectableArgument . ';' . PHP_EOL;
         }
         $constructorBody .= 'return $instance;' . PHP_EOL;
         $constructor->setBody($constructorBody);

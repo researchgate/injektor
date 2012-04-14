@@ -9,12 +9,16 @@
  */
 namespace rg\injection;
 
+/**
+ * @implementedBy rg\injection\FactoryDependencyInjectionContainer
+ * @generator ignore
+ */
 class DependencyInjectionContainer {
 
     /**
      * @var \rg\injection\Configuration
      */
-    private $config;
+    protected $config;
 
     /**
      * @var array
@@ -27,17 +31,40 @@ class DependencyInjectionContainer {
     private static $instance;
 
     /**
+     * @var \rg\injection\SimpleAnnotationReader
+     */
+    private $annotationReader;
+
+    /**
      * @param \rg\injection\Configuration $config
      */
     public function __construct(Configuration $config) {
         $this->config = $config;
 
-        $this->instances[__CLASS__] = $this;
-        $this->config->setClassConfig(__CLASS__, array(
+        $className = get_class($this);
+
+        $this->instances[$className .  json_encode(array())] = $this;
+        $this->config->setClassConfig($className, array(
             'singleton' => true
         ));
 
+        if ($className !== __CLASS__) {
+            $this->instances[__CLASS__ . json_encode(array())] = $this;
+            $this->config->setClassConfig(__CLASS__, array(
+                'singleton' => true
+            ));
+        }
+
         self::$instance = $this;
+
+        $this->annotationReader = new SimpleAnnotationReader();
+    }
+
+    /**
+     * @return \rg\injection\Configuration
+     */
+    public function getConfig() {
+        return $this->config;
     }
 
     /**
@@ -49,7 +76,7 @@ class DependencyInjectionContainer {
             return self::$instance;
         }
 
-        throw new InjectionException('dependency injection container was not instanciated yet');
+        throw new InjectionException('dependency injection container was not instantiated yet');
     }
 
     /**
@@ -64,34 +91,80 @@ class DependencyInjectionContainer {
 
         $classReflection = new \ReflectionClass($fullClassName);
 
+        if ($configuredInstance = $this->getConfiguredInstance($classConfig)) {
+            return $configuredInstance;
+        }
+
+        if ($providedClass = $this->getProvidedConfiguredClass($classConfig, $classReflection)) {
+            return $providedClass;
+        }
+
         $fullClassName = $this->getRealConfiguredClassName($classConfig, $classReflection);
 
         $classReflection = $this->getClassReflection($fullClassName);
 
+        $singletonKey = $fullClassName . json_encode($constructorArguments);
+
         if ($this->isConfiguredAsSingleton($classConfig, $classReflection) &&
-            isset($this->instances[$fullClassName])
+            isset($this->instances[$singletonKey])
         ) {
-            return $this->instances[$fullClassName];
+            return $this->instances[$singletonKey];
         }
 
+        $methodReflection = null;
 
         if ($this->isConfiguredAsSingleton($classConfig, $classReflection) &&
             $this->isSingleton($classReflection)
         ) {
+            $methodReflection = $classReflection->getMethod('getInstance');
             $constructorArguments = $this->getConstructorArguments($classReflection, $classConfig, $constructorArguments, 'getInstance');
+            $constructorArguments = $this->executeBeforeAspects($methodReflection, $constructorArguments);
+            $interceptedResult = $this->executeInterceptorAspects($methodReflection, $constructorArguments);
+            if ($interceptedResult !== false) {
+                return $interceptedResult;
+            }
             $instance = $classReflection->getMethod('getInstance')->invokeArgs(null, $constructorArguments);
         } else {
             $constructorArguments = $this->getConstructorArguments($classReflection, $classConfig, $constructorArguments);
-            $instance = $classReflection->newInstanceArgs($constructorArguments);
+            if ($classReflection->hasMethod('__construct')) {
+                $methodReflection = $classReflection->getMethod('__construct');
+                $constructorArguments = $this->executeBeforeAspects($methodReflection, $constructorArguments);
+                $interceptedResult = $this->executeInterceptorAspects($methodReflection, $constructorArguments);
+                if ($interceptedResult !== false) {
+                    return $interceptedResult;
+                }
+            }
+
+            if ($constructorArguments) {
+                $instance = $classReflection->newInstanceArgs($constructorArguments);
+            } else {
+                $instance = $classReflection->newInstanceArgs();
+            }
         }
 
         if ($this->isConfiguredAsSingleton($classConfig, $classReflection)) {
-            $this->instances[$fullClassName] = $instance;
+            $this->instances[$singletonKey] = $instance;
         }
 
         $instance = $this->injectProperties($classReflection, $instance);
 
+        if ($methodReflection) {
+            $instance = $this->executeAfterAspects($methodReflection, $instance);
+        }
+
         return $instance;
+    }
+
+    /**
+     * @param array $classConfig
+     * @return object
+     */
+    protected function getConfiguredInstance($classConfig) {
+        if (isset($classConfig['instance'])) {
+            return $classConfig['instance'];
+        }
+
+        return null;
     }
 
     /**
@@ -100,7 +173,7 @@ class DependencyInjectionContainer {
      */
     public function isSingleton(\ReflectionClass $classReflection) {
         return $classReflection->hasMethod('__construct') &&
-            ! $classReflection->getMethod('__construct')->isPublic() &&
+            !$classReflection->getMethod('__construct')->isPublic() &&
             $classReflection->hasMethod('getInstance') &&
             $classReflection->getMethod('getInstance')->isStatic() &&
             $classReflection->getMethod('getInstance')->isPublic();
@@ -179,11 +252,15 @@ class DependencyInjectionContainer {
      */
     private function injectProperty($property, $instance) {
         $fullClassName = $this->getClassFromVarTypeHint($property->getDocComment());
+        if (! $fullClassName) {
+            throw new InjectionException('Expected tag @var not found in doc comment.');
+        }
         $propertyInstance = $this->getInstanceOfClass($fullClassName);
         $property->setAccessible(true);
         $property->setValue($instance, $propertyInstance);
         $property->setAccessible(false);
     }
+
 
     /**
      * @param string $docComment
@@ -191,28 +268,13 @@ class DependencyInjectionContainer {
      * @throws InjectionException
      */
     public function getClassFromVarTypeHint($docComment) {
-        $class = trim($this->getClassFromTypeHint($docComment, '@var'), '\\');
+        $class = $this->annotationReader->getClassFromVarTypeHint($docComment);
         $propertyClassConfig = $this->config->getClassConfig($class);
-        $namedClass = $this->getNamedClassOfArgument($propertyClassConfig, $docComment);
+        $namedClass = $this->getNamedClassOfArgument($class, $propertyClassConfig, $docComment);
         if ($namedClass) {
             return $namedClass;
         }
         return $class;
-    }
-
-    /**
-     * @param string $docComment
-     * @param string $tag
-     * @return string mixed
-     * @throws InjectionException
-     */
-    private function getClassFromTypeHint($docComment, $tag) {
-        $matches = array();
-        preg_match('/' . $tag . '\s([a-zA-Z0-9\\\]+)/', $docComment, $matches);
-        if (isset($matches[1])) {
-            return $matches[1];
-        }
-        throw new InjectionException('Expected tag ' . $tag . ' not found in doc comment.');
     }
 
     /**
@@ -236,9 +298,49 @@ class DependencyInjectionContainer {
     /**
      * @param array $classConfig
      * @param \ReflectionClass $classReflection
+     * @param string $name
+     * @return null|object
+     */
+    public function getProvidedConfiguredClass($classConfig, \ReflectionClass $classReflection, $name = null) {
+        if ($namedAnnoation = $this->getProviderClassName($classConfig, $classReflection, $name)) {
+            return $this->getRealClassInstanceFromProvider($namedAnnoation->getClassName(), $classReflection->name, $namedAnnoation->getParameters());
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array $classConfig
+     * @param \ReflectionClass $classReflection
+     * @param string $name
+     * @return annotations\Named
+     */
+    public function getProviderClassName($classConfig, $classReflection, $name) {
+        if ($name && isset($classConfig['namedProviders']) && isset($classConfig['namedProviders'][$name])
+            && isset($classConfig['namedProviders'][$name]['class'])) {
+            $parameters = isset($classConfig['namedProviders'][$name]['parameters']) ? $classConfig['namedProviders'][$name]['parameters'] : array();
+            $annotation = new \rg\injection\annotations\Named();
+            $annotation->setClassName($classConfig['namedProviders'][$name]['class']);
+            $annotation->setParameters($parameters);
+            return $annotation;
+        }
+        if (isset($classConfig['provider']) && isset($classConfig['provider']['class'])) {
+            $parameters = isset($classConfig['provider']['parameters']) ? $classConfig['provider']['parameters'] : array();
+            $annotation = new \rg\injection\annotations\Named();
+            $annotation->setClassName($classConfig['provider']['class']);
+            $annotation->setParameters($parameters);
+            return $annotation;
+        }
+
+        return $this->getProvidedByAnnotation($classReflection->getDocComment(), $name);
+    }
+
+    /**
+     * @param array $classConfig
+     * @param \ReflectionClass $classReflection
      * @return string
      */
-    private function getRealConfiguredClassName($classConfig, \ReflectionClass $classReflection) {
+    public function getRealConfiguredClassName($classConfig, \ReflectionClass $classReflection) {
         if (isset($classConfig['class'])) {
             return $classConfig['class'];
         }
@@ -255,19 +357,94 @@ class DependencyInjectionContainer {
      * @param \ReflectionClass $classReflection
      * @return string
      */
-    private function getAnnotatedImplementationClass(\ReflectionClass $classReflection) {
+    private function getAnnotatedImplementationClass(\ReflectionClass $classReflection, $name = null) {
         $docComment = $classReflection->getDocComment();
 
-        $matches = array();
-
-        preg_match('/@implementedBy\s+([a-zA-Z0-9\\\]+)/', $docComment, $matches);
-
-        if (isset($matches[1])) {
-            return $matches[1];
+        if ($namedAnnotation = $this->getImplementedByAnnotation($docComment, $name)) {
+            return $namedAnnotation->getClassName();
         }
 
         return null;
     }
+
+    /**
+     * @param string $providerClassName
+     * @param string $originalName
+     * @param array $parameters
+     * @return object
+     * @throws InjectionException
+     */
+    private function getRealClassInstanceFromProvider($providerClassName, $originalName, array $parameters = array()) {
+        /** @var Provider $provider  */
+        $provider = $this->getInstanceOfClass($providerClassName, $parameters);
+
+        if (!$provider instanceof Provider) {
+            throw new InjectionException('Provider class ' . $providerClassName . ' specified in ' . $originalName . ' does not implement rg\injection\provider');
+        }
+
+        return $provider->get();
+    }
+
+    /**
+     * @param string $docComment
+     * @param string $name
+     * @return \rg\injection\annotations\Named
+     */
+    private function getImplementedByAnnotation($docComment, $name) {
+        return $this->getMatchingAnnotationByNamedPatter($docComment, '@implementedBy', $name);
+    }
+
+    /**
+     * @param string $docComment
+     * @param string $name
+     * @return \rg\injection\annotations\Named
+     */
+    private function getProvidedByAnnotation($docComment, $name) {
+        return $this->getMatchingAnnotationByNamedPatter($docComment, '@providedBy', $name);
+    }
+
+    /**
+     * @param string $docComment
+     * @param string $type
+     * @param string $name
+     * @return \rg\injection\annotations\Named
+     */
+    private function getMatchingAnnotationByNamedPatter($docComment, $type, $name) {
+        $matches = array();
+
+        $pattern = $this->createNamedPattern($type, $name);
+
+        preg_match('/' . $pattern . '/', $docComment, $matches);
+
+        if (isset($matches['className'])) {
+            $annotation = new \rg\injection\annotations\Named();
+            $annotation->setName($name);
+            $annotation->setClassName($matches['className']);
+            if (isset($matches['parameters'])) {
+                $parameters = json_decode($matches['parameters'], true);
+                if ($parameters) {
+                    $annotation->setParameters($parameters);
+                }
+            }
+            return $annotation;
+        }
+
+        return null;
+    }
+
+    private function createNamedPattern($type, $name) {
+        $pattern = $type;
+        if ($name) {
+            $pattern .= '\s+' . preg_quote($name, '/');
+        } else {
+            $pattern .= '(\s+default)?';
+        }
+        $pattern .= '\s+(?P<className>[a-zA-Z0-9\\\]+)';
+        $pattern .= '(\s+(?P<parameters>{[\s\:\'\",a-zA-Z0-9\\\]+}))?';
+
+        return $pattern;
+    }
+
 
     /**
      * @param array $classConfig
@@ -293,6 +470,7 @@ class DependencyInjectionContainer {
      */
     public function callMethodOnObject($object, $methodName, array $additionalArguments = array()) {
         $fullClassName = get_class($object);
+
         if (substr($methodName, 0, 2) === '__') {
             throw new InjectionException('You are not allowed to call magic method ' . $methodName . ' on ' . $fullClassName);
         }
@@ -305,10 +483,28 @@ class DependencyInjectionContainer {
         $arguments = $this->getMethodArguments($methodReflection, $additionalArguments);
 
         $arguments = $this->executeBeforeAspects($methodReflection, $arguments);
+        $interceptedResult = $this->executeInterceptorAspects($methodReflection, $arguments);
+        if ($interceptedResult !== false) {
+            return $interceptedResult;
+        }
 
         $result = $methodReflection->invokeArgs($object, $arguments);
 
         return $this->executeAfterAspects($methodReflection, $result);
+    }
+
+    private function executeInterceptorAspects(\ReflectionMethod $methodReflection, $arguments) {
+        $aspects = $this->getAspects($methodReflection, 'intercept');
+
+        $result = false;
+
+        foreach ($aspects as $aspect) {
+            /** @var \rg\injection\aspects\Intercept $aspectInstance */
+            $aspectInstance = $this->getInstanceOfClass($aspect['class']);
+            $result = $aspectInstance->execute($aspect['aspectArguments'], $methodReflection->getDeclaringClass()->name, $methodReflection->name, $arguments, $result);
+        }
+
+        return $result;
     }
 
     private function executeBeforeAspects(\ReflectionMethod $methodReflection, $arguments) {
@@ -335,7 +531,7 @@ class DependencyInjectionContainer {
         return $result;
     }
 
-    private function getAspects(\ReflectionMethod $methodReflection, $type) {
+    public function getAspects(\ReflectionMethod $methodReflection, $type) {
         $docComment = $methodReflection->getDocComment();
         $matches = array();
         $pattern = '@' . $type . '\s+([a-z0-9\\\]+)\s*([a-z0-9\\\=&]*)';
@@ -421,10 +617,13 @@ class DependencyInjectionContainer {
         $argumentValues = array();
 
         foreach ($arguments as $argument) {
+            /** @var \ReflectionParameter $argument */
             if (isset($defaultArguments[$argument->name])) {
-               $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$argument->name]);
+                $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$argument->name]);
             } else if ($methodIsMarkedInjectible) {
                 $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
+            } else if ($argument->isOptional()) {
+                $argumentValues[$argument->name] = $argument->getDefaultValue();
             } else if (!$argument->isOptional()) {
                 throw new InjectionException('Parameter ' . $argument->name . ' in class ' . $methodReflection->class . ' is not injectable');
             }
@@ -438,7 +637,7 @@ class DependencyInjectionContainer {
      * @return mixed
      */
     private function getValueOfDefaultArgument($argumentConfig) {
-        if (! is_array($argumentConfig)) {
+        if (!is_array($argumentConfig)) {
             return $argumentConfig;
         }
         if (isset($argumentConfig['value'])) {
@@ -447,7 +646,7 @@ class DependencyInjectionContainer {
         if (isset($argumentConfig['class'])) {
             return $this->getInstanceOfClass($argumentConfig['class']);
         }
-        return null;
+        return $argumentConfig;
     }
 
     /**
@@ -457,11 +656,20 @@ class DependencyInjectionContainer {
      */
     private function getInstanceOfArgument(\ReflectionParameter $argument) {
         if (!$argument->getClass()) {
-            throw new InjectionException('Invalid argument without class typehint ' . $argument->name);
+            if ($argument->isOptional()) {
+                return $argument->getDefaultValue();
+            }
+            throw new InjectionException('Invalid argument without class typehint class: [' . $argument->getDeclaringClass()->name . '] method: [' . $argument->getDeclaringFunction()->name . '] argument: [' . $argument->name . ']');
         }
 
         $argumentClassConfig = $this->config->getClassConfig($argument->getClass()->name);
-        $namedClassName = $this->getNamedClassOfArgument($argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
+
+        $providedInstance = $this->getNamedProvidedInstance($argument->getClass()->name, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
+        if ($providedInstance) {
+            return $providedInstance;
+        }
+
+        $namedClassName = $this->getNamedClassOfArgument($argument->getClass()->name, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
         if ($namedClassName) {
             return $this->getInstanceOfClass($namedClassName);
         }
@@ -470,12 +678,40 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @param string $argumentClass
+     * @param array $classConfig
+     * @param string$docComment
+     * @param string $argumentName
+     * @return null|object
+     */
+    public function getNamedProvidedInstance($argumentClass, array $classConfig, $docComment, $argumentName = null) {
+        $implementationName = $this->getImplementationName($docComment, $argumentName);
+
+        return $this->getProvidedConfiguredClass($classConfig, new \ReflectionClass($argumentClass), $implementationName);
+    }
+
+    /**
+     * @param string $argumentClass
      * @param array $classConfig
      * @param string $docComment
      * @param string $argumentName
      * @return string
      */
-    private function getNamedClassOfArgument(array $classConfig, $docComment, $argumentName = null) {
+    public function getNamedClassOfArgument($argumentClass, array $classConfig, $docComment, $argumentName = null) {
+        $implementationName = $this->getImplementationName($docComment, $argumentName);
+
+        if ($implementationName) {
+            return $this->getImplementingClassBecauseOfName($argumentClass, $classConfig, $implementationName);
+        }
+        return null;
+    }
+
+    /**
+     * @param string $docComment
+     * @param string $argumentName
+     * @return string
+     */
+    public function getImplementationName($docComment, $argumentName) {
         $matches = array();
         $pattern = '@named\s+([a-zA-Z0-9\\\]+)';
         if ($argumentName) {
@@ -483,12 +719,30 @@ class DependencyInjectionContainer {
         }
         preg_match('/' . $pattern . '/', $docComment, $matches);
         if (isset($matches[1])) {
-            if (! isset($classConfig['named']) || ! isset($classConfig['named'][$matches[1]])) {
-                throw new InjectionException('Configuration for name ' . $matches[1] . ' not found.');
-            }
-            return $classConfig['named'][$matches[1]];
+            return $matches[1];
         }
+
         return null;
+    }
+
+    /**
+     * @param string $argumentClass
+     * @param array $classConfig
+     * @param string $name
+     * @return string
+     * @throws InjectionException
+     */
+    private function getImplementingClassBecauseOfName($argumentClass, $classConfig, $name) {
+        if (!isset($classConfig['named']) || !isset($classConfig['named'][$name])) {
+            $classReflection = new \ReflectionClass($argumentClass);
+            $annotatedConfigurationClassName = $this->getAnnotatedImplementationClass($classReflection, $name);
+            if ($annotatedConfigurationClassName) {
+                return $annotatedConfigurationClassName;
+            }
+
+            throw new InjectionException('Configuration for name ' . $name . ' not found.');
+        }
+        return $classConfig['named'][$name];
     }
 
     /**

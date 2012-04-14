@@ -21,4 +21,10 @@ class WritingFactoryGenerator extends FactoryGenerator {
         }
     }
 
+    public static function cleanUpGenerationDirectory($path) {
+        $files = glob($path . DIRECTORY_SEPARATOR . '*.php');
+        foreach ($files as $file) {
+            unlink($file);
+        }
+    }
 }
