@@ -1,0 +1,16 @@
+{
+    "name": "rg/injection",
+    "repositories":[
+        {
+            "type":"pear",
+            "url":"http://packages.zendframework.com"
+        }
+    ],
+    "require": {
+        "php":">=5.3.2",
+        "pear-zf2/Zend_Code":"*"
+    },
+    "autoload": {
+        "psr-0": { "rg": ["src/"] }
+    }
+}

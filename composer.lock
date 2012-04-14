@@ -1,0 +1,10 @@
+{
+    "hash": "972f026212829f9b4774acceb9f8b252",
+    "packages": [
+        {
+            "package": "pear-zf2/Zend_Code",
+            "version": "2.0.0beta3"
+        }
+    ],
+    "aliases": []
+}
