@@ -1,5 +1,17 @@
 {
     "name": "rg/injection",
+    "description": "Dependency Injection container inspired by google-guice",
+    "keywords": ["dependency", "injection"],
+    "homepage": "http://www.github.com/researchgate/injection",
+    "type": "library",
+    "license": "Apache 2.0",
+    "authors": [
+        {
+            "name": "Bastian Hofmann",
+            "email": "bastian.hofmann@researchgate.net",
+            "homepage": "http://www.bastianhofmann.de"
+        }
+    ],
     "repositories":[
         {
             "type":"pear",
@@ -11,6 +23,6 @@
         "pear-zf2/Zend_Code":"*"
     },
     "autoload": {
-        "psr-0": { "rg": ["src/"] }
+        "psr-0": { "rg": "src/" }
     }
 }
