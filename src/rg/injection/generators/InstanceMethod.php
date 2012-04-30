@@ -11,15 +11,28 @@ namespace rg\injection\generators;
 
 class InstanceMethod extends \Zend\Code\Generator\MethodGenerator {
 
+    /**
+     * @var bool
+     */
     private $singletonSupport = false;
+
+    /**
+     * @var null|\rg\injection\FactoryGenerator
+     */
+    private $factoryGenerator;
 
     /**
      * @var InjectionParameter[]
      */
     private $instanceParameters = array();
 
-    public function __construct() {
+    /**
+     * @param null|\rg\injection\FactoryGenerator $factoryGenerator
+     */
+    public function __construct(\rg\injection\FactoryGenerator $factoryGenerator) {
         parent::__construct('getInstance');
+
+        $this->factoryGenerator = $factoryGenerator;
 
         $parameter = new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array());
         $this->setParameter($parameter);

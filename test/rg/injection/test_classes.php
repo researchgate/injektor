@@ -12,10 +12,12 @@ namespace rg\injection;
 require_once 'test_classes_not_injectable.php';
 
 class DICTestClassOne {
+
     /**
      * @var \rg\injection\DICTestClassTwo
      */
     public $two;
+
     /**
      * @var \rg\injection\DICTestClassThree
      */
@@ -39,7 +41,7 @@ class DICTestClassOne {
      * @param DICTestClassTwo $two
      * @param DICTestClassThree $three
      */
-    public function __construct(DICTestClassTwo $two, DICTestClassThree $three) {
+    public function __construct(DICTestClassTwo $two, DICTestClassThree $three = null) {
         $this->two = $two;
         $this->three = $three;
     }
@@ -78,6 +80,7 @@ class DICTestClassOneConfigured extends DICTestAbstractClass implements DICTestI
 }
 
 class DICTestClassTwo {
+
     /**
      * @var \rg\injection\DICTestClassThree
      */
@@ -114,9 +117,99 @@ class DICTestClassNoInject {
     }
 }
 
+class DICProvidedTestClassNoTypeHintProvider implements Provider {
+
+    private $one;
+
+    private $two;
+
+    public function __construct($one, $two) {
+        $this->one = $one;
+        $this->two = $two;
+    }
+
+    public function get() {
+        return new DICProvidedTestClassNoTypeHint($this->one . 'f', $this->two . 'f');
+    }
+}
+
+class DICProvidedTestClassArgumentsWithParameters {
+
+    public $class;
+
+    public $methodClass;
+
+    /**
+     * @inject
+     * @var \rg\injection\DICProvidedTestClassNoTypeHint {"one":"foo","two":"bar"}
+     */
+    public $injectedProperty;
+
+    /**
+     * @inject
+     * @param DICProvidedTestClassNoTypeHint $class {"one":"foo","two":"bar"}
+     */
+    public function __construct(DICProvidedTestClassNoTypeHint $class) {
+        $this->class = $class;
+    }
+
+    /**
+     * @inject
+     * @param DICProvidedTestClassNoTypeHint $class {"one":"foo","two":"bar"}
+     */
+    public function someMethod(DICProvidedTestClassNoTypeHint $class) {
+        $this->methodClass = $class;
+    }
+}
+
+/**
+ * @providedBy \rg\injection\DICProvidedTestClassNoTypeHintProvider
+ */
+class DICProvidedTestClassNoTypeHint {
+
+    public $one;
+
+    public $two;
+
+    public function __construct($one, $two) {
+        $this->one = $one;
+        $this->two = $two;
+    }
+}
+
+class DICTestClassArgumentsWithParameters {
+
+    public $class;
+
+    public $methodClass;
+
+    /**
+     * @inject
+     * @var \rg\injection\DICTestClassNoTypeHint {"one":"foo","two":"bar"}
+     */
+    public $injectedProperty;
+
+    /**
+     * @inject
+     * @param DICTestClassNoTypeHint $class {"one":"foo","two":"bar"}
+     */
+    public function __construct(DICTestClassNoTypeHint $class) {
+        $this->class = $class;
+    }
+
+    /**
+     * @inject
+     * @param DICTestClassNoTypeHint $class {"one":"foo","two":"bar"}
+     */
+    public function someMethod(DICTestClassNoTypeHint $class) {
+        $this->methodClass = $class;
+    }
+}
+
 class DICTestClassNoTypeHint {
 
     public $one;
+
     public $two;
 
     /**
@@ -131,7 +224,9 @@ class DICTestClassNoTypeHint {
 class DICTestClassNoTypeHintOptionalArgument {
 
     public $one;
+
     public $two;
+
     public $ar;
 
     public function __construct($one, $two = 'bar', array $ar = array()) {
@@ -142,6 +237,7 @@ class DICTestClassNoTypeHintOptionalArgument {
 }
 
 class DICTestClassNoParamTypeHint {
+
     /**
      * @inject
      */
@@ -149,6 +245,7 @@ class DICTestClassNoParamTypeHint {
 }
 
 class DICTestClassPrivateProperty {
+
     /**
      * @inject
      * @var DICTestClassNoConstructor
@@ -157,6 +254,7 @@ class DICTestClassPrivateProperty {
 }
 
 class DICTestClassPropertyDoubledAnnotation {
+
     /**
      * @inject
      * @var \rg\injection\DICTestClassNoConstructor
@@ -166,8 +264,8 @@ class DICTestClassPropertyDoubledAnnotation {
 }
 
 class DICTestClassNoConstructor {
-}
 
+}
 
 class DICTestAnnotatedInterfaceImpl implements DICTestAnnotatedInterface {
 
@@ -182,7 +280,9 @@ class DICTestAnnotatedInterfaceImplTwo implements DICTestAnnotatedInterface {
 }
 
 class DICTestNamed {
+
     public $one;
+
     /**
      * @inject
      * @var \rg\injection\DICTestAnnotatedInterface
@@ -254,7 +354,9 @@ class DICTestNamedConfig {
 }
 
 class DICTestSingleton {
+
     public $foo;
+
     public $instance;
 
     /**
@@ -283,12 +385,17 @@ class DICTestSingleton {
  * @singleton
  */
 class DICTestAnnotatedSingleton {
+
 }
 
 class DICTestAspects {
+
     public $one;
+
     public $two;
+
     public $cone;
+
     public $ctwo;
 
     /**
@@ -321,6 +428,7 @@ class DICTestAspects {
 }
 
 class DICTestBeforeAspect implements \rg\injection\aspects\Before {
+
     public function execute($aspectArguments, $className, $functionName, $functionArguments) {
         $functionArguments['two'] = array(
             $functionArguments['two'],
@@ -333,6 +441,7 @@ class DICTestBeforeAspect implements \rg\injection\aspects\Before {
 }
 
 class DICTestAfterAspect implements \rg\injection\aspects\After {
+
     public function execute($aspectArguments, $className, $functionName, $result) {
         $result = array(
             $result,
@@ -345,9 +454,13 @@ class DICTestAfterAspect implements \rg\injection\aspects\After {
 }
 
 class DICTestInterceptAspectClass {
+
     public $one;
+
     public $two;
+
     public $cone;
+
     public $ctwo;
 
     /**
@@ -376,6 +489,7 @@ class DICTestInterceptAspectClass {
 }
 
 class DICTestInterceptAspect implements \rg\injection\aspects\Intercept {
+
     public function execute($aspectArguments, $className, $functionName, $functionArguments, $lastResult) {
         return array(
             $functionArguments,
@@ -396,6 +510,7 @@ class DICTestProvidedInterfaceImpl2 implements DICTestProvidedInterface {
 }
 
 class DICTestSimpleProvidedDecorator implements DICTestSimpleProvidedInterface {
+
     private $providedClass;
 
     public function setProvidedClass($providedClass) {
@@ -421,12 +536,13 @@ class DICTestProvidedDecorator implements DICTestProvidedInterface {
 }
 
 class DICTestNamedProvidedImpl1Dependency {
+
     public $providedInterface1;
+
     public $providedInterface2;
 
     /**
      * @inject
-     *
      * @named impl1 $providedInterface1
      * @named impl2 $providedInterface2
      */
@@ -449,16 +565,17 @@ class DICTestSimpleProvidedImplDependency {
 
     /**
      * @inject
-     *
      * @param DICTestSimpleProvidedInterface $providedInterface
      */
     public function someMethod(DICTestSimpleProvidedInterface $providedInterface) {
         return $providedInterface;
     }
 }
+
 class DICTestProvider implements \rg\injection\Provider {
 
     private $decorator;
+
     private $name;
 
     /**
@@ -482,7 +599,6 @@ class DICTestProvider implements \rg\injection\Provider {
     }
 }
 
-
 class DICTestProviderNoAnnotation implements \rg\injection\Provider {
 
     private $decorator;
@@ -503,6 +619,7 @@ class DICTestProviderNoAnnotation implements \rg\injection\Provider {
 }
 
 class DICTestProvidedInterfaceNoConfigImpl implements DICTestProvidedInterfaceNoConfig {
+
     public $name;
 
     public function __construct($name) {
@@ -552,7 +669,6 @@ class DICTestInterfaceDependencyTwo {
 
     /**
      * @inject
-     *
      * @named impl1 $dependency
      */
     public function __construct(DICTestProvidedInterface $dependency) {
@@ -574,11 +690,11 @@ class DICTestInterfaceDependencyTwoNoAnnotation {
 }
 
 class DICTestSimpleProvidedInterfaceDependency {
+
     public $dependency;
 
     /**
      * @inject
-     *
      * @param DICTestSimpleProvidedInterface $dependency
      */
     public function __construct(DICTestSimpleProvidedInterface $dependency) {
@@ -587,6 +703,7 @@ class DICTestSimpleProvidedInterfaceDependency {
 }
 
 class DICTestAnnotatedInterfacePropertyInjection {
+
     /**
      * @inject
      * @var rg\injection\DICTestAnnotatedInterface

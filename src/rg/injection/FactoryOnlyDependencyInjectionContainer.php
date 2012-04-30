@@ -12,8 +12,9 @@ namespace rg\injection;
 class FactoryOnlyDependencyInjectionContainer extends FactoryDependencyInjectionContainer {
 
     /**
-     * @param string $fullClassName
+     * @param string $className
      * @param array $constructorArguments
+     * @throws InjectionException
      * @return object
      */
     public function getInstanceOfClass($className, array $constructorArguments = array()) {

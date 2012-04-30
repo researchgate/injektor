@@ -21,29 +21,35 @@ class InjectionParameter {
     /**
      * @var array
      */
-    private $classConfig;
+    protected $classConfig;
 
     /**
      * @var \rg\injection\Configuration
      */
-    private $config;
+    protected $config;
 
     /**
      * @var \rg\injection\FactoryDependencyInjectionContainer
      */
-    private $dic;
+    protected $dic;
 
     /**
      * @var string
      */
-    private $parameterFactoryName;
+    protected $factoryName;
 
     /**
      * @var string
      */
-    private $parameterClassName;
+    protected $className;
 
-    private $parameterDefaultValue;
+    protected $defaultValue;
+
+    protected $name;
+
+    protected $docComment;
+
+    protected $additionalArguments;
 
     public function __construct(\ReflectionParameter $parameter, array $classConfig,
                                 \rg\injection\Configuration $config,
@@ -52,30 +58,41 @@ class InjectionParameter {
         $this->classConfig = $classConfig;
         $this->config = $config;
         $this->dic = $dic;
+        $this->name = $parameter->name;
+        $this->docComment = $this->parameter->getDeclaringFunction()->getDocComment();
 
-        $this->analyzeParameter();
+        $this->additionalArguments = $this->dic->getParamsFromTypeHint($this->parameter);
+
+        $this->analyze();
     }
 
     public function getPreProcessingBody() {
-        return '$methodParameters[\'' . $this->parameter->name . '\'] = isset($parameters[\'' . $this->parameter->name . '\']) ? $parameters[\'' . $this->parameter->name . '\'] : ' . $this->parameterDefaultValue . ';' . PHP_EOL;
+        return '$methodParameters[\'' . $this->name . '\'] = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
     }
 
     public function getPostProcessingBody() {
-        return '$' . $this->parameter->name . ' = isset($methodParameters[\'' . $this->parameter->name . '\']) ? $methodParameters[\'' . $this->parameter->name . '\'] : ' . $this->parameterDefaultValue . ';' . PHP_EOL;
+        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $methodParameters) ? $methodParameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
     }
 
-    private function analyzeParameter() {
+    public function getDefaultPreProcessingBody() {
+        return '$methodParameters[\'' . $this->name . '\'] = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : null;' . PHP_EOL;
+    }
+
+    public function getDefaultPostProcessingBody() {
+        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $methodParameters) ? $methodParameters[\'' . $this->name . '\'] : null;' . PHP_EOL;
+    }
+
+    protected function analyze() {
         $argumentClass = null;
 
-        $isInjectable = $this->dic->isInjectable($this->parameter->getDeclaringFunction()->getDocComment());
+        $isInjectable = $this->dic->isInjectable($this->docComment);
 
-        if (!empty($this->classConfig['params'][$this->parameter->name]['class'])) {
-            $argumentClass = $this->classConfig['params'][$this->parameter->name]['class'];
+        if (!empty($this->classConfig['params'][$this->name]['class'])) {
+            $argumentClass = $this->classConfig['params'][$this->name]['class'];
             $isInjectable = true;
 
-        } else if ($this->parameter->getClass()) {
-            $argumentClass = $this->parameter->getClass()->name;
-
+        } else if ($this->hasClass()) {
+            $argumentClass = $this->getClass();
         }
 
         if ($argumentClass && $isInjectable) {
@@ -84,8 +101,8 @@ class InjectionParameter {
                 $namedClass = $this->dic->getNamedClassOfArgument(
                     $argumentClass,
                     $this->config->getClassConfig($argumentClass),
-                    $this->parameter->getDeclaringFunction()->getDocComment(),
-                    $this->parameter->name
+                    $this->docComment,
+                    $this->name
                 );
                 if ($namedClass) {
                     $argumentClass = $namedClass;
@@ -93,44 +110,59 @@ class InjectionParameter {
             } catch (InjectionException $e) {
             }
             if ($argumentClass === 'rg\injection\DependencyInjectionContainer') {
-                $this->parameterDefaultValue =  '\\' . $argumentClass . '::getInstance()';
+                $this->defaultValue =  '\\' . $argumentClass . '::getInstance()';
             } else {
-
                 $providerClassName = $this->dic->getProviderClassName($this->config->getClassConfig($argumentClass), new \ReflectionClass($argumentClass),
-                    $this->dic->getImplementationName($this->parameter->getDeclaringFunction()->getDocComment(), $this->parameter->name));
+                    $this->dic->getImplementationName($this->docComment, $this->name));
                 if ($providerClassName && $providerClassName->getClassName()) {
                     $argumentFactory = $this->dic->getFullFactoryClassName($providerClassName->getClassName());
-                    $this->parameterClassName = $providerClassName->getClassName();
-                    $this->parameterFactoryName = $argumentFactory;
-                    $this->parameterDefaultValue = '\\' . $argumentFactory . '::getInstance(' . var_export($providerClassName->getParameters(), true) . ')->get()';
+                    $this->className = $providerClassName->getClassName();
+                    $this->factoryName = $argumentFactory;
+                    $this->defaultValue = '\\' . $argumentFactory . '::getInstance(' . var_export(array_merge($providerClassName->getParameters(), $this->additionalArguments), true) . ')->get()';
                 } else {
                     $argumentClass = $this->dic->getRealConfiguredClassName($this->config->getClassConfig($argumentClass), new \ReflectionClass($argumentClass));
 
                     $argumentFactory = $this->dic->getFullFactoryClassName($argumentClass);
 
-                    $this->parameterClassName = $argumentClass;
-                    $this->parameterFactoryName = $argumentFactory;
+                    $this->className = $argumentClass;
+                    $this->factoryName = $argumentFactory;
 
-                    $this->parameterDefaultValue = '\\' . $argumentFactory . '::getInstance()';
+                    $this->defaultValue = '\\' . $argumentFactory . '::getInstance(' . var_export($this->additionalArguments, true) . ')';
                 }
             }
 
         } else {
-            if (!empty($this->classConfig['params'][$this->parameter->name]['value'])) {
-                $this->parameterDefaultValue = var_export($this->classConfig['params'][$this->parameter->name]['value'], true);
-            } else if ($this->parameter->isDefaultValueAvailable()) {
-                $this->parameterDefaultValue = var_export($this->parameter->getDefaultValue(), true);
+            if (!empty($this->classConfig['params'][$this->name]['value'])) {
+                $this->defaultValue = var_export($this->classConfig['params'][$this->name]['value'], true);
+            } else if ($this->hasDefaultValue()) {
+                $this->defaultValue = var_export($this->getDefaultValue(), true);
             } else {
-                $this->parameterDefaultValue = 'null';
+                $this->defaultValue = 'null';
             }
         }
     }
 
-    public function getParameterFactoryName() {
-        return $this->parameterFactoryName;
+    protected function hasDefaultValue() {
+        return $this->parameter->isDefaultValueAvailable();
     }
 
-    public function getParameterClassName() {
-        return $this->parameterClassName;
+    protected function getDefaultValue() {
+        return $this->parameter->getDefaultValue();
+    }
+
+    protected function hasClass() {
+        return $this->parameter->getClass();
+    }
+
+    protected function getClass() {
+        return $this->parameter->getClass()->name;
+    }
+
+    public function getFactoryName() {
+        return $this->factoryName;
+    }
+
+    public function getClassName() {
+        return $this->className;
     }
 }

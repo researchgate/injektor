@@ -16,7 +16,7 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
     public static $prefix = '';
 
     /**
-     * @param string $fullClassName
+     * @param string $className
      * @param array $constructorArguments
      * @return object
      */

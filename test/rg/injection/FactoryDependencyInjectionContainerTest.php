@@ -28,10 +28,12 @@ class FactoryDependencyInjectionContainerTest extends \PHPUnit_Framework_TestCas
 }
 
 class FDICTestClassOne {
+
     /**
      * @var \rg\injection\FDICTestClassTwo
      */
     public $two;
+
     /**
      * @var \rg\injection\FDICTestClassThree
      */
@@ -79,12 +81,13 @@ class FDICTestClassOne {
     }
 }
 
-
 class FDICTestClassTwo {
+
     /**
      * @var \rg\injection\FDICTestClassThree
      */
     public $three;
+
     /**
      * @inject
      * @param FDICTestClassThree $three

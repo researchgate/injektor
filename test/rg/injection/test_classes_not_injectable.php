@@ -10,15 +10,18 @@
 namespace rg\injection;
 
 abstract class DICTestAbstractClass {
+
 }
 
 interface DICTestInterface {
+
 }
 
 /**
  * @implementedBy rg\injection\DICTestAnnotatedInterfaceImpl
  */
 interface DICTestAnnotatedInterface {
+
 }
 
 /**
@@ -41,6 +44,7 @@ interface DICTestProvidedInterface {
 interface DICTestProvidedInterfaceNoConfig {
 
 }
+
 /**
  * @providedBy rg\injection\DICSimpleTestProvider
  */

@@ -68,6 +68,19 @@ namespace rg\\injection\\generated;
 
 require_once '/RgInjectionFGTestClassSimpleFactory.php';
 
+class RgInjectionFGTestClassFourProxy extends \\rg\injection\FGTestClassFour
+{
+
+    public static function getProxyInstance(\$simple, \$injectedProperty)
+    {
+        \$instance = parent::getInstance(\$simple);
+        \$instance->injectedProperty = \$injectedProperty;
+        return \$instance;
+    }
+
+
+}
+
 class RgInjectionFGTestClassFourFactory
 {
 
@@ -80,25 +93,15 @@ class RgInjectionFGTestClassFourFactory
             return self::\$instance[\$singletonKey];
         }
 
-        \$methodParameters['simple'] = isset(\$parameters['simple']) ? \$parameters['simple'] : \\rg\injection\generated\\RgInjectionFGTestClassSimpleFactory::getInstance();
-        \$injectedProperty = \\rg\injection\generated\\RgInjectionFGTestClassSimpleFactory::getInstance();
-        \$simple = isset(\$methodParameters['simple']) ? \$methodParameters['simple'] : \\rg\injection\generated\\RgInjectionFGTestClassSimpleFactory::getInstance();
+        \$methodParameters['simple'] = array_key_exists('simple', \$parameters) ? \$parameters['simple'] : \\rg\injection\generated\\RgInjectionFGTestClassSimpleFactory::getInstance(array (
+        ));
+        \$injectedProperty = \\rg\injection\generated\\RgInjectionFGTestClassSimpleFactory::getInstance(array (
+        ));
+        \$simple = array_key_exists('simple', \$methodParameters) ? \$methodParameters['simple'] : \\rg\injection\generated\\RgInjectionFGTestClassSimpleFactory::getInstance(array (
+        ));
 
         \$instance = RgInjectionFGTestClassFourProxy::getProxyInstance(\$simple, \$injectedProperty);
         self::\$instance[\$singletonKey] = \$instance;
-        return \$instance;
-    }
-
-
-}
-
-class RgInjectionFGTestClassFourProxy extends \\rg\injection\FGTestClassFour
-{
-
-    public static function getProxyInstance(\$simple, \$injectedProperty)
-    {
-        \$instance = parent::getInstance(\$simple);
-        \$instance->injectedProperty = \$injectedProperty;
         return \$instance;
     }
 
@@ -121,10 +124,12 @@ class RgInjectionFGTestClassThreeFactory
 
     public static function getInstance(array \$parameters = array())
     {
-        \$methodParameters['foo'] = isset(\$parameters['foo']) ? \$parameters['foo'] : 'foo';
-        \$methodParameters['four'] = isset(\$parameters['four']) ? \$parameters['four'] : \\rg\\injection\\generated\\RgInjectionFGTestClassFourFactory::getInstance();
-        \$foo = isset(\$methodParameters['foo']) ? \$methodParameters['foo'] : 'foo';
-        \$four = isset(\$methodParameters['four']) ? \$methodParameters['four'] : \\rg\\injection\\generated\\RgInjectionFGTestClassFourFactory::getInstance();
+        \$methodParameters['foo'] = array_key_exists('foo', \$parameters) ? \$parameters['foo'] : 'foo';
+        \$methodParameters['four'] = array_key_exists('four', \$parameters) ? \$parameters['four'] : \\rg\\injection\\generated\\RgInjectionFGTestClassFourFactory::getInstance(array (
+        ));
+        \$foo = array_key_exists('foo', \$methodParameters) ? \$methodParameters['foo'] : 'foo';
+        \$four = array_key_exists('four', \$methodParameters) ? \$methodParameters['four'] : \\rg\\injection\\generated\\RgInjectionFGTestClassFourFactory::getInstance(array (
+        ));
 
         \$instance = new \\rg\\injection\\FGTestClassThree(\$foo, \$four);
         return \$instance;
@@ -133,10 +138,6 @@ class RgInjectionFGTestClassThreeFactory
     public static function callGetSomething(\$object)
     {
         \$methodParameters = array();
-
-
-
-
         \$result = \$object->getSomething();
 
 
@@ -163,8 +164,10 @@ class RgInjectionFGTestClassTwoFactory
 
     public static function getInstance(array \$parameters = array())
     {
-        \$methodParameters['three'] = isset(\$parameters['three']) ? \$parameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
-        \$three = isset(\$methodParameters['three']) ? \$methodParameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
+        \$methodParameters['three'] = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance(array (
+        ));
+        \$three = array_key_exists('three', \$methodParameters) ? \$methodParameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance(array (
+        ));
 
         \$instance = new \\rg\\injection\\FGTestClassTwo(\$three);
         return \$instance;
@@ -173,10 +176,6 @@ class RgInjectionFGTestClassTwoFactory
     public static function callGetSomething(\$object)
     {
         \$methodParameters = array();
-
-
-
-
         \$result = \$object->getSomething();
 
 
@@ -207,18 +206,14 @@ class RgInjectionFGTestBeforeAspectFactory
     public static function callExecute(\$object, array \$parameters = array())
     {
         \$methodParameters = array();
-
-        \$methodParameters['aspectArguments'] = isset(\$parameters['aspectArguments']) ? \$parameters['aspectArguments'] : null;
-        \$methodParameters['className'] = isset(\$parameters['className']) ? \$parameters['className'] : null;
-        \$methodParameters['functionName'] = isset(\$parameters['functionName']) ? \$parameters['functionName'] : null;
-        \$methodParameters['functionArguments'] = isset(\$parameters['functionArguments']) ? \$parameters['functionArguments'] : null;
-
-
-        \$aspectArguments = isset(\$methodParameters['aspectArguments']) ? \$methodParameters['aspectArguments'] : null;
-        \$className = isset(\$methodParameters['className']) ? \$methodParameters['className'] : null;
-        \$functionName = isset(\$methodParameters['functionName']) ? \$methodParameters['functionName'] : null;
-        \$functionArguments = isset(\$methodParameters['functionArguments']) ? \$methodParameters['functionArguments'] : null;
-
+        \$methodParameters['aspectArguments'] = array_key_exists('aspectArguments', \$parameters) ? \$parameters['aspectArguments'] : null;
+        \$methodParameters['className'] = array_key_exists('className', \$parameters) ? \$parameters['className'] : null;
+        \$methodParameters['functionName'] = array_key_exists('functionName', \$parameters) ? \$parameters['functionName'] : null;
+        \$methodParameters['functionArguments'] = array_key_exists('functionArguments', \$parameters) ? \$parameters['functionArguments'] : null;
+        \$aspectArguments = array_key_exists('aspectArguments', \$methodParameters) ? \$methodParameters['aspectArguments'] : null;
+        \$className = array_key_exists('className', \$methodParameters) ? \$methodParameters['className'] : null;
+        \$functionName = array_key_exists('functionName', \$methodParameters) ? \$methodParameters['functionName'] : null;
+        \$functionArguments = array_key_exists('functionArguments', \$methodParameters) ? \$methodParameters['functionArguments'] : null;
         \$result = \$object->execute(\$aspectArguments, \$className, \$functionName, \$functionArguments);
 
 
@@ -249,18 +244,14 @@ class RgInjectionFGTestAfterAspectFactory
     public static function callExecute(\$object, array \$parameters = array())
     {
         \$methodParameters = array();
-
-        \$methodParameters['aspectArguments'] = isset(\$parameters['aspectArguments']) ? \$parameters['aspectArguments'] : null;
-        \$methodParameters['className'] = isset(\$parameters['className']) ? \$parameters['className'] : null;
-        \$methodParameters['functionName'] = isset(\$parameters['functionName']) ? \$parameters['functionName'] : null;
-        \$methodParameters['result'] = isset(\$parameters['result']) ? \$parameters['result'] : null;
-
-
-        \$aspectArguments = isset(\$methodParameters['aspectArguments']) ? \$methodParameters['aspectArguments'] : null;
-        \$className = isset(\$methodParameters['className']) ? \$methodParameters['className'] : null;
-        \$functionName = isset(\$methodParameters['functionName']) ? \$methodParameters['functionName'] : null;
-        \$result = isset(\$methodParameters['result']) ? \$methodParameters['result'] : null;
-
+        \$methodParameters['aspectArguments'] = array_key_exists('aspectArguments', \$parameters) ? \$parameters['aspectArguments'] : null;
+        \$methodParameters['className'] = array_key_exists('className', \$parameters) ? \$parameters['className'] : null;
+        \$methodParameters['functionName'] = array_key_exists('functionName', \$parameters) ? \$parameters['functionName'] : null;
+        \$methodParameters['result'] = array_key_exists('result', \$parameters) ? \$parameters['result'] : null;
+        \$aspectArguments = array_key_exists('aspectArguments', \$methodParameters) ? \$methodParameters['aspectArguments'] : null;
+        \$className = array_key_exists('className', \$methodParameters) ? \$methodParameters['className'] : null;
+        \$functionName = array_key_exists('functionName', \$methodParameters) ? \$methodParameters['functionName'] : null;
+        \$result = array_key_exists('result', \$methodParameters) ? \$methodParameters['result'] : null;
         \$result = \$object->execute(\$aspectArguments, \$className, \$functionName, \$result);
 
 
@@ -284,6 +275,18 @@ require_once '/RgInjectionFGTestClassThreeFactory.php';
 require_once '/RgInjectionFGTestBeforeAspectFactory.php';
 require_once '/RgInjectionFGTestAfterAspectFactory.php';
 
+class RgInjectionFGTestClassOneProxy extends \\rg\\injection\\FGTestClassOne
+{
+
+    public function __construct(\$two, \$three, \$four)
+    {
+        \$this->four = \$four;
+        parent::__construct(\$two, \$three);
+    }
+
+
+}
+
 class RgInjectionFGTestClassOneFactory
 {
 
@@ -296,11 +299,16 @@ class RgInjectionFGTestClassOneFactory
             return self::\$instance[\$singletonKey];
         }
 
-        \$methodParameters['two'] = isset(\$parameters['two']) ? \$parameters['two'] : \\rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance();
-        \$methodParameters['three'] = isset(\$parameters['three']) ? \$parameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
-        \$four = \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
-        \$two = isset(\$methodParameters['two']) ? \$methodParameters['two'] : \\rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance();
-        \$three = isset(\$methodParameters['three']) ? \$methodParameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
+        \$methodParameters['two'] = array_key_exists('two', \$parameters) ? \$parameters['two'] : \\rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance(array (
+        ));
+        \$methodParameters['three'] = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance(array (
+        ));
+        \$four = \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance(array (
+        ));
+        \$two = array_key_exists('two', \$methodParameters) ? \$methodParameters['two'] : \\rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance(array (
+        ));
+        \$three = array_key_exists('three', \$methodParameters) ? \$methodParameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance(array (
+        ));
 
         \$instance = new RgInjectionFGTestClassOneProxy(\$two, \$three, \$four);
         self::\$instance[\$singletonKey] = \$instance;
@@ -310,10 +318,6 @@ class RgInjectionFGTestClassOneFactory
     public static function callGetFour(\$object)
     {
         \$methodParameters = array();
-
-
-
-
         \$result = \$object->getFour();
 
 
@@ -323,14 +327,14 @@ class RgInjectionFGTestClassOneFactory
     public static function callGetSomething(\$object, array \$parameters = array())
     {
         \$methodParameters = array();
-
-        \$methodParameters['two'] = isset(\$parameters['two']) ? \$parameters['two'] : \\rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance();
-        \$methodParameters['three'] = isset(\$parameters['three']) ? \$parameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
-
-
-        \$two = isset(\$methodParameters['two']) ? \$methodParameters['two'] : \\rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance();
-        \$three = isset(\$methodParameters['three']) ? \$methodParameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance();
-
+        \$methodParameters['two'] = array_key_exists('two', \$parameters) ? \$parameters['two'] : \\rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance(array (
+        ));
+        \$methodParameters['three'] = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance(array (
+        ));
+        \$two = array_key_exists('two', \$methodParameters) ? \$methodParameters['two'] : \\rg\\injection\\generated\\RgInjectionFGTestClassTwoFactory::getInstance(array (
+        ));
+        \$three = array_key_exists('three', \$methodParameters) ? \$methodParameters['three'] : \\rg\\injection\\generated\\RgInjectionFGTestClassThreeFactory::getInstance(array (
+        ));
         \$result = \$object->getSomething(\$two, \$three);
 
 
@@ -340,14 +344,10 @@ class RgInjectionFGTestClassOneFactory
     public static function callGetSomethingNotInjectible(\$object, array \$parameters = array())
     {
         \$methodParameters = array();
-
-        \$methodParameters['two'] = isset(\$parameters['two']) ? \$parameters['two'] : null;
-        \$methodParameters['three'] = isset(\$parameters['three']) ? \$parameters['three'] : null;
-
-
-        \$two = isset(\$methodParameters['two']) ? \$methodParameters['two'] : null;
-        \$three = isset(\$methodParameters['three']) ? \$methodParameters['three'] : null;
-
+        \$methodParameters['two'] = array_key_exists('two', \$parameters) ? \$parameters['two'] : null;
+        \$methodParameters['three'] = array_key_exists('three', \$parameters) ? \$parameters['three'] : null;
+        \$two = array_key_exists('two', \$methodParameters) ? \$methodParameters['two'] : null;
+        \$three = array_key_exists('three', \$methodParameters) ? \$methodParameters['three'] : null;
         \$result = \$object->getSomethingNotInjectible(\$two, \$three);
 
 
@@ -357,12 +357,8 @@ class RgInjectionFGTestClassOneFactory
     public static function callNoTypeHint(\$object, array \$parameters = array())
     {
         \$methodParameters = array();
-
-        \$methodParameters['foo'] = isset(\$parameters['foo']) ? \$parameters['foo'] : null;
-
-
-        \$foo = isset(\$methodParameters['foo']) ? \$methodParameters['foo'] : null;
-
+        \$methodParameters['foo'] = array_key_exists('foo', \$parameters) ? \$parameters['foo'] : null;
+        \$foo = array_key_exists('foo', \$methodParameters) ? \$methodParameters['foo'] : null;
         \$result = \$object->noTypeHint(\$foo);
 
 
@@ -372,9 +368,7 @@ class RgInjectionFGTestClassOneFactory
     public static function callMethodRestriction(\$object, array \$parameters = array())
     {
         \$methodParameters = array();
-
-        \$methodParameters['two'] = isset(\$parameters['two']) ? \$parameters['two'] : NULL;
-
+        \$methodParameters['two'] = array_key_exists('two', \$parameters) ? \$parameters['two'] : NULL;
         \$aspect = RgInjectionFGTestBeforeAspectFactory::getInstance();
         \$methodParameters = \$aspect->execute(array (
           'foo' => 'bar',
@@ -383,9 +377,7 @@ class RgInjectionFGTestClassOneFactory
         \$aspect = RgInjectionFGTestBeforeAspectFactory::getInstance();
         \$methodParameters = \$aspect->execute(array (
         ), 'rg\injection\FGTestClassOne', 'methodRestriction', \$methodParameters);
-
-        \$two = isset(\$methodParameters['two']) ? \$methodParameters['two'] : NULL;
-
+        \$two = array_key_exists('two', \$methodParameters) ? \$methodParameters['two'] : NULL;
         \$result = \$object->methodRestriction(\$two);
 
         \$aspect = RgInjectionFGTestAfterAspectFactory::getInstance();
@@ -398,18 +390,6 @@ class RgInjectionFGTestClassOneFactory
         ), 'rg\injection\FGTestClassOne', 'methodRestriction', \$result);
 
         return \$result;
-    }
-
-
-}
-
-class RgInjectionFGTestClassOneProxy extends \\rg\\injection\\FGTestClassOne
-{
-
-    public function __construct(\$two, \$three, \$four)
-    {
-        \$this->four = \$four;
-        parent::__construct(\$two, \$three);
     }
 
 

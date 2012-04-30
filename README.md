@@ -1,9 +1,15 @@
 rg\\injection
-============
+=============
 
 rg\\injection is a sophisticated dependency injection container for PHP that was inspired by Guice.
 Unlike other reflection based containers rg\\injection includes a factory class generator that you can use to prevent
 the use of reflection on production.
+
+ToDo
+====
+
+- Migrate to annotation support from doctrine commons instead of custom implementation
+- Clean up FactoryGenerator
 
 Features
 ========
