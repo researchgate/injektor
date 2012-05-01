@@ -1,5 +1,5 @@
 <?php
-namespace rg\injection;
+namespace rg\injection\generators;
 /*
  * This file is part of rg\injection.
  *
@@ -9,6 +9,8 @@ namespace rg\injection;
  * file that was distributed with this source code.
  */
 use Zend\Code\Generator;
+use rg\injection\Configuration;
+use rg\injection\FactoryDependencyInjectionContainer;
 
 class FileGenerator {
 
@@ -156,7 +158,7 @@ class FileGenerator {
                     }
                     $body .= $injectionParameter->getPreProcessingBody();
                     $bottomBody .= $injectionParameter->getPostProcessingBody();
-                } catch (InjectionException $e) {
+                } catch (\Exception $e) {
                     $body .= $injectionParameter->getDefaultPreProcessingBody();
                     $bottomBody .= $injectionParameter->getDefaultPostProcessingBody();
                 }
@@ -275,11 +277,11 @@ class FileGenerator {
                     $this->constructorArguments[] = $propertyName;
                     $this->constructorArgumentStringParts[] = '$' . $propertyName;
                     $body .= $injectionProperty->getProcessingBody();
-                } catch (InjectionException $e) {
+                } catch (\Exception $e) {
                     unset($this->injectableProperties[$key]);
                 }
             }
-        } catch (InjectionException $e) {
+        } catch (\Exception $e) {
         }
         return $body;
     }
@@ -371,7 +373,7 @@ class FileGenerator {
                 }
                 $body .= $injectionParameter->getPreProcessingBody();
                 $bottomBody .= $injectionParameter->getPostProcessingBody();
-            } catch (InjectionException $e) {
+            } catch (\Exception $e) {
                 $body .= $injectionParameter->getDefaultPreProcessingBody();
                 $bottomBody .= $injectionParameter->getDefaultPostProcessingBody();
             }

@@ -7,7 +7,7 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace rg\injection;
+namespace rg\injection\generators;
 
 class WritingFactoryGenerator extends FactoryGenerator {
 

@@ -9,6 +9,8 @@
  */
 namespace rg\injection;
 
+use rg\injection\generators\WritingFactoryGenerator;
+
 require_once 'DependencyInjectionContainerTest.php';
 
 class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionContainerTest {
@@ -31,6 +33,7 @@ class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionCon
         $fileReflection = new \Zend\Code\Reflection\FileReflection(__DIR__ . '/test_classes.php');
         $classes = $fileReflection->getClasses();
         foreach ($classes as $class) {
+            /** @var \ReflectionClass $class */
             $generator->processFileForClass($class->getName());
         }
 

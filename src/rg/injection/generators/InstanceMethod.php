@@ -17,7 +17,7 @@ class InstanceMethod extends \Zend\Code\Generator\MethodGenerator {
     private $singletonSupport = false;
 
     /**
-     * @var null|\rg\injection\FactoryGenerator
+     * @var \rg\injection\generators\FactoryGenerator
      */
     private $factoryGenerator;
 
@@ -27,9 +27,9 @@ class InstanceMethod extends \Zend\Code\Generator\MethodGenerator {
     private $instanceParameters = array();
 
     /**
-     * @param null|\rg\injection\FactoryGenerator $factoryGenerator
+     * @param \rg\injection\generators\FactoryGenerator $factoryGenerator
      */
-    public function __construct(\rg\injection\FactoryGenerator $factoryGenerator) {
+    public function __construct(FactoryGenerator $factoryGenerator) {
         parent::__construct('getInstance');
 
         $this->factoryGenerator = $factoryGenerator;
