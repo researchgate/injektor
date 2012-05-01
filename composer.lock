@@ -2,14 +2,12 @@
     "hash": "ede0b7907f4cd5e9dc69156159ab83a0",
     "packages": [
         {
-            "package": "lapistano/proxy-object",
-            "version": "dev-master",
-            "source-reference": "897189eb1c0debd24e715b75f916e5a02d235678"
-        },
-        {
             "package": "pear-zf2/Zend_Code",
             "version": "2.0.0beta3"
         }
     ],
-    "aliases": []
+    "packages-dev": null,
+    "aliases": [
+
+    ]
 }
