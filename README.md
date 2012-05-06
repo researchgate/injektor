@@ -5,12 +5,6 @@ rg\\injection is a sophisticated dependency injection container for PHP that was
 Unlike other reflection based containers rg\\injection includes a factory class generator that you can use to prevent
 the use of reflection on production.
 
-ToDo
-====
-
-- Migrate to annotation support from doctrine commons instead of custom implementation
-- Clean up FactoryGenerator
-
 Features
 ========
 
@@ -295,6 +289,44 @@ Configuration:
             )
         )
     )
+
+Alternatively you can also configure this with annotations
+
+      class Foo {
+
+         /**
+          * @inject
+          * @var Bar {"foo":456,"buzz":"content"}
+          */
+         protected $propertyInjection;
+
+
+         /**
+          * @inject
+          * @param Bar $bar {"foo":123,"buzz":"content"}
+          */
+         public function __construct(Bar $bar) {
+
+         }
+      }
+
+      /**
+       * @singleton
+       */
+      class Bar {
+        private function __construct() {
+
+        }
+
+        /**
+         * @inject
+         */
+        public static function getInstance($foo, $buzz) {
+
+        }
+      }
+
+      $dic->getInstanceOfClass('Foo');
 
 Pass additional parameters on runtime
 -------------------------------------
