@@ -91,7 +91,7 @@ class RgInjectionGeneratorsFGTestClassFourFactory
 
     public static function getInstance(array \$parameters = array())
     {
-        \$singletonKey = json_encode(\$parameters);
+        \$singletonKey = json_encode(\$parameters) . "#" . getmypid();
         if (isset(self::\$instance[\$singletonKey])) {
             return self::\$instance[\$singletonKey];
         }
@@ -297,7 +297,7 @@ class RgInjectionGeneratorsFGTestClassOneFactory
 
     public static function getInstance(array \$parameters = array())
     {
-        \$singletonKey = json_encode(\$parameters);
+        \$singletonKey = json_encode(\$parameters) . "#" . getmypid();
         if (isset(self::\$instance[\$singletonKey])) {
             return self::\$instance[\$singletonKey];
         }

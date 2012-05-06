@@ -103,7 +103,6 @@ class FileGenerator {
 
         $arguments = array();
 
-
         $constructorMethodReflection = null;
         if ($this->dic->isSingleton($classReflection)) {
             $constructorMethodReflection = $classReflection->getMethod('getInstance');
@@ -122,7 +121,10 @@ class FileGenerator {
             $property->setStatic(true);
             $factoryClass->setProperty($property);
 
-            $instanceMethod->addSingletonSupport();
+            $body = '$singletonKey = json_encode($parameters) . "#" . getmypid();' . PHP_EOL;
+            $body .= 'if (isset(self::$instance[$singletonKey])) {' . PHP_EOL;
+            $body .= '    return self::$instance[$singletonKey];' . PHP_EOL;
+            $body .= '}' . PHP_EOL . PHP_EOL;
         }
         $bottomBody = '';
 
@@ -144,8 +146,6 @@ class FileGenerator {
                     $this->config,
                     $this->dic
                 );
-
-                $instanceMethod->addInstanceParameter($injectionParameter);
 
                 $argumentName = $argument->name;
 

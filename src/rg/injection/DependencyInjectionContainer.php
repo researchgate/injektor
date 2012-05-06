@@ -55,20 +55,6 @@ class DependencyInjectionContainer {
     public function __construct(Configuration $config = null) {
         $this->config = $config ? : new Configuration('', '');
 
-        $className = get_class($this);
-
-        $this->instances[$className . json_encode(array())] = $this;
-        $this->config->setClassConfig($className, array(
-            'singleton' => true
-        ));
-
-        if ($className !== __CLASS__) {
-            $this->instances[__CLASS__ . json_encode(array())] = $this;
-            $this->config->setClassConfig(__CLASS__, array(
-                'singleton' => true
-            ));
-        }
-
         if (!self::$defaultInstance) {
             self::$defaultInstance = $this;
         }
@@ -78,6 +64,7 @@ class DependencyInjectionContainer {
 
     /**
      * @static
+     * @throws InjectionException
      * @return \rg\injection\DependencyInjectionContainer
      */
     public static function getDefaultInstance() {
@@ -89,7 +76,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \Closure $loggerFunction
+     * @param closure $loggerFunction
      */
     public function setLoggerFunction($loggerFunction) {
         $this->loggerFunction = $loggerFunction;
@@ -111,6 +98,10 @@ class DependencyInjectionContainer {
         $this->iterationDepth++;
 
         $fullClassName = trim($fullClassName, '\\');
+
+        if ($fullClassName === __CLASS__) {
+            return $this->getDefaultInstance();
+        }
 
         $this->log('Trying to get instance of [' . $fullClassName . ']');
 
@@ -138,7 +129,7 @@ class DependencyInjectionContainer {
 
         $classReflection = $this->getClassReflection($fullClassName);
 
-        $singletonKey = $fullClassName . json_encode($constructorArguments);
+        $singletonKey = $this->getSingletonKey($fullClassName, $constructorArguments);
 
         if ($this->isConfiguredAsSingleton($classConfig, $classReflection) &&
             isset($this->instances[$singletonKey])
@@ -216,6 +207,15 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @param string $fullClassName
+     * @param array $constructorArguments
+     * @return string
+     */
+    private function getSingletonKey($fullClassName, $constructorArguments) {
+        return $fullClassName . json_encode($constructorArguments) . '#' . getmypid();
+    }
+
+    /**
      * @param array $classConfig
      * @return object
      */
@@ -286,6 +286,7 @@ class DependencyInjectionContainer {
 
     /**
      * @param \ReflectionClass $classReflection
+     * @throws InjectionException
      * @return array
      */
     public function getInjectableProperties($classReflection) {
@@ -422,6 +423,7 @@ class DependencyInjectionContainer {
 
     /**
      * @param \ReflectionClass $classReflection
+     * @param null $name
      * @return string
      */
     private function getAnnotatedImplementationClass(\ReflectionClass $classReflection, $name = null) {
@@ -623,6 +625,7 @@ class DependencyInjectionContainer {
 
     /**
      * @param \ReflectionMethod $methodReflection
+     * @throws \RuntimeException
      * @return
      */
     public function checkAllowedHttpMethodAnnotation(\ReflectionMethod $methodReflection) {
@@ -673,6 +676,7 @@ class DependencyInjectionContainer {
     /**
      * @param \ReflectionMethod $methodReflection
      * @param array $defaultArguments
+     * @throws InjectionException
      * @return array
      */
     public function getMethodArguments(\ReflectionMethod $methodReflection, array $defaultArguments = array()) {
@@ -767,8 +771,8 @@ class DependencyInjectionContainer {
      * @param array $classConfig
      * @param string$docComment
      * @param string $argumentName
+     * @param array $additionalArgumentsForProvider
      * @return null|object
-     * @return array $additionalArgumentsForProvider
      */
     public function getNamedProvidedInstance($argumentClass, array $classConfig, $docComment, $argumentName = null, $additionalArgumentsForProvider = array()) {
         $implementationName = $this->getImplementationName($docComment, $argumentName);
