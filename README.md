@@ -5,6 +5,133 @@ rg\\injection is a sophisticated dependency injection container for PHP that was
 Unlike other reflection based containers rg\\injection includes a factory class generator that you can use to prevent
 the use of reflection on production.
 
+Installation
+============
+
+To use rg\\injection in your project, just install it with Composer (http://getcomposer.org/) from the Packagist
+repository (http://packagist.org/).
+
+Usage
+=====
+
+After you installed rg\\injection you can use it like this:
+
+  $configuration = new \rg\injection\Configuration($pathToConfigFile, $pathToFactoryDirectory);
+  $dic = new \rg\injection\DependencyInjectionContainer($configuration);
+
+  $instance = $dic->getInstanceOfClass('ClassName');
+  $result = $dic->callMethodOnObject($instance, 'methodName');
+
+For more details on the specific features of rg\\injection see below.
+
+If you need an instance of the DependencyInjectionContainer with this configuration later on, you can get it with
+
+  $dic = \rg\injection\DependencyInjectionContainer::getDefaultInstance();
+
+If you use some kind of MVC framework it is recommended to include rg\\injection in your front controller to create
+your controller objects and call methods on them.
+
+Generating Factories
+====================
+
+By default rg\\injection relies heavily on Reflection which is fine for your development environment but would slow down
+your production environment unnecessarily. So you should use the built in possiblity to use generated factory classes
+instead. In order to do this you have to generate these factories before deploying your project.
+
+First you have to use the \rg\injection\FactoryDependencyInjectionContainer class in your code:
+
+  $configuration = new \rg\injection\Configuration($pathToConfigFile, $pathToFactoryDirectory);
+  $dic = new \rg\injection\FactoryDependencyInjectionContainer($configuration);
+
+Later on you still can get the created instance of \rg\injection\FactoryDependencyInjectionContainer by
+
+  $dic = \rg\injection\DependencyInjectionContainer::getDefaultInstance();
+
+If no factories are present \rg\injection\FactoryDependencyInjectionContainer falls back to Reflection.
+
+To generate factories you have to write a small script that iterates over your PHP files and create factories for each
+of them. Here is an example of such a script based on the Symfony Console Component:
+
+    use Symfony\Component\Console\Input\InputInterface;
+    use Symfony\Component\Console\Output\OutputInterface;
+    use rg\injection\WritingFactoryGenerator;
+
+    class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Command\Command {
+
+        /**
+         * @var \rg\injection\DependencyInjectionContainer
+         */
+        private $dic;
+
+        /**
+         * @var \rg\injection\WritingFactoryGenerator
+         */
+        private $factoryGenerator;
+
+        /**
+         * @var string
+         */
+        private $root;
+
+        protected function configure() {
+            $this->setDescription('generates factories for dependency injection container');
+            $this->setHelp('generates factories for dependency injection container');
+        }
+
+        protected function execute(InputInterface $input, OutputInterface $output) {
+            $output->writeln('Generating Factories');
+
+            $this->root = '/path/to/your/project';
+
+            $factoryPath = $this->root . '/folder/for/generated/factories';
+
+            if (!file_exists($factoryPath)) {
+                mkdir($factoryPath, 0777, true);
+            }
+
+            $this->dic = \rg\injection\DependencyInjectionContainer::getDefaultInstance();
+
+            $this->factoryGenerator = new WritingFactoryGenerator($this->dic->getConfig(), $factoryPath);
+
+            $this->factoryGenerator->cleanUpGenerationDirectory($factoryPath);
+
+            $this->processAllDirectories($output);
+        }
+
+        private function processAllDirectories(OutputInterface $output) {
+            $this->processDirectory($this->root . DIRECTORY_SEPARATOR . 'folderWithPhpClasses', $output);
+        }
+
+        private function processDirectory($directory, OutputInterface $output) {
+            $output->writeln('Directory: ' . $directory);
+            $directoryIterator = new \RecursiveDirectoryIterator($directory);
+            $iterator = new \RecursiveIteratorIterator($directoryIterator);
+            $regexIterator = new \RegexIterator($iterator, '/^.+\.php$/i', \RecursiveRegexIterator::GET_MATCH);
+            foreach ($regexIterator as $file) {
+                $this->processFile($file[0], $output);
+            }
+        }
+
+        private function processFile($fullpath, OutputInterface $output) {
+            $output->writeln('Process file [' . $fullpath . ']');
+
+            require_once $fullpath;
+
+            $fileReflection = new \Zend\Code\Reflection\FileReflection($fullpath);
+            $classes = $fileReflection->getClasses();
+            foreach ($classes as $class) {
+                $this->processClass($class);
+            }
+        }
+
+        private function processClass(\Zend\Code\Reflection\ClassReflection $class) {
+            if (!$class->isInstantiable()) {
+                return;
+            }
+            $this->factoryGenerator->processFileForClass($class->name);
+        }
+    }
+
 Features
 ========
 
