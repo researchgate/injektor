@@ -8,5 +8,6 @@ php:
 before_script:
   - wget -nc http://getcomposer.org/composer.phar
   - php composer.phar install
+  - chmod -R 777 test/rg/injektor/_factories/
 
 script: phpunit
