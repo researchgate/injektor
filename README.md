@@ -16,17 +16,17 @@ Usage
 
 After you installed rg\\injektor you can use it like this:
 
-  $configuration = new \rg\injektor\Configuration($pathToConfigFile, $pathToFactoryDirectory);
-  $dic = new \rg\injektor\DependencyInjectionContainer($configuration);
+    $configuration = new \rg\injektor\Configuration($pathToConfigFile, $pathToFactoryDirectory);
+    $dic = new \rg\injektor\DependencyInjectionContainer($configuration);
 
-  $instance = $dic->getInstanceOfClass('ClassName');
-  $result = $dic->callMethodOnObject($instance, 'methodName');
+    $instance = $dic->getInstanceOfClass('ClassName');
+    $result = $dic->callMethodOnObject($instance, 'methodName');
 
 For more details on the specific features of rg\\injektor see below.
 
 If you need an instance of the DependencyInjectionContainer with this configuration later on, you can get it with
 
-  $dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
+    $dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
 
 If you use some kind of MVC framework it is recommended to include rg\\injektor in your front controller to create
 your controller objects and call methods on them.
@@ -40,12 +40,12 @@ instead. In order to do this you have to generate these factories before deployi
 
 First you have to use the \rg\injektor\FactoryDependencyInjectionContainer class in your code:
 
-  $configuration = new \rg\injektor\Configuration($pathToConfigFile, $pathToFactoryDirectory);
-  $dic = new \rg\injektor\FactoryDependencyInjectionContainer($configuration);
+    $configuration = new \rg\injektor\Configuration($pathToConfigFile, $pathToFactoryDirectory);
+    $dic = new \rg\injektor\FactoryDependencyInjectionContainer($configuration);
 
 Later on you still can get the created instance of \rg\injektor\FactoryDependencyInjectionContainer by
 
-  $dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
+    $dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
 
 If no factories are present \rg\injektor\FactoryDependencyInjectionContainer falls back to Reflection.
 
