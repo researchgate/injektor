@@ -1,8 +1,8 @@
 {
-    "name": "rg/injection",
+    "name": "rg/injektor",
     "description": "Dependency Injection container inspired by google-guice",
     "keywords": ["dependency", "injection"],
-    "homepage": "http://www.github.com/researchgate/injection",
+    "homepage": "http://www.github.com/researchgate/injektor",
     "type": "library",
     "license": "Apache 2.0",
     "authors": [
