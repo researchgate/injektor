@@ -45,7 +45,6 @@ class FactoryGeneratorTest extends \PHPUnit_Framework_TestCase {
 'rg\\injektor\\generators\\FGTestClassSimple' => <<<EOF
 <?php
 
-/** @namespace */
 namespace rg\injektor\generated;
 
 class RgInjektorGeneratorsFGTestClassSimpleFactory
@@ -66,7 +65,6 @@ EOF
 'rg\\injektor\\generators\\FGTestClassFour' => <<<EOF
 <?php
 
-/** @namespace */
 namespace rg\\injektor\\generated;
 
 require_once '/RgInjektorGeneratorsFGTestClassSimpleFactory.php';
@@ -117,7 +115,6 @@ EOF
 'rg\\injektor\\generators\\FGTestClassThree' => <<<EOF
 <?php
 
-/** @namespace */
 namespace rg\\injektor\\generated;
 
 require_once '/RgInjektorGeneratorsFGTestClassFourFactory.php';
@@ -157,7 +154,6 @@ EOF
 'rg\\injektor\\generators\\FGTestClassTwo' => <<<EOF
 <?php
 
-/** @namespace */
 namespace rg\\injektor\\generated;
 
 require_once '/RgInjektorGeneratorsFGTestClassThreeFactory.php';
@@ -194,7 +190,6 @@ EOF
 'rg\\injektor\\generators\\FGTestBeforeAspect' => <<<EOF
 <?php
 
-/** @namespace */
 namespace rg\injektor\generated;
 
 class RgInjektorGeneratorsFGTestBeforeAspectFactory
@@ -232,7 +227,6 @@ EOF
 'rg\\injektor\\generators\\FGTestAfterAspect' => <<<EOF
 <?php
 
-/** @namespace */
 namespace rg\injektor\generated;
 
 class RgInjektorGeneratorsFGTestAfterAspectFactory
@@ -270,7 +264,6 @@ EOF
 'rg\\injektor\\generators\\FGTestClassOne' => <<<EOF
 <?php
 
-/** @namespace */
 namespace rg\\injektor\\generated;
 
 require_once '/RgInjektorGeneratorsFGTestClassTwoFactory.php';

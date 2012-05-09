@@ -12,15 +12,9 @@
             "homepage": "http://www.bastianhofmann.de"
         }
     ],
-    "repositories":[
-        {
-            "type":"pear",
-            "url":"http://packages.zendframework.com"
-        }
-    ],
     "require": {
         "php":">=5.3.2",
-        "pear-zf2/Zend_Code":"*"
+        "zendframework/zendframework":"*"
     },
     "autoload": {
         "psr-0": { "rg": "src/" }

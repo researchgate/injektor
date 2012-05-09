@@ -1,9 +1,10 @@
 {
-    "hash": "34c99218f3855aa16baa8839abfe09b8",
+    "hash": "a45eae22fccf7036ee89115d74db8318",
     "packages": [
         {
-            "package": "pear-zf2/Zend_Code",
-            "version": "2.0.0beta3"
+            "package": "zendframework/zendframework",
+            "version": "dev-master",
+            "source-reference": "bf57146353f66e84a6a332c4f01fdd77c3b3b616"
         }
     ],
     "packages-dev": null,
