@@ -1,70 +1,70 @@
-rg\\injection
+rg\\injektor
 =============
 
-rg\\injection is a sophisticated dependency injection container for PHP that was inspired by Guice.
-Unlike other reflection based containers rg\\injection includes a factory class generator that you can use to prevent
+rg\\injektor is a sophisticated dependency injection container for PHP that was inspired by Guice.
+Unlike other reflection based containers rg\\injektor includes a factory class generator that you can use to prevent
 the use of reflection on production.
 
 Installation
 ============
 
-To use rg\\injection in your project, just install it with Composer (http://getcomposer.org/) from the Packagist
+To use rg\\injektor in your project, just install it with Composer (http://getcomposer.org/) from the Packagist
 repository (http://packagist.org/).
 
 Usage
 =====
 
-After you installed rg\\injection you can use it like this:
+After you installed rg\\injektor you can use it like this:
 
-  $configuration = new \rg\injection\Configuration($pathToConfigFile, $pathToFactoryDirectory);
-  $dic = new \rg\injection\DependencyInjectionContainer($configuration);
+  $configuration = new \rg\injektor\Configuration($pathToConfigFile, $pathToFactoryDirectory);
+  $dic = new \rg\injektor\DependencyInjectionContainer($configuration);
 
   $instance = $dic->getInstanceOfClass('ClassName');
   $result = $dic->callMethodOnObject($instance, 'methodName');
 
-For more details on the specific features of rg\\injection see below.
+For more details on the specific features of rg\\injektor see below.
 
 If you need an instance of the DependencyInjectionContainer with this configuration later on, you can get it with
 
-  $dic = \rg\injection\DependencyInjectionContainer::getDefaultInstance();
+  $dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
 
-If you use some kind of MVC framework it is recommended to include rg\\injection in your front controller to create
+If you use some kind of MVC framework it is recommended to include rg\\injektor in your front controller to create
 your controller objects and call methods on them.
 
 Generating Factories
 ====================
 
-By default rg\\injection relies heavily on Reflection which is fine for your development environment but would slow down
+By default rg\\injektor relies heavily on Reflection which is fine for your development environment but would slow down
 your production environment unnecessarily. So you should use the built in possiblity to use generated factory classes
 instead. In order to do this you have to generate these factories before deploying your project.
 
-First you have to use the \rg\injection\FactoryDependencyInjectionContainer class in your code:
+First you have to use the \rg\injektor\FactoryDependencyInjectionContainer class in your code:
 
-  $configuration = new \rg\injection\Configuration($pathToConfigFile, $pathToFactoryDirectory);
-  $dic = new \rg\injection\FactoryDependencyInjectionContainer($configuration);
+  $configuration = new \rg\injektor\Configuration($pathToConfigFile, $pathToFactoryDirectory);
+  $dic = new \rg\injektor\FactoryDependencyInjectionContainer($configuration);
 
-Later on you still can get the created instance of \rg\injection\FactoryDependencyInjectionContainer by
+Later on you still can get the created instance of \rg\injektor\FactoryDependencyInjectionContainer by
 
-  $dic = \rg\injection\DependencyInjectionContainer::getDefaultInstance();
+  $dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
 
-If no factories are present \rg\injection\FactoryDependencyInjectionContainer falls back to Reflection.
+If no factories are present \rg\injektor\FactoryDependencyInjectionContainer falls back to Reflection.
 
 To generate factories you have to write a small script that iterates over your PHP files and create factories for each
 of them. Here is an example of such a script based on the Symfony Console Component:
 
     use Symfony\Component\Console\Input\InputInterface;
     use Symfony\Component\Console\Output\OutputInterface;
-    use rg\injection\WritingFactoryGenerator;
+    use rg\injektor\WritingFactoryGenerator;
 
     class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Command\Command {
 
         /**
-         * @var \rg\injection\DependencyInjectionContainer
+         * @var \rg\injektor\DependencyInjectionContainer
          */
         private $dic;
 
         /**
-         * @var \rg\injection\WritingFactoryGenerator
+         * @var \rg\injektor\WritingFactoryGenerator
          */
         private $factoryGenerator;
 
@@ -89,7 +89,7 @@ of them. Here is an example of such a script based on the Symfony Console Compon
                 mkdir($factoryPath, 0777, true);
             }
 
-            $this->dic = \rg\injection\DependencyInjectionContainer::getDefaultInstance();
+            $this->dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
 
             $this->factoryGenerator = new WritingFactoryGenerator($this->dic->getConfig(), $factoryPath);
 
@@ -266,7 +266,7 @@ Using Provider Classes
 
       }
 
-      class BarProvider implements rg\injection\Provider {
+      class BarProvider implements rg\injektor\Provider {
           public function get() {
               return new BarImpl();
           }
@@ -306,7 +306,7 @@ Passing fixed data to providers
 
       }
 
-      class BarProvider implements rg\injection\Provider {
+      class BarProvider implements rg\injektor\Provider {
 
           /**
            * @inject
@@ -628,7 +628,7 @@ You can also configure this directly with annotations
 
      }
 
-     class BarProvider implements rg\injection\Provider {
+     class BarProvider implements rg\injektor\Provider {
         private $name;
 
         public function __construct($name) {
