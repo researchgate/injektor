@@ -1,0 +1,1 @@
+This folder is used during unit tests for test factory generation.
