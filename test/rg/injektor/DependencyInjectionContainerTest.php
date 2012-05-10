@@ -748,6 +748,35 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('barf', $instance->methodClass->two);
     }
 
+    public function testNamedProvidedByPropertyInjectionDefault() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICProvidedTestClassNoTypeHintNamedUserDefault');
+
+        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHintNamedUserDefault', $instance);
+
+        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHint', $instance->provided);
+
+        $this->assertEquals('1f', $instance->provided->one);
+        $this->assertEquals('2f', $instance->provided->two);
+    }
+
+    public function testNamedProvidedByPropertyInjectionNonDefault() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICProvidedTestClassNoTypeHintNamedUserSomeName');
+
+        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHintNamedUserSomeName', $instance);
+
+        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHint', $instance->provided);
+
+        $this->assertEquals('3f', $instance->provided->one);
+        $this->assertEquals('4f', $instance->provided->two);
+    }
     /**
      * @param Configuration $config
      * @return DependencyInjectionContainer

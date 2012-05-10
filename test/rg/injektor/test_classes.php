@@ -177,6 +177,40 @@ class DICProvidedTestClassNoTypeHint {
     }
 }
 
+class DICProvidedTestClassNoTypeHintNamedUserDefault {
+    /**
+     * @inject
+     * @var \rg\injektor\DICProvidedTestClassNoTypeHintNamed
+     */
+    public $provided;
+}
+
+class DICProvidedTestClassNoTypeHintNamedUserSomeName {
+
+    /**
+     * @inject
+     * @var \rg\injektor\DICProvidedTestClassNoTypeHintNamed
+     * @named someName
+     */
+    public $provided;
+}
+
+/**
+ * @providedBy default \rg\injektor\DICProvidedTestClassNoTypeHintProvider {"one":1,"two":2}
+ * @providedBy someName \rg\injektor\DICProvidedTestClassNoTypeHintProvider {"one":3,"two":4}
+ */
+class DICProvidedTestClassNoTypeHintNamed {
+
+    public $one;
+
+    public $two;
+
+    public function __construct($one, $two) {
+        $this->one = $one;
+        $this->two = $two;
+    }
+}
+
 class DICTestClassArgumentsWithParameters {
 
     public $class;

@@ -319,8 +319,12 @@ class DependencyInjectionContainer {
         $arguments = $this->getParamsFromPropertyTypeHint($property);
 
         $argumentClassConfig = $this->config->getClassConfig($fullClassName);
-        $propertyInstance = $this->getNamedProvidedInstance($fullClassName, $argumentClassConfig, $property->getDocComment(), $property->name, $arguments);
+        $propertyInstance = $this->getNamedProvidedInstance($fullClassName, $argumentClassConfig, $property->getDocComment(), null, $arguments);
         if (!$propertyInstance) {
+            $namedClass = $this->getNamedClassOfArgument($fullClassName, $property->getDocComment());
+            if ($namedClass) {
+                $fullClassName = $namedClass;
+            }
             $propertyInstance = $this->getInstanceOfClass($fullClassName, is_array($arguments) ? $arguments : array());
         }
         $property->setAccessible(true);
@@ -334,13 +338,7 @@ class DependencyInjectionContainer {
      * @throws InjectionException
      */
     public function getClassFromVarTypeHint($docComment) {
-        $class = $this->annotationReader->getClassFromVarTypeHint($docComment);
-        $propertyClassConfig = $this->config->getClassConfig($class);
-        $namedClass = $this->getNamedClassOfArgument($class, $propertyClassConfig, $docComment);
-        if ($namedClass) {
-            return $namedClass;
-        }
-        return $class;
+        return $this->annotationReader->getClassFromVarTypeHint($docComment);
     }
 
     /**
@@ -741,7 +739,7 @@ class DependencyInjectionContainer {
             return $providedInstance;
         }
 
-        $namedClassName = $this->getNamedClassOfArgument($argument->getClass()->name, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
+        $namedClassName = $this->getNamedClassOfArgument($argument->getClass()->name, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
 
         if ($namedClassName) {
             return $this->getInstanceOfClass($namedClassName, $arguments);
@@ -782,16 +780,17 @@ class DependencyInjectionContainer {
 
     /**
      * @param string $argumentClass
-     * @param array $classConfig
      * @param string $docComment
      * @param string $argumentName
      * @return string
      */
-    public function getNamedClassOfArgument($argumentClass, array $classConfig, $docComment, $argumentName = null) {
+    public function getNamedClassOfArgument($argumentClass, $docComment, $argumentName = null) {
+        $argumentClassConfig = $this->config->getClassConfig($argumentClass);
+
         $implementationName = $this->getImplementationName($docComment, $argumentName);
 
         if ($implementationName) {
-            return $this->getImplementingClassBecauseOfName($argumentClass, $classConfig, $implementationName);
+            return $this->getImplementingClassBecauseOfName($argumentClass, $argumentClassConfig, $implementationName);
         }
         return null;
     }
