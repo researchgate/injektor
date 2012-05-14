@@ -219,8 +219,7 @@ class FileGenerator {
         foreach ($methods as $method) {
             /** @var \ReflectionMethod $method */
             if ($method->isPublic() &&
-                substr($method->name, 0, 2) !== '__' &&
-                !$method->isStatic()
+                substr($method->name, 0, 2) !== '__'
             ) {
                 $factoryMethod = $this->getFactoryMethod($method, $classConfig);
                 $factoryClass->setMethod($factoryMethod);
