@@ -106,6 +106,19 @@ class RgInjektorGeneratorsFGTestClassFourFactory
         return \$instance;
     }
 
+    public static function callGetInstance(\$object, array \$parameters = array())
+    {
+        \$methodParameters = array();
+        \$methodParameters['simple'] = array_key_exists('simple', \$parameters) ? \$parameters['simple'] : \\rg\injektor\generated\RgInjektorGeneratorsFGTestClassSimpleFactory::getInstance(array (
+        ));
+        \$simple = array_key_exists('simple', \$methodParameters) ? \$methodParameters['simple'] : \\rg\injektor\generated\RgInjektorGeneratorsFGTestClassSimpleFactory::getInstance(array (
+        ));
+        \$result = \$object->getInstance(\$simple);
+
+
+        return \$result;
+    }
+
 
 }
 
