@@ -112,7 +112,7 @@ class InjectionParameter {
             } catch (InjectionException $e) {
             }
             if ($argumentClass === 'rg\injektor\DependencyInjectionContainer') {
-                $this->defaultValue =  '\\' . $argumentClass . '::getInstance()';
+                $this->defaultValue =  '\\' . $argumentClass . '::getDefaultInstance()';
             } else {
                 $providerClassName = $this->dic->getProviderClassName($this->config->getClassConfig($argumentClass), new \ReflectionClass($argumentClass),
                     $this->dic->getImplementationName($this->docComment, $this->nameForAnnotationParsing));
