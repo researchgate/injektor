@@ -69,6 +69,10 @@ class InjectionParameter {
         $this->analyze();
     }
 
+    public function getName() {
+        return $this->name;
+    }
+
     public function getPreProcessingBody() {
         return '$methodParameters[\'' . $this->name . '\'] = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
     }

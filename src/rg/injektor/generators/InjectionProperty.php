@@ -50,7 +50,7 @@ class InjectionProperty extends InjectionParameter {
     }
 
     public function getProcessingBody() {
-        return '$' . $this->name . ' = ' . $this->defaultValue . ';' . PHP_EOL;
+        return '$this->' . $this->name . ' = ' . $this->defaultValue . ';' . PHP_EOL;
     }
 
 }

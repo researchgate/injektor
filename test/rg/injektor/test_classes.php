@@ -411,7 +411,7 @@ class DICTestSingleton {
      * @return Singleton
      */
     public static function getInstance(DICTestClassNoConstructor $instance) {
-        return new DICTestSingleton('foo', $instance);
+        return new static('foo', $instance);
     }
 }
 

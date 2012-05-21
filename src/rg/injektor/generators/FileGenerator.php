@@ -55,7 +55,7 @@ class FileGenerator {
     private $constructorArguments = array();
 
     /**
-     * @var array
+     * @var InjectionProperty[]
      */
     private $injectableArguments = array();
 
@@ -169,7 +169,7 @@ class FileGenerator {
             }
 
             // Property injection
-            $body .= $this->injectProperties($classConfig, $classReflection);
+            $this->injectProperties($classConfig, $classReflection);
 
             if ($constructorMethodReflection) {
 
@@ -183,10 +183,10 @@ class FileGenerator {
             if (count($this->injectableProperties) > 0) {
                 $proxyName = $this->dic->getProxyClassName($this->fullClassName);
                 if ($this->dic->isSingleton($classReflection)) {
-                    $file->setClass($this->createSingletonProxyClass($proxyName));
-                    $body .= PHP_EOL . '$instance = ' . $proxyName . '::getProxyInstance(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
+                    $file->setClass($this->createProxyClass($proxyName));
+                    $body .= PHP_EOL . '$instance = ' . $proxyName . '::getInstance(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 } else {
-                    $file->setClass($this->createProxyClass($proxyName, $classReflection->hasMethod('__construct')));
+                    $file->setClass($this->createProxyClass($proxyName));
                     $body .= PHP_EOL . '$instance = new ' . $proxyName . '(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 }
             } else {
@@ -206,6 +206,10 @@ class FileGenerator {
 
         if ($isSingleton) {
             $body .= 'self::$instance[$singletonKey] = $instance;' . PHP_EOL;
+        }
+
+        foreach ($this->injectableArguments as $injectableArgument) {
+            $body .= '$instance->propertyInjection' . $injectableArgument->getName() . '();' . PHP_EOL;
         }
 
         $body .= 'return $instance;' . PHP_EOL;
@@ -245,10 +249,8 @@ class FileGenerator {
     /**
      * @param array $classConfig
      * @param \ReflectionClass $classReflection
-     * @return string
      */
     private function injectProperties(array $classConfig, \ReflectionClass $classReflection) {
-        $body = '';
         try {
             $this->injectableProperties = $this->dic->getInjectableProperties($classReflection);
             foreach ($this->injectableProperties as $key => $injectableProperty) {
@@ -263,8 +265,6 @@ class FileGenerator {
                     $injectableProperty, $classConfig, $this->config, $this->dic
                 );
 
-                $propertyName = $injectableProperty->name;
-
                 try {
                     if ($injectionProperty->getClassName()) {
                         $this->factoryGenerator->processFileForClass($injectionProperty->getClassName());
@@ -272,17 +272,13 @@ class FileGenerator {
                     if ($injectionProperty->getFactoryName()) {
                         $this->usedFactories[] = $injectionProperty->getFactoryName();
                     }
-                    $this->injectableArguments[] = $propertyName;
-                    $this->constructorArguments[] = $propertyName;
-                    $this->constructorArgumentStringParts[] = '$' . $propertyName;
-                    $body .= $injectionProperty->getProcessingBody();
+                    $this->injectableArguments[] = $injectionProperty;
                 } catch (\Exception $e) {
                     unset($this->injectableProperties[$key]);
                 }
             }
         } catch (\Exception $e) {
         }
-        return $body;
     }
 
     private function injectBeforeAspects(\ReflectionMethod $methodReflection) {
@@ -396,50 +392,16 @@ class FileGenerator {
 
     /**
      * @param string $proxyName
-     * @param boolean $hasConstructor
      * @return \Zend\Code\Generator\ClassGenerator
      */
-    private function createProxyClass($proxyName, $hasConstructor) {
+    private function createProxyClass($proxyName) {
         $proxyClass = new Generator\ClassGenerator($proxyName);
         $proxyClass->setExtendedClass('\\' . $this->fullClassName);
-        $constructor = new Generator\MethodGenerator('__construct');
-        foreach ($this->constructorArguments as $constructorArgument) {
-            $parameter = new Generator\ParameterGenerator($constructorArgument);
-            $constructor->setParameter($parameter);
-        }
-        $constructorBody = '';
         foreach ($this->injectableArguments as $injectableArgument) {
-            $constructorBody .= '$this->' . $injectableArgument . ' = $' . $injectableArgument . ';' . PHP_EOL;
+            $injectorMethod = new \Zend\Code\Generator\MethodGenerator('propertyInjection' . $injectableArgument->getName());
+            $injectorMethod->setBody($injectableArgument->getProcessingBody());
+            $proxyClass->setMethod($injectorMethod);
         }
-        if ($hasConstructor) {
-            $constructorBody .= 'parent::__construct(' . implode(', ', $this->realConstructorArgumentStringParts) . ');' . PHP_EOL;
-        }
-        $constructor->setBody($constructorBody);
-        $proxyClass->setMethod($constructor);
-        return $proxyClass;
-    }
-
-    /**
-     * @param string $proxyName
-     * @return \Zend\Code\Generator\ClassGenerator
-     */
-    private function createSingletonProxyClass($proxyName) {
-        $proxyClass = new Generator\ClassGenerator($proxyName);
-        $proxyClass->setExtendedClass('\\' . $this->fullClassName);
-        $constructor = new Generator\MethodGenerator('getProxyInstance');
-        $constructor->setStatic(true);
-        foreach ($this->constructorArguments as $constructorArgument) {
-            $parameter = new Generator\ParameterGenerator($constructorArgument);
-            $constructor->setParameter($parameter);
-        }
-        $constructorBody = '$instance = parent::getInstance(' . implode(', ', $this->realConstructorArgumentStringParts) . ');' . PHP_EOL;
-        ;
-        foreach ($this->injectableArguments as $injectableArgument) {
-            $constructorBody .= '$instance->' . $injectableArgument . ' = $' . $injectableArgument . ';' . PHP_EOL;
-        }
-        $constructorBody .= 'return $instance;' . PHP_EOL;
-        $constructor->setBody($constructorBody);
-        $proxyClass->setMethod($constructor);
         return $proxyClass;
     }
 }
