@@ -119,7 +119,7 @@ class FileGenerator {
         if ($isSingleton) {
             $property = new Generator\PropertyGenerator('instance', array(), Generator\PropertyGenerator::FLAG_PRIVATE);
             $property->setStatic(true);
-            $factoryClass->setProperty($property);
+            $factoryClass->addPropertyFromGenerator($property);
 
             $body = '$singletonKey = json_encode($parameters) . "#" . getmypid();' . PHP_EOL;
             $body .= 'if (isset(self::$instance[$singletonKey])) {' . PHP_EOL;
@@ -216,7 +216,7 @@ class FileGenerator {
 
         $instanceMethod->setBody($body);
         $instanceMethod->setStatic(true);
-        $factoryClass->setMethod($instanceMethod);
+        $factoryClass->addMethodFromGenerator($instanceMethod);
 
         // Add Factory Method
         $methods = $classReflection->getMethods();
@@ -226,7 +226,7 @@ class FileGenerator {
                 substr($method->name, 0, 2) !== '__'
             ) {
                 $factoryMethod = $this->getFactoryMethod($method, $classConfig);
-                $factoryClass->setMethod($factoryMethod);
+                $factoryClass->addMethodFromGenerator($factoryMethod);
             }
         }
 
@@ -400,7 +400,7 @@ class FileGenerator {
         foreach ($this->injectableArguments as $injectableArgument) {
             $injectorMethod = new \Zend\Code\Generator\MethodGenerator('propertyInjection' . $injectableArgument->getName());
             $injectorMethod->setBody($injectableArgument->getProcessingBody());
-            $proxyClass->setMethod($injectorMethod);
+            $proxyClass->addMethodFromGenerator($injectorMethod);
         }
         return $proxyClass;
     }
