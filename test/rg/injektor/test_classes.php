@@ -744,3 +744,12 @@ class DICTestAnnotatedInterfacePropertyInjection {
      */
     public $dependency;
 }
+
+class DICTestDependsOnInterface {
+
+    public $interface = true;
+
+    public function __construct(DICTestInterface $interface = null) {
+        $this->interface = $interface;
+    }
+}

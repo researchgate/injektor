@@ -128,6 +128,12 @@ class InjectionParameter {
                 } else {
                     $argumentClass = $this->dic->getRealConfiguredClassName($this->config->getClassConfig($argumentClass), new \ReflectionClass($argumentClass));
 
+                    $argumentClassReflection = new \ReflectionClass($argumentClass);
+                    if (! $argumentClassReflection->isInstantiable() && ! $argumentClassReflection->hasMethod('getInstance')) {
+                        $this->setParameterToDefault();
+                        return;
+                    }
+
                     $argumentFactory = $this->dic->getFullFactoryClassName($argumentClass);
 
                     $this->className = $argumentClass;
@@ -138,13 +144,17 @@ class InjectionParameter {
             }
 
         } else {
-            if (!empty($this->classConfig['params'][$this->name]['value'])) {
-                $this->defaultValue = var_export($this->classConfig['params'][$this->name]['value'], true);
-            } else if ($this->hasDefaultValue()) {
-                $this->defaultValue = var_export($this->getDefaultValue(), true);
-            } else {
-                $this->defaultValue = 'null';
-            }
+            $this->setParameterToDefault();
+        }
+    }
+
+    private function setParameterToDefault() {
+        if (!empty($this->classConfig['params'][$this->name]['value'])) {
+            $this->defaultValue = var_export($this->classConfig['params'][$this->name]['value'], true);
+        } else if ($this->hasDefaultValue()) {
+            $this->defaultValue = var_export($this->getDefaultValue(), true);
+        } else {
+            $this->defaultValue = 'null';
         }
     }
 

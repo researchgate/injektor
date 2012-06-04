@@ -659,6 +659,15 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($instance->dependency->getProvidedClass());
     }
 
+    public function testDependsOnInterface() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+        $dic = $this->getContainer($config);
+        /** @var DICTestDependsOnInterface $instance  */
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestDependsOnInterface');
+
+        $this->assertNull($instance->interface);
+    }
+
     public function testConfiguredProvidedByDirectAccess() {
         $config = new Configuration(null, __DIR__ . '/_factories');
 

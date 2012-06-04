@@ -14,7 +14,12 @@ use rg\injektor\Configuration;
 
 class FactoryGeneratorTest extends \PHPUnit_Framework_TestCase {
 
-    public function testGenerateFactory() {
+    /**
+     * @param string $file
+     * @param string $content
+     * @dataProvider provider
+     */
+    public function testGenerateFactory($file, $content) {
         if (strtolower(substr(php_uname(), 0, 7)) == 'windows') {
             $this->markTestSkipped('Skipped since doesnt work on windows.');
         }
@@ -41,8 +46,12 @@ class FactoryGeneratorTest extends \PHPUnit_Framework_TestCase {
         $factoryGenerator = new TestingFactoryGenerator($config, '');
         $factoryGenerator->processFileForClass('rg\injektor\generators\FGTestClassOne');
 
+        $this->assertEquals($content, $factoryGenerator->files[$file]);
+    }
+
+    public function provider() {
         $expected = array(
-'rg\\injektor\\generators\\FGTestClassSimple' => <<<EOF
+            'rg\\injektor\\generators\\FGTestClassSimple' => <<<EOF
 <?php
 
 namespace rg\injektor\generated;
@@ -61,8 +70,8 @@ class RgInjektorGeneratorsFGTestClassSimpleFactory
 
 
 EOF
-,
-'rg\\injektor\\generators\\FGTestClassFour' => <<<EOF
+        ,
+            'rg\\injektor\\generators\\FGTestClassFour' => <<<EOF
 <?php
 
 namespace rg\\injektor\\generated;
@@ -122,8 +131,8 @@ class RgInjektorGeneratorsFGTestClassFourFactory
 
 
 EOF
-,
-'rg\\injektor\\generators\\FGTestClassThree' => <<<EOF
+        ,
+            'rg\\injektor\\generators\\FGTestClassThree' => <<<EOF
 <?php
 
 namespace rg\\injektor\\generated;
@@ -160,9 +169,9 @@ class RgInjektorGeneratorsFGTestClassThreeFactory
 
 
 EOF
-,
+        ,
 
-'rg\\injektor\\generators\\FGTestClassTwo' => <<<EOF
+            'rg\\injektor\\generators\\FGTestClassTwo' => <<<EOF
 <?php
 
 namespace rg\\injektor\\generated;
@@ -197,8 +206,8 @@ class RgInjektorGeneratorsFGTestClassTwoFactory
 
 
 EOF
-,
-'rg\\injektor\\generators\\FGTestBeforeAspect' => <<<EOF
+        ,
+            'rg\\injektor\\generators\\FGTestBeforeAspect' => <<<EOF
 <?php
 
 namespace rg\injektor\generated;
@@ -234,8 +243,8 @@ class RgInjektorGeneratorsFGTestBeforeAspectFactory
 
 
 EOF
-,
-'rg\\injektor\\generators\\FGTestAfterAspect' => <<<EOF
+        ,
+            'rg\\injektor\\generators\\FGTestAfterAspect' => <<<EOF
 <?php
 
 namespace rg\injektor\generated;
@@ -271,8 +280,8 @@ class RgInjektorGeneratorsFGTestAfterAspectFactory
 
 
 EOF
-,
-'rg\\injektor\\generators\\FGTestClassOne' => <<<EOF
+        ,
+            'rg\\injektor\\generators\\FGTestClassOne' => <<<EOF
 <?php
 
 namespace rg\\injektor\\generated;
@@ -403,13 +412,17 @@ class RgInjektorGeneratorsFGTestClassOneFactory
 
 
 EOF
-);
-            foreach ($expected as $file => $content) {
-                $this->assertEquals($content, $factoryGenerator->files[$file]);
-            }
+        );
 
+        $data = array();
+        foreach ($expected as $file => $content) {
+            $data[] = array(
+                $file, $content,
+            );
+        }
+
+        return $data;
     }
-
 }
 
 class TestingFactoryGenerator extends FactoryGenerator {
