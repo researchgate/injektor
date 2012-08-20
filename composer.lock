@@ -1,29 +1,16 @@
 {
-    "hash": "a45eae22fccf7036ee89115d74db8318",
+    "hash": "955f7bb987506a64cccea13b3e82b6a4",
     "packages": [
         {
-            "package": "zendframework/zendframework",
-            "version": "dev-master",
-            "alias-pretty-version": "2.0.x-dev",
-            "alias-version": "2.0.9999999.9999999-dev"
-        },
-        {
-            "package": "zendframework/zendframework",
-            "version": "dev-master",
-            "source-reference": "48bf0c42bc6c406681327b16064ab3cf1a644218"
-        },
-        {
-            "package": "zendframework/zendframework",
-            "version": "dev-master",
-            "alias-pretty-version": "2.0.x-dev",
-            "alias-version": "2.0.9999999.9999999-dev"
+            "package": "zendframework/zend-code",
+            "version": "2.0.0rc4"
         }
     ],
     "packages-dev": null,
     "aliases": [
 
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "RC",
     "stability-flags": [
 
     ]
