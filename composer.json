@@ -5,6 +5,13 @@
     "homepage": "http://github.com/researchgate/injektor",
     "type": "library",
     "license": "Apache 2.0",
+    "minimum-stability": "RC",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://packages.zendframework.com/"
+        }
+    ],
     "authors": [
         {
             "name": "Bastian Hofmann",
@@ -14,7 +21,7 @@
     ],
     "require": {
         "php":">=5.3.2",
-        "zendframework/zendframework":"*"
+        "zendframework/zend-code":"*"
     },
     "autoload": {
         "psr-0": { "rg": "src/" }
