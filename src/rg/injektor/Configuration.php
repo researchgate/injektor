@@ -26,6 +26,7 @@ class Configuration {
 
     /**
      * @param string $configurationFilePath
+     * @param string $factoryPath
      */
     public function __construct($configurationFilePath, $factoryPath) {
         $this->addConfigFile($configurationFilePath);

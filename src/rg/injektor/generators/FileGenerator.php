@@ -171,13 +171,6 @@ class FileGenerator {
             // Property injection
             $this->injectProperties($classConfig, $classReflection);
 
-            if ($constructorMethodReflection) {
-
-                $body .= $this->injectBeforeAspects($constructorMethodReflection);
-
-                $body .= $this->injectInterceptAspects($constructorMethodReflection);
-
-            }
             $body .= $bottomBody;
 
             if (count($this->injectableProperties) > 0) {
@@ -195,13 +188,7 @@ class FileGenerator {
                 } else {
                     $body .= PHP_EOL . '$instance = new \\' . $this->fullClassName . '(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 }
-
             }
-
-            if ($constructorMethodReflection) {
-                $body .= $this->injectAfterAspects($constructorMethodReflection, '$instance');
-            }
-
         }
 
         if ($isSingleton) {
@@ -281,56 +268,6 @@ class FileGenerator {
         }
     }
 
-    private function injectBeforeAspects(\ReflectionMethod $methodReflection) {
-        $body = '';
-        $beforeAspects = $this->dic->getAspects($methodReflection, 'before');
-        foreach ($beforeAspects as $aspect) {
-            $aspect['class'] = trim($aspect['class'], '\\');
-            $aspectFactory = $this->dic->getFactoryClassName($aspect['class']);
-            $body .= '$aspect = ' . $aspectFactory . '::getInstance();' . PHP_EOL;
-            $body .= '$methodParameters = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $this->fullClassName . '\', \'' . $methodReflection->name . '\', $methodParameters);' . PHP_EOL;
-
-            $this->usedFactories[] = $aspectFactory;
-            $this->factoryGenerator->processFileForClass($aspect['class']);
-        }
-
-        return $body;
-    }
-
-    private function injectInterceptAspects(\ReflectionMethod $methodReflection) {
-        $body = '';
-        $interceptAspects = $this->dic->getAspects($methodReflection, 'intercept');
-        if (count($interceptAspects) > 0) {
-            $body .= '$result = false;' . PHP_EOL;
-            foreach ($interceptAspects as $aspect) {
-                $aspect['class'] = trim($aspect['class'], '\\');
-                $aspectFactory = $this->dic->getFactoryClassName($aspect['class']);
-                $body .= '$aspect = ' . $aspectFactory . '::getInstance();' . PHP_EOL;
-                $body .= '$result = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $this->fullClassName . '\', \'' . $methodReflection->name . '\', $methodParameters, $result);' . PHP_EOL;
-                $this->usedFactories[] = $aspectFactory;
-                $this->factoryGenerator->processFileForClass($aspect['class']);
-            }
-            $body .= 'if ($result !== false) {' . PHP_EOL;
-            $body .= '    return $result;' . PHP_EOL;
-            $body .= '}' . PHP_EOL;
-        }
-        return $body;
-    }
-
-    private function injectAfterAspects(\ReflectionMethod $methodReflection, $returnVariableName) {
-        $body = '';
-        $afterAspects = $this->dic->getAspects($methodReflection, 'after');
-        foreach ($afterAspects as $aspect) {
-            $aspect['class'] = trim($aspect['class'], '\\');
-            $aspectFactory = $this->dic->getFactoryClassName($aspect['class']);
-            $body .= '$aspect = ' . $aspectFactory . '::getInstance();' . PHP_EOL;
-            $body .= $returnVariableName . ' = $aspect->execute(' . var_export($aspect['aspectArguments'], true) . ', \'' . $this->fullClassName . '\', \'' . $methodReflection->name . '\', ' . $returnVariableName. ');' . PHP_EOL;
-            $this->usedFactories[] = $aspectFactory;
-            $this->factoryGenerator->processFileForClass($aspect['class']);
-        }
-        return $body;
-    }
-
     protected function getFactoryMethod(\ReflectionMethod $method, $classConfig) {
         $factoryMethod = new Generator\MethodGenerator($this->dic->getFactoryMethodName($method->name));
         $factoryMethod->setParameter(new Generator\ParameterGenerator('object'));
@@ -376,14 +313,8 @@ class FileGenerator {
             $methodArgumentStringParts[] = '$' . $argumentName;
         }
 
-        $body .= $this->injectBeforeAspects($method);
-
-        $body .= $this->injectInterceptAspects($method);
-
         $body .=  $bottomBody;
         $body .= '$result = $object->' . $method->name . '(' . implode(', ', $methodArgumentStringParts) . ');' . PHP_EOL . PHP_EOL;
-
-        $body .= $this->injectAfterAspects($method, '$result');
 
         $body .= PHP_EOL . 'return $result;';
         $factoryMethod->setBody($body);

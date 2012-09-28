@@ -76,7 +76,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param closure $loggerFunction
+     * @param callable $loggerFunction
      */
     public function setLoggerFunction($loggerFunction) {
         $this->loggerFunction = $loggerFunction;
@@ -146,39 +146,10 @@ class DependencyInjectionContainer {
         if ($this->isConfiguredAsSingleton($classConfig, $classReflection) &&
             $this->isSingleton($classReflection)
         ) {
-            $methodReflection = $classReflection->getMethod('getInstance');
             $constructorArguments = $this->getConstructorArguments($classReflection, $classConfig, $constructorArguments, 'getInstance');
-            $constructorArguments = $this->executeBeforeAspects($methodReflection, $constructorArguments);
-            $interceptedResult = $this->executeInterceptorAspects($methodReflection, $constructorArguments);
-            if ($interceptedResult !== false) {
-                $this->log('Return intercepted instance [' . spl_object_hash($interceptedResult) . '] of class [' . get_class($interceptedResult) . ']');
-
-                if ($this->iterationDepth > 0) {
-                    $this->iterationDepth--;
-                }
-                return $interceptedResult;
-            }
             $instance = $classReflection->getMethod('getInstance')->invokeArgs(null, $constructorArguments);
         } else {
             $constructorArguments = $this->getConstructorArguments($classReflection, $classConfig, $constructorArguments);
-            if ($classReflection->hasMethod('__construct')) {
-                $methodReflection = $classReflection->getMethod('__construct');
-                $constructorArguments = $this->executeBeforeAspects($methodReflection, $constructorArguments);
-                $interceptedResult = $this->executeInterceptorAspects($methodReflection, $constructorArguments);
-                if ($interceptedResult !== false) {
-                    if (is_object($interceptedResult)) {
-                        $this->log('Return intercepted instance [' . spl_object_hash($interceptedResult) . '] of class [' . get_class($interceptedResult) . ']');
-                    } else {
-                        $this->log('Return intercepted non object [' . var_export($interceptedResult, true) . ']');
-                    }
-
-                    if ($this->iterationDepth > 0) {
-                        $this->iterationDepth--;
-                    }
-                    return $interceptedResult;
-                }
-            }
-
             if ($constructorArguments) {
                 $instance = $classReflection->newInstanceArgs($constructorArguments);
             } else {
@@ -194,10 +165,6 @@ class DependencyInjectionContainer {
         }
 
         $instance = $this->injectProperties($classReflection, $instance);
-
-        if ($methodReflection) {
-            $instance = $this->executeAfterAspects($methodReflection, $instance);
-        }
 
         if ($this->iterationDepth > 0) {
             $this->iterationDepth--;
@@ -548,83 +515,13 @@ class DependencyInjectionContainer {
 
         $arguments = $this->getMethodArguments($methodReflection, $additionalArguments);
 
-        $arguments = $this->executeBeforeAspects($methodReflection, $arguments);
-        $interceptedResult = $this->executeInterceptorAspects($methodReflection, $arguments);
-        if ($interceptedResult !== false) {
-            return $interceptedResult;
-        }
-
-        $result = $methodReflection->invokeArgs($object, $arguments);
-
-        return $this->executeAfterAspects($methodReflection, $result);
-    }
-
-    private function executeInterceptorAspects(\ReflectionMethod $methodReflection, $arguments) {
-        $aspects = $this->getAspects($methodReflection, 'intercept');
-
-        $result = false;
-
-        foreach ($aspects as $aspect) {
-            /** @var \rg\injektor\aspects\Intercept $aspectInstance */
-            $aspectInstance = $this->getInstanceOfClass($aspect['class']);
-            $result = $aspectInstance->execute($aspect['aspectArguments'], $methodReflection->getDeclaringClass()->name, $methodReflection->name, $arguments, $result);
-        }
-
-        return $result;
-    }
-
-    private function executeBeforeAspects(\ReflectionMethod $methodReflection, $arguments) {
-        $aspects = $this->getAspects($methodReflection, 'before');
-
-        foreach ($aspects as $aspect) {
-            /** @var \rg\injektor\aspects\Before $aspectInstance */
-            $aspectInstance = $this->getInstanceOfClass($aspect['class']);
-            $arguments = $aspectInstance->execute($aspect['aspectArguments'], $methodReflection->getDeclaringClass()->name, $methodReflection->name, $arguments);
-        }
-
-        return $arguments;
-    }
-
-    private function executeAfterAspects(\ReflectionMethod $methodReflection, $result) {
-        $aspects = $this->getAspects($methodReflection, 'after');
-
-        foreach ($aspects as $aspect) {
-            /** @var \rg\injektor\aspects\After $aspectInstance */
-            $aspectInstance = $this->getInstanceOfClass($aspect['class']);
-            $result = $aspectInstance->execute($aspect['aspectArguments'], $methodReflection->getDeclaringClass()->name, $methodReflection->name, $result);
-        }
-
-        return $result;
-    }
-
-    public function getAspects(\ReflectionMethod $methodReflection, $type) {
-        $docComment = $methodReflection->getDocComment();
-        $matches = array();
-        $pattern = '@' . $type . '\s+([a-z0-9\\\]+)\s*([a-z0-9\\\=&]*)';
-        preg_match_all('/' . $pattern . '/i', $docComment, $matches);
-
-        $aspects = array();
-
-        if (isset($matches[1])) {
-            foreach ($matches[1] as $key => $aspectClass) {
-                $aspectArguments = array();
-                if (isset($matches[2][$key])) {
-                    parse_str($matches[2][$key], $aspectArguments);
-                }
-                $aspects[] = array(
-                    'class' => $aspectClass,
-                    'aspectArguments' => $aspectArguments,
-                );
-            }
-        }
-
-        return $aspects;
+        return $methodReflection->invokeArgs($object, $arguments);
     }
 
     /**
      * @param \ReflectionMethod $methodReflection
      * @throws \RuntimeException
-     * @return
+     * @return void
      */
     public function checkAllowedHttpMethodAnnotation(\ReflectionMethod $methodReflection) {
         if (!isset($_SERVER['REQUEST_METHOD'])) {

@@ -207,80 +207,6 @@ class RgInjektorGeneratorsFGTestClassTwoFactory
 
 EOF
         ,
-            'rg\\injektor\\generators\\FGTestBeforeAspect' => <<<EOF
-<?php
-
-namespace rg\injektor\generated;
-
-class RgInjektorGeneratorsFGTestBeforeAspectFactory
-{
-
-    public static function getInstance(array \$parameters = array())
-    {
-        \$instance = new \\rg\injektor\generators\\FGTestBeforeAspect();
-        return \$instance;
-    }
-
-    public static function callExecute(\$object, array \$parameters = array())
-    {
-        \$methodParameters = array();
-        \$methodParameters['aspectArguments'] = array_key_exists('aspectArguments', \$parameters) ? \$parameters['aspectArguments'] : null;
-        \$methodParameters['className'] = array_key_exists('className', \$parameters) ? \$parameters['className'] : null;
-        \$methodParameters['functionName'] = array_key_exists('functionName', \$parameters) ? \$parameters['functionName'] : null;
-        \$methodParameters['functionArguments'] = array_key_exists('functionArguments', \$parameters) ? \$parameters['functionArguments'] : null;
-        \$aspectArguments = array_key_exists('aspectArguments', \$methodParameters) ? \$methodParameters['aspectArguments'] : null;
-        \$className = array_key_exists('className', \$methodParameters) ? \$methodParameters['className'] : null;
-        \$functionName = array_key_exists('functionName', \$methodParameters) ? \$methodParameters['functionName'] : null;
-        \$functionArguments = array_key_exists('functionArguments', \$methodParameters) ? \$methodParameters['functionArguments'] : null;
-        \$result = \$object->execute(\$aspectArguments, \$className, \$functionName, \$functionArguments);
-
-
-        return \$result;
-    }
-
-
-}
-
-
-EOF
-        ,
-            'rg\\injektor\\generators\\FGTestAfterAspect' => <<<EOF
-<?php
-
-namespace rg\injektor\generated;
-
-class RgInjektorGeneratorsFGTestAfterAspectFactory
-{
-
-    public static function getInstance(array \$parameters = array())
-    {
-        \$instance = new \\rg\injektor\generators\\FGTestAfterAspect();
-        return \$instance;
-    }
-
-    public static function callExecute(\$object, array \$parameters = array())
-    {
-        \$methodParameters = array();
-        \$methodParameters['aspectArguments'] = array_key_exists('aspectArguments', \$parameters) ? \$parameters['aspectArguments'] : null;
-        \$methodParameters['className'] = array_key_exists('className', \$parameters) ? \$parameters['className'] : null;
-        \$methodParameters['functionName'] = array_key_exists('functionName', \$parameters) ? \$parameters['functionName'] : null;
-        \$methodParameters['result'] = array_key_exists('result', \$parameters) ? \$parameters['result'] : null;
-        \$aspectArguments = array_key_exists('aspectArguments', \$methodParameters) ? \$methodParameters['aspectArguments'] : null;
-        \$className = array_key_exists('className', \$methodParameters) ? \$methodParameters['className'] : null;
-        \$functionName = array_key_exists('functionName', \$methodParameters) ? \$methodParameters['functionName'] : null;
-        \$result = array_key_exists('result', \$methodParameters) ? \$methodParameters['result'] : null;
-        \$result = \$object->execute(\$aspectArguments, \$className, \$functionName, \$result);
-
-
-        return \$result;
-    }
-
-
-}
-
-
-EOF
-        ,
             'rg\\injektor\\generators\\FGTestClassOne' => <<<EOF
 <?php
 
@@ -288,8 +214,6 @@ namespace rg\\injektor\\generated;
 
 require_once '/RgInjektorGeneratorsFGTestClassTwoFactory.php';
 require_once '/RgInjektorGeneratorsFGTestClassThreeFactory.php';
-require_once '/RgInjektorGeneratorsFGTestBeforeAspectFactory.php';
-require_once '/RgInjektorGeneratorsFGTestAfterAspectFactory.php';
 
 class RgInjektorGeneratorsFGTestClassOneProxy extends \\rg\\injektor\\generators\\FGTestClassOne
 {
@@ -384,25 +308,9 @@ class RgInjektorGeneratorsFGTestClassOneFactory
     {
         \$methodParameters = array();
         \$methodParameters['two'] = array_key_exists('two', \$parameters) ? \$parameters['two'] : NULL;
-        \$aspect = RgInjektorGeneratorsFGTestBeforeAspectFactory::getInstance();
-        \$methodParameters = \$aspect->execute(array (
-          'foo' => 'bar',
-          'one' => '1',
-        ), 'rg\injektor\generators\\FGTestClassOne', 'methodRestriction', \$methodParameters);
-        \$aspect = RgInjektorGeneratorsFGTestBeforeAspectFactory::getInstance();
-        \$methodParameters = \$aspect->execute(array (
-        ), 'rg\injektor\generators\\FGTestClassOne', 'methodRestriction', \$methodParameters);
         \$two = array_key_exists('two', \$methodParameters) ? \$methodParameters['two'] : NULL;
         \$result = \$object->methodRestriction(\$two);
 
-        \$aspect = RgInjektorGeneratorsFGTestAfterAspectFactory::getInstance();
-        \$result = \$aspect->execute(array (
-          'foo' => 'bar',
-          'one' => '1',
-        ), 'rg\injektor\generators\\FGTestClassOne', 'methodRestriction', \$result);
-        \$aspect = RgInjektorGeneratorsFGTestAfterAspectFactory::getInstance();
-        \$result = \$aspect->execute(array (
-        ), 'rg\injektor\generators\\FGTestClassOne', 'methodRestriction', \$result);
 
         return \$result;
     }
@@ -489,10 +397,6 @@ class FGTestClassOne {
 
     /**
      * @inject
-     * @before \rg\injektor\generators\FGTestBeforeAspect foo=bar&one=1
-     * @before \rg\injektor\generators\FGTestBeforeAspect
-     * @after \rg\injektor\generators\FGTestAfterAspect foo=bar&one=1
-     * @after \rg\injektor\generators\FGTestAfterAspect
      * @param mixed $two
      */
     public function methodRestriction($two = null) {
@@ -555,14 +459,4 @@ class FGTestClassFour {
 
 class FGTestClassSimple {
 
-}
-
-class FGTestBeforeAspect implements \rg\injektor\aspects\Before {
-    public function execute($aspectArguments, $className, $functionName, $functionArguments) {
-    }
-}
-
-class FGTestAfterAspect implements \rg\injektor\aspects\After {
-    public function execute($aspectArguments, $className, $functionName, $result) {
-    }
 }

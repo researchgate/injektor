@@ -395,7 +395,7 @@ class DICTestSingleton {
 
     /**
      * @inject
-     * @var rg\injektor\DICTestClassNoConstructor
+     * @var \rg\injektor\DICTestClassNoConstructor
      */
     public $injectedProperty;
 
@@ -420,119 +420,6 @@ class DICTestSingleton {
  */
 class DICTestAnnotatedSingleton {
 
-}
-
-class DICTestAspects {
-
-    public $one;
-
-    public $two;
-
-    public $cone;
-
-    public $ctwo;
-
-    /**
-     * @inject
-     * @param \rg\injektor\DICTestAnnotatedSingleton $one
-     * @param $two
-     * @before \rg\injektor\DICTestBeforeAspect one=1&two=bar
-     * @before \rg\injektor\DICTestBeforeAspect
-     * @after \rg\injektor\DICTestAfterAspect foo=bar
-     */
-    public function __construct(DICTestAnnotatedSingleton $one, $two) {
-        $this->cone = $one;
-        $this->ctwo = $two;
-    }
-
-    /**
-     * @inject
-     * @param \rg\injektor\DICTestAnnotatedSingleton $one
-     * @param $two
-     * @before \rg\injektor\DICTestBeforeAspect one=1&two=bar
-     * @before \rg\injektor\DICTestBeforeAspect
-     * @after \rg\injektor\DICTestAfterAspect foo=bar
-     */
-    public function aspectFunction(DICTestAnnotatedSingleton $one, $two) {
-        $this->one = $one;
-        $this->two = $two;
-
-        return 'foo';
-    }
-}
-
-class DICTestBeforeAspect implements \rg\injektor\aspects\Before {
-
-    public function execute($aspectArguments, $className, $functionName, $functionArguments) {
-        $functionArguments['two'] = array(
-            $functionArguments['two'],
-            $aspectArguments,
-            $className,
-            $functionName
-        );
-        return $functionArguments;
-    }
-}
-
-class DICTestAfterAspect implements \rg\injektor\aspects\After {
-
-    public function execute($aspectArguments, $className, $functionName, $result) {
-        $result = array(
-            $result,
-            $aspectArguments,
-            $className,
-            $functionName
-        );
-        return $result;
-    }
-}
-
-class DICTestInterceptAspectClass {
-
-    public $one;
-
-    public $two;
-
-    public $cone;
-
-    public $ctwo;
-
-    /**
-     * @inject
-     * @param \rg\injektor\DICTestAnnotatedSingleton $one
-     * @param $two
-     * @intercept \rg\injektor\DICTestInterceptAspect one=1&two=bar
-     */
-    public function __construct(DICTestAnnotatedSingleton $one, $two) {
-        $this->cone = $one;
-        $this->ctwo = $two;
-    }
-
-    /**
-     * @inject
-     * @param \rg\injektor\DICTestAnnotatedSingleton $one
-     * @param $two
-     * @intercept \rg\injektor\DICTestInterceptAspect one=1&two=bar
-     */
-    public function aspectFunction(DICTestAnnotatedSingleton $one, $two) {
-        $this->one = $one;
-        $this->two = $two;
-
-        return 'foo';
-    }
-}
-
-class DICTestInterceptAspect implements \rg\injektor\aspects\Intercept {
-
-    public function execute($aspectArguments, $className, $functionName, $functionArguments, $lastResult) {
-        return array(
-            $functionArguments,
-            $aspectArguments,
-            $className,
-            $functionName,
-            $lastResult
-        );
-    }
 }
 
 class DICTestProvidedInterfaceImpl1 implements DICTestProvidedInterface {
@@ -692,7 +579,7 @@ class DICTestInterfaceDependency {
 
     /**
      * @inject
-     * @var rg\injektor\DICTestInterface
+     * @var \rg\injektor\DICTestInterface
      */
     public $dependency;
 }
@@ -725,6 +612,9 @@ class DICTestInterfaceDependencyTwoNoAnnotation {
 
 class DICTestSimpleProvidedInterfaceDependency {
 
+    /**
+     * @var DICTestSimpleProvidedInterface
+     */
     public $dependency;
 
     /**
@@ -740,7 +630,7 @@ class DICTestAnnotatedInterfacePropertyInjection {
 
     /**
      * @inject
-     * @var rg\injektor\DICTestAnnotatedInterface
+     * @var \rg\injektor\DICTestAnnotatedInterface
      */
     public $dependency;
 }

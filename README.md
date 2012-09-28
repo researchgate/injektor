@@ -715,12 +715,3 @@ It is also possible to add additional values to the method call, like with objec
      $foo = new Foo();
      $dic->callMethodOnObject($foo, 'doSomething', array('foo' => 'value'));
 
-Aspects
--------
-When creating an instance or calling a method it is additionally possible to use one of the following aspects:
-
-* Before aspects will be executed before the function (or constructor) is called and you can manipulate the arguments
-* Intercept aspects will be executed before the funciton (or constructor) is called, if the interceptor returns false,
-  the method is going to be executed, if not, the method is not going to be executed but the container returns the
-  result from the aspect
-* After aspects will be executed after the function (or constructer) is called and can manipulate the function response
