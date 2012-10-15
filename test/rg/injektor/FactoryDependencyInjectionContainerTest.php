@@ -25,6 +25,18 @@ class FactoryDependencyInjectionContainerTest extends \PHPUnit_Framework_TestCas
         $this->assertInstanceOf('rg\injektor\FDICTestClassThree', $instance->two->three);
         $this->assertInstanceOf('rg\injektor\FDICTestClassThree', $instance->getFour());
     }
+
+    public function testGetFactoryClassName() {
+        $config = new Configuration(null, '');
+
+        $dic = new FactoryDependencyInjectionContainer($config);
+        $dic::$prefix = 'prefix';
+
+        $this->assertEquals('prefixFooFactory', $dic->getFactoryClassName('Foo'));
+        $this->assertEquals('prefix__FooFactory', $dic->getFactoryClassName('\\Foo'));
+        $this->assertEquals('prefixFoo__Bar__BazFactory', $dic->getFactoryClassName('Foo\\Bar\\Baz'));
+        $this->assertEquals('prefixfoo__bar__BazFactory', $dic->getFactoryClassName('foo\\bar\\Baz'));
+    }
 }
 
 class FDICTestClassOne {
