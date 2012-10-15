@@ -33,7 +33,7 @@ class FactoryDependencyInjectionContainerTest extends \PHPUnit_Framework_TestCas
         $dic::$prefix = 'prefix';
 
         $this->assertEquals('prefixFooFactory', $dic->getFactoryClassName('Foo'));
-        $this->assertEquals('prefix__FooFactory', $dic->getFactoryClassName('\\Foo'));
+        $this->assertEquals('prefixFooFactory', $dic->getFactoryClassName('\\Foo'));
         $this->assertEquals('prefixFoo__Bar__BazFactory', $dic->getFactoryClassName('Foo\\Bar\\Baz'));
         $this->assertEquals('prefixfoo__bar__BazFactory', $dic->getFactoryClassName('foo\\bar\\Baz'));
     }
