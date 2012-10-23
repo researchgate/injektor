@@ -52,7 +52,7 @@ class FactoryOnlyDependencyInjectionContainer extends FactoryDependencyInjection
         if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
             $factoryMethod = $this->getFactoryMethodName($methodName);
             if (! method_exists($object, $methodName)) {
-                throw new InjectionException('Method ' . $methodName . ' not found in rg\injektor\DICTestClassOne');
+                throw new InjectionException('Method ' . $methodName . ' not found in ' . get_class($object));
             }
             return $fullFactoryClassName::$factoryMethod($object, $additionalArguments);
         }
