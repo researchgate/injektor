@@ -76,7 +76,7 @@ EOF
 
 namespace rg\\injektor\\generated;
 
-require_once '/rg__injektor__generators__FGTestClassSimpleFactory.php';
+require_once 'rg__injektor__generators__FGTestClassSimpleFactory.php';
 
 class rg__injektor__generators__FGTestClassFourProxy extends \\rg\injektor\generators\\FGTestClassFour
 {
@@ -137,7 +137,7 @@ EOF
 
 namespace rg\\injektor\\generated;
 
-require_once '/rg__injektor__generators__FGTestClassFourFactory.php';
+require_once 'rg__injektor__generators__FGTestClassFourFactory.php';
 
 class rg__injektor__generators__FGTestClassThreeFactory
 {
@@ -176,7 +176,7 @@ EOF
 
 namespace rg\\injektor\\generated;
 
-require_once '/rg__injektor__generators__FGTestClassThreeFactory.php';
+require_once 'rg__injektor__generators__FGTestClassThreeFactory.php';
 
 class rg__injektor__generators__FGTestClassTwoFactory
 {
@@ -212,8 +212,8 @@ EOF
 
 namespace rg\\injektor\\generated;
 
-require_once '/rg__injektor__generators__FGTestClassTwoFactory.php';
-require_once '/rg__injektor__generators__FGTestClassThreeFactory.php';
+require_once 'rg__injektor__generators__FGTestClassTwoFactory.php';
+require_once 'rg__injektor__generators__FGTestClassThreeFactory.php';
 
 class rg__injektor__generators__FGTestClassOneProxy extends \\rg\\injektor\\generators\\FGTestClassOne
 {

@@ -224,7 +224,7 @@ class FileGenerator {
         $this->usedFactories = array_unique($this->usedFactories);
         foreach ($this->usedFactories as &$usedFactory) {
             $usedFactory = str_replace('rg\injektor\generated\\', '', $usedFactory);
-            $usedFactory = $this->factoryPath . DIRECTORY_SEPARATOR . $usedFactory . '.php';
+            $usedFactory = $usedFactory . '.php';
         }
         $file->setRequiredFiles($this->usedFactories);
         $file->setClass($factoryClass);
