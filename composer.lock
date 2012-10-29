@@ -1,9 +1,47 @@
 {
-    "hash": "955f7bb987506a64cccea13b3e82b6a4",
+    "hash": "ebed383295ef116969f9ac1f249b2559",
     "packages": [
         {
-            "package": "zendframework/zend-code",
-            "version": "2.0.0rc4"
+            "name": "zendframework/zend-code",
+            "version": "2.0.3",
+            "target-dir": "Zend/Code",
+            "dist": {
+                "type": "zip",
+                "url": "http://packages.zendframework.com/composer/Zend_Code-2.0.3.zip",
+                "reference": null,
+                "shasum": null
+            },
+            "require": {
+                "php": ">=5.3.3"
+            },
+            "require-dev": {
+                "doctrine/common": ">=2.1"
+            },
+            "suggest": {
+                "doctrine/common": "Doctrine\\Common >=2.1 for annotation features"
+            },
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-0": {
+                    "Zend\\Code\\": ""
+                }
+            },
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "provides facilities to generate arbitrary code using an object oriented interface",
+            "homepage": "http://packages.zendframework.com/",
+            "keywords": [
+                "zf2",
+                "code"
+            ],
+            "support": {
+                "email": "fw-general-subscribe@lists.zend.com",
+                "irc": "irc://irc.freenode.net/zftalk",
+                "issues": "https://github.com/zendframework/zf2/issues",
+                "source": "https://github.com/zendframework/zf2"
+            }
         }
     ],
     "packages-dev": null,
