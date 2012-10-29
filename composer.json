@@ -24,6 +24,6 @@
         "zendframework/zend-code":"*"
     },
     "autoload": {
-        "psr-0": { "rg": "src/" }
+        "psr-0": { "rg\\injektor": "src/injektor" }
     }
 }
