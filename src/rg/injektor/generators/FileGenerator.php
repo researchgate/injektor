@@ -68,7 +68,7 @@ class FileGenerator {
      * @var FactoryDependencyInjectionContainer
      */
     private $dic;
-    
+
     /**
      * @param FactoryGenerator $factoryGenerator
      * @param Configuration $config
@@ -107,7 +107,7 @@ class FileGenerator {
         if ($this->dic->isSingleton($classReflection)) {
             $constructorMethodReflection = $classReflection->getMethod('getInstance');
             $arguments = $constructorMethodReflection->getParameters();
-        } else  if ($classReflection->hasMethod('__construct')) {
+        } else if ($classReflection->hasMethod('__construct')) {
             $constructorMethodReflection = $classReflection->getMethod('__construct');
             $arguments = $constructorMethodReflection->getParameters();
         }
@@ -219,7 +219,6 @@ class FileGenerator {
 
         // Generate File
 
-
         $file->setNamespace('rg\injektor\generated');
         $this->usedFactories = array_unique($this->usedFactories);
         foreach ($this->usedFactories as &$usedFactory) {
@@ -313,7 +312,7 @@ class FileGenerator {
             $methodArgumentStringParts[] = '$' . $argumentName;
         }
 
-        $body .=  $bottomBody;
+        $body .= $bottomBody;
         $body .= '$result = $object->' . $method->name . '(' . implode(', ', $methodArgumentStringParts) . ');' . PHP_EOL . PHP_EOL;
 
         $body .= PHP_EOL . 'return $result;';

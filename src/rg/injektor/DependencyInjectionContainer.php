@@ -317,11 +317,11 @@ class DependencyInjectionContainer {
         $classReflection = new \ReflectionClass($fullClassName);
 
         if ($classReflection->isAbstract()) {
-            throw new InjectionException('Can not instanciate abstract class ' . $fullClassName);
+            throw new InjectionException('Can not instantiate abstract class ' . $fullClassName);
         }
 
         if ($classReflection->isInterface()) {
-            throw new InjectionException('Can not instanciate interface ' . $fullClassName);
+            throw new InjectionException('Can not instantiate interface ' . $fullClassName);
         }
         return $classReflection;
     }
@@ -334,8 +334,8 @@ class DependencyInjectionContainer {
      * @return null|object
      */
     public function getProvidedConfiguredClass($classConfig, \ReflectionClass $classReflection, $name = null, $additionalArgumentsForProvider = array()) {
-        if ($namedAnnoation = $this->getProviderClassName($classConfig, $classReflection, $name)) {
-            return $this->getRealClassInstanceFromProvider($namedAnnoation->getClassName(), $classReflection->name, array_merge($namedAnnoation->getParameters(), $additionalArgumentsForProvider));
+        if ($namedAnnotation = $this->getProviderClassName($classConfig, $classReflection, $name)) {
+            return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
         }
 
         return null;
