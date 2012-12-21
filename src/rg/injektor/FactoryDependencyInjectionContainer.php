@@ -102,16 +102,14 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
      * @return bool
      */
     protected function factoryClassExists($fullFactoryClassName, $factoryClassName) {
-        if (class_exists($fullFactoryClassName)) {
+        if (class_exists($fullFactoryClassName, false)) {
             return true;
         }
 
         $fileName = $this->config->getFactoryPath() . DIRECTORY_SEPARATOR . $factoryClassName . '.php';
         if (file_exists($fileName)) {
             require_once $fileName;
-            if (class_exists($fullFactoryClassName)) {
-                return true;
-            }
+            return true;
         }
 
         return false;
