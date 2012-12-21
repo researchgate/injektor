@@ -34,7 +34,7 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit_Framework_TestCa
     }
 
     public function testAbstractInstanceThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'Can not instanciate abstract class rg\injektor\DICTestAbstractClass');
+        $this->setExpectedException('rg\injektor\InjectionException', 'Can not instantiate abstract class rg\injektor\DICTestAbstractClass');
 
         $config = new Configuration(null, '');
         $dic = $this->getContainer($config);
