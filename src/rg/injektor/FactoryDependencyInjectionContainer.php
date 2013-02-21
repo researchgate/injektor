@@ -84,7 +84,7 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
      * @return string
      */
     private function getStrippedClassName($fullClassName) {
-        return str_replace('\\', '__', trim($fullClassName, '\\'));
+        return strtr(trim($fullClassName, '\\'), '\\', '_');
     }
 
     /**

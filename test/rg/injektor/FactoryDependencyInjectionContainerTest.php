@@ -34,8 +34,9 @@ class FactoryDependencyInjectionContainerTest extends \PHPUnit_Framework_TestCas
 
         $this->assertEquals('prefixFooFactory', $dic->getFactoryClassName('Foo'));
         $this->assertEquals('prefixFooFactory', $dic->getFactoryClassName('\\Foo'));
-        $this->assertEquals('prefixFoo__Bar__BazFactory', $dic->getFactoryClassName('Foo\\Bar\\Baz'));
-        $this->assertEquals('prefixfoo__bar__BazFactory', $dic->getFactoryClassName('foo\\bar\\Baz'));
+        $this->assertEquals('prefixFoo_Bar_BazFactory', $dic->getFactoryClassName('Foo\\Bar\\Baz'));
+        $this->assertEquals('prefixfoo_bar_BazFactory', $dic->getFactoryClassName('foo\\bar\\Baz'));
+        $this->assertEquals('prefixfoo_bar_BazFactory', $dic->getFactoryClassName('\\foo\\bar\\Baz'));
     }
 }
 
