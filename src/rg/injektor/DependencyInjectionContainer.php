@@ -53,7 +53,7 @@ class DependencyInjectionContainer {
      * @param \rg\injektor\Configuration $config
      */
     public function __construct(Configuration $config = null) {
-        $this->config = $config ? : new Configuration('', '');
+        $this->config = $config ? : new Configuration();
 
         if (!self::$defaultInstance) {
             self::$defaultInstance = $this;
