@@ -540,43 +540,9 @@ class DependencyInjectionContainer {
 
         $methodReflection = $this->getMethodReflection($classReflection, $methodName);
 
-        $this->checkAllowedHttpMethodAnnotation($methodReflection);
-
         $arguments = $this->getMethodArguments($methodReflection, $additionalArguments);
 
         return $methodReflection->invokeArgs($object, $arguments);
-    }
-
-    /**
-     * @param \ReflectionMethod $methodReflection
-     * @throws \RuntimeException
-     * @return void
-     */
-    public function checkAllowedHttpMethodAnnotation(\ReflectionMethod $methodReflection) {
-        if (!isset($_SERVER['REQUEST_METHOD'])) {
-            return;
-        }
-
-        $allowedHttpMethod = $this->getAllowedHttpMethod($methodReflection);
-
-        if ($allowedHttpMethod && strtolower($allowedHttpMethod) !== strtolower($_SERVER['REQUEST_METHOD'])) {
-            throw new \RuntimeException('invalid http method ' . $_SERVER['REQUEST_METHOD'] . ' for ' . $methodReflection->class . '::' . $methodReflection->name . '(), ' . $allowedHttpMethod . ' expected');
-        }
-    }
-
-    /**
-     * @param \ReflectionMethod $methodReflection
-     * @return string
-     */
-    public function getAllowedHttpMethod(\ReflectionMethod $methodReflection) {
-        $docComment = $methodReflection->getDocComment();
-        $matches = array();
-        preg_match('/@method\s+([a-z]+)/i', $docComment, $matches);
-        if (isset($matches[1])) {
-            return $matches[1];
-        }
-
-        return null;
     }
 
     /**
