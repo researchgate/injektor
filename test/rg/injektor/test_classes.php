@@ -422,6 +422,22 @@ class DICTestAnnotatedSingleton {
 
 }
 
+class DICTestService {
+
+    public function __construct($arg) {
+
+    }
+}
+
+/**
+ * @service
+ */
+class DICTestAnnotatedService {
+    public function __construct($arg) {
+
+    }
+}
+
 class DICTestProvidedInterfaceImpl1 implements DICTestProvidedInterface {
 
 }

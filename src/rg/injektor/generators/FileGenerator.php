@@ -127,6 +127,18 @@ class FileGenerator {
             $body .= '}' . PHP_EOL . PHP_EOL;
         }
 
+        $isService = $this->dic->isConfiguredAsService($classConfig, $classReflection);
+
+        if ($isService) {
+            $property = new Generator\PropertyGenerator('instance', null, Generator\PropertyGenerator::FLAG_PRIVATE);
+            $property->setStatic(true);
+            $factoryClass->addPropertyFromGenerator($property);
+
+            $body = 'if (self::$instance) {' . PHP_EOL;
+            $body .= '    return self::$instance;' . PHP_EOL;
+            $body .= '}' . PHP_EOL . PHP_EOL;
+        }
+
         $providerClassName = $this->dic->getProviderClassName($classConfig, new \ReflectionClass($this->fullClassName), null);
         if ($providerClassName && $providerClassName->getClassName()) {
             $argumentFactory = $this->dic->getFullFactoryClassName($providerClassName->getClassName());
@@ -188,6 +200,9 @@ class FileGenerator {
 
         if ($isSingleton) {
             $body .= 'self::$instance[$singletonKey] = $instance;' . PHP_EOL;
+        }
+        if ($isService) {
+            $body .= 'self::$instance = $instance;' . PHP_EOL;
         }
 
         foreach ($this->injectableArguments as $injectableArgument) {

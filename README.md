@@ -366,6 +366,86 @@ You can also configure this in the dependecy injection configuration instead of 
         'singleton' => true
     )
 
+Note that for a singleton injektor analizes the given arguments of the injected class to determine if
+the wanted instance is already created or not.
+
+That means in this example:
+
+      class Foo {
+         /**
+          * @inject
+          * @var Bar
+          */
+         protected $bar;
+      }
+
+      /**
+       * @singleton
+       */
+      class Bar {
+          public function __construct($arg) {
+          }
+      }
+
+      $instanceOne = $dic->getInstanceOfClass('Foo', array('arg' => 1));
+      $instanceTwo = $dic->getInstanceOfClass('Foo', array('arg' => 2));
+
+$instanceOne and $instanceTwo will be different instances. This feature comes with a speed price though,
+so if you want to have the same instance regardless of the parameter are always pass in the same or
+inject all parameters, mark it as a service instead (see below).
+
+Injecting as service
+--------------------
+
+      class Foo {
+         /**
+          * @inject
+          * @var Bar
+          */
+         protected $bar;
+      }
+
+      /**
+       * @service
+       */
+      class Bar {
+
+      }
+
+      $instanceOne = $dic->getInstanceOfClass('Foo');
+      $instanceTwo = $dic->getInstanceOfClass('Foo');
+
+Both $instanceOne and $instanceTwo will have the same instance of Bar injections.
+
+You can also configure this in the dependecy injection configuration instead of using annotations
+
+    'Bar' => array(
+        'service' => true
+    )
+
+In contrast to singletons, In a service this example
+
+      class Foo {
+         /**
+          * @inject
+          * @var Bar
+          */
+         protected $bar;
+      }
+
+      /**
+       * @service
+       */
+      class Bar {
+          public function __construct($arg) {
+          }
+      }
+
+      $instanceOne = $dic->getInstanceOfClass('Foo', array('arg' => 1));
+      $instanceTwo = $dic->getInstanceOfClass('Foo', array('arg' => 2));
+
+would lead to $instanceOne and $instanceTwo being the same object instance.
+
 Configuring parameters
 ----------------------
 

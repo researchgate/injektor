@@ -141,6 +141,16 @@ class DependencyInjectionContainer {
             return $this->instances[$singletonKey];
         }
 
+        if ($this->isConfiguredAsService($classConfig, $classReflection) &&
+                isset($this->instances[$fullClassName])
+        ) {
+            $this->log('Found service instance of class [' . $fullClassName . ']');
+            if ($this->iterationDepth > 0) {
+                $this->iterationDepth--;
+            }
+            return $this->instances[$fullClassName];
+        }
+
         $methodReflection = null;
 
         if ($this->isConfiguredAsSingleton($classConfig, $classReflection) &&
@@ -162,6 +172,10 @@ class DependencyInjectionContainer {
         if ($this->isConfiguredAsSingleton($classConfig, $classReflection)) {
             $this->log('Added singleton instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . '], Singleton Key: [' . $singletonKey . ']');
             $this->instances[$singletonKey] = $instance;
+        }
+        if ($this->isConfiguredAsService($classConfig, $classReflection)) {
+            $this->log('Added service instance [' . spl_object_hash($instance) . '] of class [' .  $fullClassName . ']');
+            $this->instances[$fullClassName] = $instance;
         }
 
         $instance = $this->injectProperties($classReflection, $instance);
@@ -492,6 +506,21 @@ class DependencyInjectionContainer {
         $classComment = $classReflection->getDocComment();
 
         return strpos($classComment, '@singleton') !== false;
+    }
+
+    /**
+     * @param array $classConfig
+     * @param \ReflectionClass $classReflection
+     * @return bool
+     */
+    public function isConfiguredAsService(array $classConfig, \ReflectionClass $classReflection) {
+        if (isset($classConfig['service'])) {
+            return (bool) $classConfig['service'];
+        }
+
+        $classComment = $classReflection->getDocComment();
+
+        return strpos($classComment, '@service') !== false;
     }
 
     /**

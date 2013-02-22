@@ -170,6 +170,62 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('foo', $instance->foo);
     }
 
+    public function testGetInstanceOfService() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $config->setClassConfig('rg\injektor\DICTestService', array(
+            'service' => true
+        ));
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestService', array('arg' => 123));
+
+        $instanceTwo = $dic->getInstanceOfClass('rg\injektor\DICTestService', array('arg' => 123));
+
+        $this->assertSame($instance, $instanceTwo);
+    }
+
+    public function testGetInstanceOfAnnotatedService() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $config->setClassConfig('rg\injektor\DICTestAnnotatedService', array(
+            'service' => true
+        ));
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedService', array('arg' => 123));
+
+        $instanceTwo = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedService', array('arg' => 123));
+
+        $this->assertSame($instance, $instanceTwo);
+    }
+
+    public function testGetInstanceOfServiceWithDifferentArgumentsStillReturnSameInstance() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $config->setClassConfig('rg\injektor\DICTestService', array(
+            'service' => true
+        ));
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestService', array('arg' => 123));
+
+        $instanceTwo = $dic->getInstanceOfClass('rg\injektor\DICTestService', array('arg' => 456));
+
+        $this->assertSame($instance, $instanceTwo);
+    }
+
+    public function testGetInstanceOfAnnotatedServiceWithDifferentArgumentsStillReturnSameInstance() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $config->setClassConfig('rg\injektor\DICTestAnnotatedService', array(
+            'service' => true
+        ));
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedService', array('arg' => 123));
+
+        $instanceTwo = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedService', array('arg' => 456));
+
+        $this->assertSame($instance, $instanceTwo);
+    }
+
     public function testGetInstanceWithoutConstructor() {
         $config = new Configuration(null, __DIR__ . '/_factories');
 
