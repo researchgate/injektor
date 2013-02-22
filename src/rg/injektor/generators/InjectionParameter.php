@@ -73,20 +73,12 @@ class InjectionParameter {
         return $this->name;
     }
 
-    public function getPreProcessingBody() {
-        return '$methodParameters[\'' . $this->name . '\'] = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
+    public function getProcessingBody() {
+        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
     }
 
-    public function getPostProcessingBody() {
-        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $methodParameters) ? $methodParameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
-    }
-
-    public function getDefaultPreProcessingBody() {
-        return '$methodParameters[\'' . $this->name . '\'] = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : null;' . PHP_EOL;
-    }
-
-    public function getDefaultPostProcessingBody() {
-        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $methodParameters) ? $methodParameters[\'' . $this->name . '\'] : null;' . PHP_EOL;
+    public function getDefaultProcessingBody() {
+        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : null;' . PHP_EOL;
     }
 
     protected function analyze() {

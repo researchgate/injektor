@@ -126,7 +126,6 @@ class FileGenerator {
             $body .= '    return self::$instance[$singletonKey];' . PHP_EOL;
             $body .= '}' . PHP_EOL . PHP_EOL;
         }
-        $bottomBody = '';
 
         $providerClassName = $this->dic->getProviderClassName($classConfig, new \ReflectionClass($this->fullClassName), null);
         if ($providerClassName && $providerClassName->getClassName()) {
@@ -156,11 +155,9 @@ class FileGenerator {
                     if ($injectionParameter->getFactoryName()) {
                         $this->usedFactories[] = $injectionParameter->getFactoryName();
                     }
-                    $body .= $injectionParameter->getPreProcessingBody();
-                    $bottomBody .= $injectionParameter->getPostProcessingBody();
+                    $body .= $injectionParameter->getProcessingBody();
                 } catch (\Exception $e) {
-                    $body .= $injectionParameter->getDefaultPreProcessingBody();
-                    $bottomBody .= $injectionParameter->getDefaultPostProcessingBody();
+                    $body .= $injectionParameter->getDefaultProcessingBody();
                 }
                 $this->constructorArguments[] = $argumentName;
                 $this->constructorArgumentStringParts[] = '$' . $argumentName;
@@ -170,8 +167,6 @@ class FileGenerator {
 
             // Property injection
             $this->injectProperties($classConfig, $classReflection);
-
-            $body .= $bottomBody;
 
             if (count($this->injectableProperties) > 0) {
                 $proxyName = $this->dic->getProxyClassName($this->fullClassName);
@@ -274,14 +269,12 @@ class FileGenerator {
 
         $arguments = $method->getParameters();
 
-        $body = '$methodParameters = array();' . PHP_EOL;
+        $body = '';
 
         if (count($arguments) > 0) {
             $factoryMethod->setParameter(new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array()));
         }
         $methodArgumentStringParts = array();
-
-        $bottomBody = '';
 
         foreach ($arguments as $argument) {
             /** @var \ReflectionParameter $argument */
@@ -302,17 +295,14 @@ class FileGenerator {
                 if ($injectionParameter->getFactoryName()) {
                     $this->usedFactories[] = $injectionParameter->getFactoryName();
                 }
-                $body .= $injectionParameter->getPreProcessingBody();
-                $bottomBody .= $injectionParameter->getPostProcessingBody();
+                $body .= $injectionParameter->getProcessingBody();
             } catch (\Exception $e) {
-                $body .= $injectionParameter->getDefaultPreProcessingBody();
-                $bottomBody .= $injectionParameter->getDefaultPostProcessingBody();
+                $body .= $injectionParameter->getDefaultProcessingBody();
             }
 
             $methodArgumentStringParts[] = '$' . $argumentName;
         }
 
-        $body .= $bottomBody;
         $body .= '$result = $object->' . $method->name . '(' . implode(', ', $methodArgumentStringParts) . ');' . PHP_EOL . PHP_EOL;
 
         $body .= PHP_EOL . 'return $result;';
