@@ -193,7 +193,7 @@ class DependencyInjectionContainer {
      * @return string
      */
     private function getSingletonKey($fullClassName, $constructorArguments) {
-        return $fullClassName . json_encode($constructorArguments) . '#' . getmypid();
+        return $fullClassName . serialize($constructorArguments) . '#' . getmypid();
     }
 
     /**

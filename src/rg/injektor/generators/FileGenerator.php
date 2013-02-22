@@ -121,7 +121,7 @@ class FileGenerator {
             $property->setStatic(true);
             $factoryClass->addPropertyFromGenerator($property);
 
-            $body = '$singletonKey = json_encode($parameters) . "#" . getmypid();' . PHP_EOL;
+            $body = '$singletonKey = serialize($parameters) . "#" . getmypid();' . PHP_EOL;
             $body .= 'if (isset(self::$instance[$singletonKey])) {' . PHP_EOL;
             $body .= '    return self::$instance[$singletonKey];' . PHP_EOL;
             $body .= '}' . PHP_EOL . PHP_EOL;

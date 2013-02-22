@@ -97,7 +97,7 @@ class rg_injektor_generators_FGTestClassFourFactory
 
     public static function getInstance(array \$parameters = array())
     {
-        \$singletonKey = json_encode(\$parameters) . "#" . getmypid();
+        \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         if (isset(self::\$instance[\$singletonKey])) {
             return self::\$instance[\$singletonKey];
         }
@@ -222,7 +222,7 @@ class rg_injektor_generators_FGTestClassOneFactory
 
     public static function getInstance(array \$parameters = array())
     {
-        \$singletonKey = json_encode(\$parameters) . "#" . getmypid();
+        \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         if (isset(self::\$instance[\$singletonKey])) {
             return self::\$instance[\$singletonKey];
         }
