@@ -129,21 +129,22 @@ class DependencyInjectionContainer {
 
         $classReflection = $this->getClassReflection($fullClassName);
 
-        $singletonKey = $this->getSingletonKey($fullClassName, $constructorArguments);
+        $singletonKey = null;
+        $isConfiguredAsSingleton = $this->isConfiguredAsSingleton($classConfig, $classReflection);
+        if ($isConfiguredAsSingleton) {
+            $singletonKey = $this->getSingletonKey($fullClassName, $constructorArguments);
 
-        if ($this->isConfiguredAsSingleton($classConfig, $classReflection) &&
-            isset($this->instances[$singletonKey])
-        ) {
-            $this->log('Found singleton instance [' . spl_object_hash($this->instances[$singletonKey]) . '] of class [' . get_class($this->instances[$singletonKey]) . '], Singleton Key: [' . $singletonKey . ']');
-            if ($this->iterationDepth > 0) {
-                $this->iterationDepth--;
+            if (isset($this->instances[$singletonKey])) {
+                $this->log('Found singleton instance [' . spl_object_hash($this->instances[$singletonKey]) . '] of class [' . get_class($this->instances[$singletonKey]) . '], Singleton Key: [' . $singletonKey . ']');
+                if ($this->iterationDepth > 0) {
+                    $this->iterationDepth--;
+                }
+                return $this->instances[$singletonKey];
             }
-            return $this->instances[$singletonKey];
         }
 
-        if ($this->isConfiguredAsService($classConfig, $classReflection) &&
-                isset($this->instances[$fullClassName])
-        ) {
+        $isConfiguredAsService = $this->isConfiguredAsService($classConfig, $classReflection);
+        if ($isConfiguredAsService && isset($this->instances[$fullClassName])) {
             $this->log('Found service instance of class [' . $fullClassName . ']');
             if ($this->iterationDepth > 0) {
                 $this->iterationDepth--;
@@ -153,8 +154,7 @@ class DependencyInjectionContainer {
 
         $methodReflection = null;
 
-        if ($this->isConfiguredAsSingleton($classConfig, $classReflection) &&
-            $this->isSingleton($classReflection)
+        if (($isConfiguredAsSingleton || $isConfiguredAsService) && $this->isSingleton($classReflection)
         ) {
             $constructorArguments = $this->getConstructorArguments($classReflection, $classConfig, $constructorArguments, 'getInstance');
             $instance = $classReflection->getMethod('getInstance')->invokeArgs(null, $constructorArguments);
@@ -169,11 +169,11 @@ class DependencyInjectionContainer {
 
         $this->log('Created instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . ']');
 
-        if ($this->isConfiguredAsSingleton($classConfig, $classReflection)) {
+        if ($isConfiguredAsSingleton) {
             $this->log('Added singleton instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . '], Singleton Key: [' . $singletonKey . ']');
             $this->instances[$singletonKey] = $instance;
         }
-        if ($this->isConfiguredAsService($classConfig, $classReflection)) {
+        if ($isConfiguredAsService) {
             $this->log('Added service instance [' . spl_object_hash($instance) . '] of class [' .  $fullClassName . ']');
             $this->instances[$fullClassName] = $instance;
         }

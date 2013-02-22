@@ -170,6 +170,21 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('foo', $instance->foo);
     }
 
+    public function testGetInstanceOfRealSingletonMarkedAsService() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $config->setClassConfig('rg\injektor\DICTestSingleton', array(
+            'service' => true
+        ));
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestSingleton');
+
+        $this->assertInstanceOf('rg\injektor\DICTestSingleton', $instance);
+        $this->assertInstanceOf('rg\injektor\DICTestClassNoConstructor', $instance->instance);
+        $this->assertInstanceOf('rg\injektor\DICTestClassNoConstructor', $instance->injectedProperty);
+        $this->assertEquals('foo', $instance->foo);
+    }
+
     public function testGetInstanceOfService() {
         $config = new Configuration(null, __DIR__ . '/_factories');
 
