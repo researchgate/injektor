@@ -9,6 +9,8 @@
  */
 namespace rg\injektor;
 
+use Psr\Log\LoggerInterface;
+
 /**
  * @implementedBy rg\injektor\FactoryDependencyInjectionContainer
  * @generator ignore
@@ -45,9 +47,9 @@ class DependencyInjectionContainer {
     private $iterationDepth = 0;
 
     /**
-     * @var \Closure
+     * @var LoggerInterface
      */
-    private $loggerFunction;
+    private $logger;
 
     /**
      * @param \rg\injektor\Configuration $config
@@ -76,10 +78,10 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param callable $loggerFunction
+     * @param LoggerInterface $logger
      */
-    public function setLoggerFunction($loggerFunction) {
-        $this->loggerFunction = $loggerFunction;
+    public function setLogger(LoggerInterface $logger) {
+        $this->logger = $logger;
     }
 
     /**
@@ -738,9 +740,8 @@ class DependencyInjectionContainer {
      * @param string $string
      */
     protected function log($string) {
-        if (is_callable($this->loggerFunction)) {
-            call_user_func($this->loggerFunction,
-                sprintf("%02d", $this->iterationDepth) . str_repeat('-', $this->iterationDepth * 2) . '> ' . $string);
+        if ($this->logger) {
+            $this->logger->debug(sprintf("%02d", $this->iterationDepth) . str_repeat('-', $this->iterationDepth * 2) . '> ' . $string);
         }
     }
 
