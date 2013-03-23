@@ -741,6 +741,20 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('3f', $instance->provided->one);
         $this->assertEquals('4f', $instance->provided->two);
     }
+
+    public function testPropertyInjectionWithUseStatement() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('some\other\name\space\ClassPropertyInjectionWithUseStatementSupport');
+
+        $this->assertInstanceOf('some\other\name\space\ClassPropertyInjectionWithUseStatementSupport', $instance);
+        $this->assertInstanceOf('rg\injektor\DICTestClassNoConstructor', $instance->dependency);
+        $this->assertInstanceOf('some\other\name\space\DependencySameNamespace', $instance->dependencySameNamespace);
+        $this->assertInstanceOf('rg\injektor\DICTestAnnotatedInterface', $instance->dependencyInterfaceWithAlias);
+        $this->assertInstanceOf('rg\injektor\DICTestAnnotatedSingleton', $instance->dependencyWithAlias);
+    }
+
     /**
      * @param Configuration $config
      * @return DependencyInjectionContainer

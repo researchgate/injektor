@@ -9,6 +9,7 @@
  */
 namespace rg\injektor;
 
+use Doctrine\Common\Annotations\PhpParser;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -299,6 +300,9 @@ class DependencyInjectionContainer {
         if (!$fullClassName) {
             throw new InjectionException('Expected tag @var not found in doc comment.');
         }
+
+        $fullClassName = $this->getFullClassNameBecauseOfImports($property, $fullClassName);
+
         $arguments = $this->getParamsFromPropertyTypeHint($property);
 
         $argumentClassConfig = $this->config->getClassConfig($fullClassName);
@@ -313,6 +317,37 @@ class DependencyInjectionContainer {
         $property->setAccessible(true);
         $property->setValue($instance, $propertyInstance);
         $property->setAccessible(false);
+    }
+
+    /**
+     * @param \ReflectionProperty $property
+     * @param string $fullClassName
+     * @return string
+     */
+    public function getFullClassNameBecauseOfImports($property, $fullClassName) {
+        if (!class_exists($fullClassName) || !interface_exists($fullClassName)) {
+            $parser = new PhpParser();
+            $useStatements = $parser->parseClass($property->getDeclaringClass());
+            if ($property->getDeclaringClass()->inNamespace()) {
+                $useStatements['__NAMESPACE__'] = $property->getDeclaringClass()->getNamespaceName();
+            }
+            // only process names which are not fully qualified, yet
+            // fully qualified names must start with a \
+            if ('\\' !== $fullClassName[0]) {
+                $alias = (false === $pos = strpos($fullClassName, '\\')) ? $fullClassName : substr($fullClassName, 0, $pos);
+
+                if (isset($useStatements[$loweredAlias = strtolower($alias)])) {
+                    if (false !== $pos) {
+                        $fullClassName = $useStatements[$loweredAlias] . substr($fullClassName, $pos);
+                    } else {
+                        $fullClassName = $useStatements[$loweredAlias];
+                    }
+                } elseif (isset($useStatements['__NAMESPACE__']) && class_exists($useStatements['__NAMESPACE__'] . '\\' . $fullClassName)) {
+                    $fullClassName = $useStatements['__NAMESPACE__'] . '\\' . $fullClassName;
+                }
+            }
+        }
+        return $fullClassName;
     }
 
     /**
