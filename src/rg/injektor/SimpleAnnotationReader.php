@@ -28,7 +28,7 @@ class SimpleAnnotationReader {
      */
     private function getClassFromTypeHint($docComment, $tag) {
         $matches = array();
-        preg_match('/' . $tag . '\s([a-zA-Z0-9\\\\\[\\]]+)/', $docComment, $matches);
+        preg_match('/' . $tag . '\s([a-zA-Z0-9\_\\\\\[\\]]+)/', $docComment, $matches);
         if (isset($matches[1])) {
             return $matches[1];
         }
