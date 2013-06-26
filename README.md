@@ -26,10 +26,6 @@ After you installed rg\\injektor you can use it like this:
 
 For more details on the specific features of rg\\injektor see below.
 
-If you need an instance of the DependencyInjectionContainer with this configuration later on, you can get it with
-
-    $dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
-
 If you use some kind of MVC framework it is recommended to include rg\\injektor in your front controller to create
 your controller objects and call methods on them.
 
@@ -44,10 +40,6 @@ First you have to use the \rg\injektor\FactoryDependencyInjectionContainer class
 
     $configuration = new \rg\injektor\Configuration($pathToConfigFile, $pathToFactoryDirectory);
     $dic = new \rg\injektor\FactoryDependencyInjectionContainer($configuration);
-
-Later on you still can get the created instance of \rg\injektor\FactoryDependencyInjectionContainer by
-
-    $dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
 
 If no factories are present \rg\injektor\FactoryDependencyInjectionContainer falls back to Reflection.
 
@@ -91,7 +83,10 @@ of them. Here is an example of such a script based on the Symfony Console Compon
                 mkdir($factoryPath, 0777, true);
             }
 
-            $this->dic = \rg\injektor\DependencyInjectionContainer::getDefaultInstance();
+            $pathToConfigFile = '/config/dic.php';
+
+            $configuration = new \rg\injektor\Configuration($pathToConfigFile, $factoryPath);
+            $this->dic = new \rg\injektor\FactoryDependencyInjectionContainer($configuration);
 
             $this->factoryGenerator = new WritingFactoryGenerator($this->dic->getConfig(), $factoryPath);
 

@@ -79,6 +79,13 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @param \rg\injektor\DependencyInjectionContainer $instance
+     */
+    public static function setDefaultInstance(\rg\injektor\DependencyInjectionContainer $instance) {
+        self::$defaultInstance = $instance;
+    }
+
+    /**
      * @param LoggerInterface $logger
      */
     public function setLogger(LoggerInterface $logger) {
@@ -103,7 +110,7 @@ class DependencyInjectionContainer {
         $fullClassName = trim($fullClassName, '\\');
 
         if ($fullClassName === __CLASS__) {
-            return $this->getDefaultInstance();
+            return $this;
         }
 
         $this->log('Trying to get instance of [' . $fullClassName . ']');
