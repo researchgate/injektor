@@ -74,11 +74,11 @@ class InjectionParameter {
     }
 
     public function getProcessingBody() {
-        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
+        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : (array_key_exists($i, $parameters) ?  $parameters[$i] : ' . $this->defaultValue . '); $i++;' . PHP_EOL;
     }
 
     public function getDefaultProcessingBody() {
-        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : null;' . PHP_EOL;
+        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : (array_key_exists($i, $parameters) ?  $parameters[$i] : null )); $i++;' . PHP_EOL;
     }
 
     protected function analyze() {

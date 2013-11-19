@@ -620,9 +620,12 @@ class DependencyInjectionContainer {
 
         $argumentValues = array();
 
-        foreach ($arguments as $argument) {
+        $isNumericDefaultArguments = !(bool) count(array_filter(array_keys($defaultArguments), 'is_string'));
+        foreach ($arguments as $key => $argument) {
             /** @var \ReflectionParameter $argument */
-            if (array_key_exists($argument->name, $defaultArguments)) {
+            if ($isNumericDefaultArguments && array_key_exists($key, $defaultArguments)) {
+                $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$key]);
+            } else if (array_key_exists($argument->name, $defaultArguments)) {
                 $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$argument->name]);
             } else if ($methodIsMarkedInjectible) {
                 $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);

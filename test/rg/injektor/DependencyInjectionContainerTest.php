@@ -397,6 +397,20 @@ class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('barfoo', $actual);
     }
 
+    public function testCallMethodWithUnnamedParameters() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestClassOne');
+
+        $actual = $dic->callMethodOnObject($instance, 'getSomethingTwo', array(
+            new DICTestClassTwo(new DICTestClassThree()), new DICTestClassThree()
+        ));
+
+        $this->assertEquals('barfoo', $actual);
+    }
+
     public function testCallMethodWithoutParametersOnObject() {
         $config = new Configuration(null, __DIR__ . '/_factories');
 

@@ -114,14 +114,14 @@ class FileGenerator {
 
         $isSingleton = $this->dic->isConfiguredAsSingleton($classConfig, $classReflection);
 
-        $body = '';
+        $body = '$i = 0;' . PHP_EOL;
 
         if ($isSingleton) {
             $property = new Generator\PropertyGenerator('instance', array(), Generator\PropertyGenerator::FLAG_PRIVATE);
             $property->setStatic(true);
             $factoryClass->addPropertyFromGenerator($property);
 
-            $body = '$singletonKey = serialize($parameters) . "#" . getmypid();' . PHP_EOL;
+            $body .= '$singletonKey = serialize($parameters) . "#" . getmypid();' . PHP_EOL;
             $body .= 'if (isset(self::$instance[$singletonKey])) {' . PHP_EOL;
             $body .= '    return self::$instance[$singletonKey];' . PHP_EOL;
             $body .= '}' . PHP_EOL . PHP_EOL;
@@ -134,7 +134,7 @@ class FileGenerator {
             $property->setStatic(true);
             $factoryClass->addPropertyFromGenerator($property);
 
-            $body = 'if (self::$instance) {' . PHP_EOL;
+            $body .= 'if (self::$instance) {' . PHP_EOL;
             $body .= '    return self::$instance;' . PHP_EOL;
             $body .= '}' . PHP_EOL . PHP_EOL;
         }
@@ -284,7 +284,7 @@ class FileGenerator {
 
         $arguments = $method->getParameters();
 
-        $body = '';
+        $body = '$i = 0;' . PHP_EOL;
 
         if (count($arguments) > 0) {
             $factoryMethod->setParameter(new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array()));
