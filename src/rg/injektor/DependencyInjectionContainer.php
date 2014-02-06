@@ -173,7 +173,7 @@ class DependencyInjectionContainer {
             if ($constructorArguments) {
                 $instance = $classReflection->newInstanceArgs($constructorArguments);
             } else {
-                $instance = $classReflection->newInstanceArgs();
+                $instance = $classReflection->newInstanceArgs(array());
             }
         }
 
