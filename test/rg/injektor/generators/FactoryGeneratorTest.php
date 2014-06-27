@@ -109,7 +109,7 @@ class rg_injektor_generators_FGTestClassFourFactory
             \$simple = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$simple = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         )); \$i++;
         }
@@ -131,7 +131,7 @@ class rg_injektor_generators_FGTestClassFourFactory
             \$simple = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$simple = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         )); \$i++;
         }
@@ -169,7 +169,7 @@ class rg_injektor_generators_FGTestClassThreeFactory
             \$four = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
         ));
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$foo = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : 'foo'; \$i++;
             \$four = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
         )); \$i++;
@@ -217,7 +217,7 @@ class rg_injektor_generators_FGTestClassTwoFactory
             \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         )); \$i++;
         }
@@ -284,7 +284,7 @@ class rg_injektor_generators_FGTestClassOneFactory
             \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         )); \$i++;
             \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
@@ -321,7 +321,7 @@ class rg_injektor_generators_FGTestClassOneFactory
             \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         )); \$i++;
             \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
@@ -346,7 +346,7 @@ class rg_injektor_generators_FGTestClassOneFactory
             \$two = null;
             \$three = null;
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : null; \$i++;
             \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : null; \$i++;
         }
@@ -366,7 +366,7 @@ class rg_injektor_generators_FGTestClassOneFactory
         if (!\$parameters) {
             \$foo = null;
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$foo = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : null; \$i++;
         }
         else {
@@ -384,7 +384,7 @@ class rg_injektor_generators_FGTestClassOneFactory
         if (!\$parameters) {
             \$two = NULL;
         }
-        else if (array_keys(\$parameters)[0] === 0) {
+        else if (array_key_exists(0, \$parameters)) {
             \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : NULL; \$i++;
         }
         else {

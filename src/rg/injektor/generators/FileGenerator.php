@@ -185,7 +185,7 @@ class FileGenerator {
                 }
 
                 $body .= '}' . PHP_EOL;
-                $body .= 'else if (array_keys($parameters)[0] === 0) {' . PHP_EOL;
+                $body .= 'else if (array_key_exists(0, $parameters)) {' . PHP_EOL;
 
                 foreach ($arguments as $argument) {
                     /** @var \ReflectionParameter $argument */
@@ -386,7 +386,7 @@ class FileGenerator {
             }
 
             $body .= '}' . PHP_EOL;
-            $body .= 'else if (array_keys($parameters)[0] === 0) {' . PHP_EOL;
+            $body .= 'else if (array_key_exists(0, $parameters)) {' . PHP_EOL;
 
             foreach ($arguments as $argument) {
                 /** @var \ReflectionParameter $argument */
