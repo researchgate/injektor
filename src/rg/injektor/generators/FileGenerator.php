@@ -148,33 +148,97 @@ class FileGenerator {
         } else {
             // constructor method arguments
 
-            foreach ($arguments as $argument) {
-                /** @var \ReflectionParameter $argument  */
+            if (count($arguments) > 0) {
+                foreach ($arguments as $argument) {
+                    /** @var \ReflectionParameter $argument */
+                    $argumentName = $argument->name;
+                    $this->constructorArguments[] = $argumentName;
+                    $this->constructorArgumentStringParts[] = '$' . $argumentName;
+                    $this->realConstructorArgumentStringParts[] = '$' . $argumentName;
 
-                $injectionParameter = new \rg\injektor\generators\InjectionParameter(
-                    $argument,
-                    $classConfig,
-                    $this->config,
-                    $this->dic
-                );
-
-                $argumentName = $argument->name;
-
-                try {
-                    if ($injectionParameter->getClassName()) {
-                        $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
-                    }
-                    if ($injectionParameter->getFactoryName()) {
-                        $this->usedFactories[] = $injectionParameter->getFactoryName();
-                    }
-                    $body .= $injectionParameter->getProcessingBody();
-                } catch (\Exception $e) {
-                    $body .= $injectionParameter->getDefaultProcessingBody();
                 }
-                $this->constructorArguments[] = $argumentName;
-                $this->constructorArgumentStringParts[] = '$' . $argumentName;
-                $this->realConstructorArgumentStringParts[] = '$' . $argumentName;
 
+                $body .= 'if (!$parameters) {' . PHP_EOL;
+
+                foreach ($arguments as $argument) {
+                    /** @var \ReflectionParameter $argument */
+
+                    $injectionParameter = new \rg\injektor\generators\InjectionParameter(
+                        $argument,
+                        $classConfig,
+                        $this->config,
+                        $this->dic,
+                        InjectionParameter::MODE_NO_ARGUMENTS
+                    );
+
+                    try {
+                        if ($injectionParameter->getClassName()) {
+                            $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
+                        }
+                        if ($injectionParameter->getFactoryName()) {
+                            $this->usedFactories[] = $injectionParameter->getFactoryName();
+                        }
+                        $body .= '    ' . $injectionParameter->getProcessingBody();
+                    } catch (\Exception $e) {
+                        $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                    }
+                }
+
+                $body .= '}' . PHP_EOL;
+                $body .= 'else if (array_keys($parameters)[0] === 0) {' . PHP_EOL;
+
+                foreach ($arguments as $argument) {
+                    /** @var \ReflectionParameter $argument */
+
+                    $injectionParameter = new \rg\injektor\generators\InjectionParameter(
+                        $argument,
+                        $classConfig,
+                        $this->config,
+                        $this->dic,
+                        InjectionParameter::MODE_NUMERIC
+                    );
+
+                    try {
+                        if ($injectionParameter->getClassName()) {
+                            $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
+                        }
+                        if ($injectionParameter->getFactoryName()) {
+                            $this->usedFactories[] = $injectionParameter->getFactoryName();
+                        }
+                        $body .= '    ' . $injectionParameter->getProcessingBody();
+                    } catch (\Exception $e) {
+                        $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                    }
+                }
+
+                $body .= '}' . PHP_EOL;
+                $body .= 'else {' . PHP_EOL;
+
+                foreach ($arguments as $argument) {
+                    /** @var \ReflectionParameter $argument */
+
+                    $injectionParameter = new \rg\injektor\generators\InjectionParameter(
+                        $argument,
+                        $classConfig,
+                        $this->config,
+                        $this->dic,
+                        InjectionParameter::MODE_STRING
+                    );
+
+                    try {
+                        if ($injectionParameter->getClassName()) {
+                            $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
+                        }
+                        if ($injectionParameter->getFactoryName()) {
+                            $this->usedFactories[] = $injectionParameter->getFactoryName();
+                        }
+                        $body .= '    ' . $injectionParameter->getProcessingBody();
+                    } catch (\Exception $e) {
+                        $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                    }
+                }
+
+                $body .= '}' . PHP_EOL;
             }
 
             // Property injection
@@ -285,37 +349,95 @@ class FileGenerator {
         $arguments = $method->getParameters();
 
         $body = '$i = 0;' . PHP_EOL;
+        $methodArgumentStringParts = array();
 
         if (count($arguments) > 0) {
             $factoryMethod->setParameter(new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array()));
-        }
-        $methodArgumentStringParts = array();
 
-        foreach ($arguments as $argument) {
-            /** @var \ReflectionParameter $argument */
-
-            $injectionParameter = new \rg\injektor\generators\InjectionParameter(
-                $argument,
-                $classConfig,
-                $this->config,
-                $this->dic
-            );
-
-            $argumentName = $argument->name;
-
-            try {
-                if ($injectionParameter->getClassName()) {
-                    $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
-                }
-                if ($injectionParameter->getFactoryName()) {
-                    $this->usedFactories[] = $injectionParameter->getFactoryName();
-                }
-                $body .= $injectionParameter->getProcessingBody();
-            } catch (\Exception $e) {
-                $body .= $injectionParameter->getDefaultProcessingBody();
+            foreach ($arguments as $argument) {
+                /** @var \ReflectionParameter $argument */
+                $argumentName = $argument->name;
+                $methodArgumentStringParts[] = '$' . $argumentName;
             }
 
-            $methodArgumentStringParts[] = '$' . $argumentName;
+            $body .= 'if (!$parameters) {' . PHP_EOL;
+
+            foreach ($arguments as $argument) {
+                /** @var \ReflectionParameter $argument */
+                $injectionParameter = new \rg\injektor\generators\InjectionParameter(
+                    $argument,
+                    $classConfig,
+                    $this->config,
+                    $this->dic,
+                    InjectionParameter::MODE_NO_ARGUMENTS
+                );
+
+                try {
+                    if ($injectionParameter->getClassName()) {
+                        $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
+                    }
+                    if ($injectionParameter->getFactoryName()) {
+                        $this->usedFactories[] = $injectionParameter->getFactoryName();
+                    }
+                    $body .= '    ' . $injectionParameter->getProcessingBody();
+                } catch (\Exception $e) {
+                    $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                }
+            }
+
+            $body .= '}' . PHP_EOL;
+            $body .= 'else if (array_keys($parameters)[0] === 0) {' . PHP_EOL;
+
+            foreach ($arguments as $argument) {
+                /** @var \ReflectionParameter $argument */
+                $injectionParameter = new \rg\injektor\generators\InjectionParameter(
+                    $argument,
+                    $classConfig,
+                    $this->config,
+                    $this->dic,
+                    InjectionParameter::MODE_NUMERIC
+                );
+
+                try {
+                    if ($injectionParameter->getClassName()) {
+                        $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
+                    }
+                    if ($injectionParameter->getFactoryName()) {
+                        $this->usedFactories[] = $injectionParameter->getFactoryName();
+                    }
+                    $body .= '    ' . $injectionParameter->getProcessingBody();
+                } catch (\Exception $e) {
+                    $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                }
+            }
+
+            $body .= '}' . PHP_EOL;
+            $body .= 'else {' . PHP_EOL;
+
+            foreach ($arguments as $argument) {
+                /** @var \ReflectionParameter $argument */
+                $injectionParameter = new \rg\injektor\generators\InjectionParameter(
+                    $argument,
+                    $classConfig,
+                    $this->config,
+                    $this->dic,
+                    InjectionParameter::MODE_STRING
+                );
+
+                try {
+                    if ($injectionParameter->getClassName()) {
+                        $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
+                    }
+                    if ($injectionParameter->getFactoryName()) {
+                        $this->usedFactories[] = $injectionParameter->getFactoryName();
+                    }
+                    $body .= '    ' . $injectionParameter->getProcessingBody();
+                } catch (\Exception $e) {
+                    $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                }
+            }
+
+            $body .= '}' . PHP_EOL;
         }
 
         $body .= '$result = $object->' . $method->name . '(' . implode(', ', $methodArgumentStringParts) . ');' . PHP_EOL . PHP_EOL;

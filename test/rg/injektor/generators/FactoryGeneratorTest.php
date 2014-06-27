@@ -105,8 +105,18 @@ class rg_injektor_generators_FGTestClassFourFactory
             return self::\$instance[\$singletonKey];
         }
 
-        \$simple = array_key_exists('simple', \$parameters) ? \$parameters['simple'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
-        ))); \$i++;
+        if (!\$parameters) {
+            \$simple = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
+        ));
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$simple = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
+        )); \$i++;
+        }
+        else {
+            \$simple = array_key_exists('simple', \$parameters) ? \$parameters['simple'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
+        ));
+        }
 
         \$instance = rg_injektor_generators_FGTestClassFourProxy::getInstance(\$simple);
         self::\$instance[\$singletonKey] = \$instance;
@@ -117,8 +127,18 @@ class rg_injektor_generators_FGTestClassFourFactory
     public static function callGetInstance(\$object, array \$parameters = array())
     {
         \$i = 0;
-        \$simple = array_key_exists('simple', \$parameters) ? \$parameters['simple'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : \\rg\injektor\\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
-        ))); \$i++;
+        if (!\$parameters) {
+            \$simple = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
+        ));
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$simple = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
+        )); \$i++;
+        }
+        else {
+            \$simple = array_key_exists('simple', \$parameters) ? \$parameters['simple'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
+        ));
+        }
         \$result = \$object->getInstance(\$simple);
 
 
@@ -144,9 +164,21 @@ class rg_injektor_generators_FGTestClassThreeFactory
     public static function getInstance(array \$parameters = array())
     {
         \$i = 0;
-        \$foo = array_key_exists('foo', \$parameters) ? \$parameters['foo'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : 'foo'); \$i++;
-        \$four = array_key_exists('four', \$parameters) ? \$parameters['four'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : \\rg\\injektor\\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
-        ))); \$i++;
+        if (!\$parameters) {
+            \$foo = 'foo';
+            \$four = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
+        ));
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$foo = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : 'foo'; \$i++;
+            \$four = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
+        )); \$i++;
+        }
+        else {
+            \$foo = array_key_exists('foo', \$parameters) ? \$parameters['foo'] : 'foo';
+            \$four = array_key_exists('four', \$parameters) ? \$parameters['four'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
+        ));
+        }
 
         \$instance = new \\rg\\injektor\\generators\\FGTestClassThree(\$foo, \$four);
         return \$instance;
@@ -181,8 +213,18 @@ class rg_injektor_generators_FGTestClassTwoFactory
     public static function getInstance(array \$parameters = array())
     {
         \$i = 0;
-        \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : \\rg\\injektor\\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
-        ))); \$i++;
+        if (!\$parameters) {
+            \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        ));
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        )); \$i++;
+        }
+        else {
+            \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        ));
+        }
 
         \$instance = new \\rg\\injektor\\generators\\FGTestClassTwo(\$three);
         return \$instance;
@@ -236,10 +278,24 @@ class rg_injektor_generators_FGTestClassOneFactory
             return self::\$instance[\$singletonKey];
         }
 
-        \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : \\rg\\injektor\\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
-        ))); \$i++;
-        \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : \\rg\\injektor\\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
-        ))); \$i++;
+        if (!\$parameters) {
+            \$two = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
+        ));
+            \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        ));
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
+        )); \$i++;
+            \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        )); \$i++;
+        }
+        else {
+            \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
+        ));
+            \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        ));
+        }
 
         \$instance = new rg_injektor_generators_FGTestClassOneProxy(\$two, \$three);
         self::\$instance[\$singletonKey] = \$instance;
@@ -259,10 +315,24 @@ class rg_injektor_generators_FGTestClassOneFactory
     public static function callGetSomething(\$object, array \$parameters = array())
     {
         \$i = 0;
-        \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : \\rg\\injektor\\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
-        ))); \$i++;
-        \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : \\rg\\injektor\\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
-        ))); \$i++;
+        if (!\$parameters) {
+            \$two = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
+        ));
+            \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        ));
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
+        )); \$i++;
+            \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        )); \$i++;
+        }
+        else {
+            \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
+        ));
+            \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
+        ));
+        }
         \$result = \$object->getSomething(\$two, \$three);
 
 
@@ -272,8 +342,18 @@ class rg_injektor_generators_FGTestClassOneFactory
     public static function callGetSomethingNotInjectible(\$object, array \$parameters = array())
     {
         \$i = 0;
-        \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : null); \$i++;
-        \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : null); \$i++;
+        if (!\$parameters) {
+            \$two = null;
+            \$three = null;
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : null; \$i++;
+            \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : null; \$i++;
+        }
+        else {
+            \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : null;
+            \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : null;
+        }
         \$result = \$object->getSomethingNotInjectible(\$two, \$three);
 
 
@@ -283,7 +363,15 @@ class rg_injektor_generators_FGTestClassOneFactory
     public static function callNoTypeHint(\$object, array \$parameters = array())
     {
         \$i = 0;
-        \$foo = array_key_exists('foo', \$parameters) ? \$parameters['foo'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : null); \$i++;
+        if (!\$parameters) {
+            \$foo = null;
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$foo = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : null; \$i++;
+        }
+        else {
+            \$foo = array_key_exists('foo', \$parameters) ? \$parameters['foo'] : null;
+        }
         \$result = \$object->noTypeHint(\$foo);
 
 
@@ -293,7 +381,15 @@ class rg_injektor_generators_FGTestClassOneFactory
     public static function callMethodRestriction(\$object, array \$parameters = array())
     {
         \$i = 0;
-        \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : (array_key_exists(\$i, \$parameters) ?  \$parameters[\$i] : NULL); \$i++;
+        if (!\$parameters) {
+            \$two = NULL;
+        }
+        else if (array_keys(\$parameters)[0] === 0) {
+            \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : NULL; \$i++;
+        }
+        else {
+            \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : NULL;
+        }
         \$result = \$object->methodRestriction(\$two);
 
 

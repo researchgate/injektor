@@ -13,6 +13,10 @@ use rg\injektor\InjectionException;
 
 class InjectionParameter {
 
+    const MODE_NO_ARGUMENTS = 'noArguments';
+    const MODE_NUMERIC = 'numeric';
+    const MODE_STRING = 'string';
+
     /**
      * @var \ReflectionParameter
      */
@@ -53,9 +57,12 @@ class InjectionParameter {
 
     protected $additionalArguments;
 
+    protected $mode;
+
     public function __construct(\ReflectionParameter $parameter, array $classConfig,
                                 \rg\injektor\Configuration $config,
-                                \rg\injektor\DependencyInjectionContainer $dic) {
+                                \rg\injektor\DependencyInjectionContainer $dic,
+                                $mode) {
         $this->parameter = $parameter;
         $this->classConfig = $classConfig;
         $this->config = $config;
@@ -65,6 +72,7 @@ class InjectionParameter {
         $this->docComment = $this->parameter->getDeclaringFunction()->getDocComment();
 
         $this->additionalArguments = $this->dic->getParamsFromTypeHint($this->parameter);
+        $this->mode = $mode;
 
         $this->analyze();
     }
@@ -74,11 +82,21 @@ class InjectionParameter {
     }
 
     public function getProcessingBody() {
-        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : (array_key_exists($i, $parameters) ?  $parameters[$i] : ' . $this->defaultValue . '); $i++;' . PHP_EOL;
+        if ($this->mode === self::MODE_NO_ARGUMENTS) {
+            return '$' . $this->name . ' = ' . $this->defaultValue . ';' . PHP_EOL;
+        } else if ($this->mode === self::MODE_NUMERIC) {
+            return '$' . $this->name . ' = array_key_exists($i, $parameters) ? $parameters[$i] : ' . $this->defaultValue . '; $i++;' . PHP_EOL;
+        }
+        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
     }
 
     public function getDefaultProcessingBody() {
-        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : (array_key_exists($i, $parameters) ?  $parameters[$i] : null )); $i++;' . PHP_EOL;
+        if ($this->mode === self::MODE_NO_ARGUMENTS) {
+            return '$' . $this->name . ' = null;' . PHP_EOL;
+        } else if ($this->mode === self::MODE_NUMERIC) {
+            return '$' . $this->name . ' = array_key_exists($i, $parameters) ? $parameters[$i] : null; $i++;' . PHP_EOL;
+        }
+        return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : null;' . PHP_EOL;
     }
 
     protected function analyze() {
