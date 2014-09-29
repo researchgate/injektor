@@ -117,8 +117,6 @@ class DependencyInjectionContainer {
 
         $classConfig = $this->config->getClassConfig($fullClassName);
 
-        $classReflection = new \ReflectionClass($fullClassName);
-
         if ($configuredInstance = $this->getConfiguredInstance($classConfig)) {
             $this->log('Found configured instance [' . spl_object_hash($configuredInstance) . '] of class [' . get_class($configuredInstance) . ']');
             if ($this->iterationDepth > 0) {
@@ -126,6 +124,8 @@ class DependencyInjectionContainer {
             }
             return $configuredInstance;
         }
+
+        $classReflection = new \ReflectionClass($fullClassName);
 
         if ($providedClass = $this->getProvidedConfiguredClass($classConfig, $classReflection)) {
             $this->log('Got provided instance [' . spl_object_hash($providedClass) . '] of class [' . get_class($providedClass) . ']');
