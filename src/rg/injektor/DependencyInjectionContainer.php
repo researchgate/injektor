@@ -163,8 +163,6 @@ class DependencyInjectionContainer {
             return $this->instances[$fullClassName];
         }
 
-        $methodReflection = null;
-
         if (($isConfiguredAsSingleton || $isConfiguredAsService) && $this->isSingleton($classReflection)
         ) {
             $constructorArguments = $this->getConstructorArguments($classReflection, $classConfig, $constructorArguments, 'getInstance');
