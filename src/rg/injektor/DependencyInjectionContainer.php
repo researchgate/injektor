@@ -11,6 +11,7 @@ namespace rg\injektor;
 
 use Doctrine\Common\Annotations\PhpParser;
 use Psr\Log\LoggerInterface;
+use rg\injektor\annotations\Named;
 
 /**
  * @implementedBy rg\injektor\FactoryDependencyInjectionContainer
@@ -21,7 +22,7 @@ class DependencyInjectionContainer {
     public static $CLASS = __CLASS__;
 
     /**
-     * @var \rg\injektor\Configuration
+     * @var Configuration
      */
     protected $config;
 
@@ -31,12 +32,12 @@ class DependencyInjectionContainer {
     private $instances = array();
 
     /**
-     * @var \rg\injektor\DependencyInjectionContainer
+     * @var DependencyInjectionContainer
      */
     private static $defaultInstance;
 
     /**
-     * @var \rg\injektor\SimpleAnnotationReader
+     * @var SimpleAnnotationReader
      */
     private $annotationReader;
 
@@ -53,7 +54,7 @@ class DependencyInjectionContainer {
     private $logger;
 
     /**
-     * @param \rg\injektor\Configuration $config
+     * @param Configuration $config
      */
     public function __construct(Configuration $config = null) {
         $this->config = $config ? : new Configuration();
@@ -68,7 +69,7 @@ class DependencyInjectionContainer {
     /**
      * @static
      * @throws InjectionException
-     * @return \rg\injektor\DependencyInjectionContainer
+     * @return DependencyInjectionContainer
      */
     public static function getDefaultInstance() {
         if (self::$defaultInstance) {
@@ -79,9 +80,9 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \rg\injektor\DependencyInjectionContainer $instance
+     * @param DependencyInjectionContainer $instance
      */
-    public static function setDefaultInstance(\rg\injektor\DependencyInjectionContainer $instance) {
+    public static function setDefaultInstance(DependencyInjectionContainer $instance) {
         self::$defaultInstance = $instance;
     }
 
@@ -93,7 +94,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @return \rg\injektor\Configuration
+     * @return Configuration
      */
     public function getConfig() {
         return $this->config;
@@ -410,14 +411,14 @@ class DependencyInjectionContainer {
             && isset($classConfig['namedProviders'][$name]['class'])
         ) {
             $parameters = isset($classConfig['namedProviders'][$name]['parameters']) ? $classConfig['namedProviders'][$name]['parameters'] : array();
-            $annotation = new \rg\injektor\annotations\Named();
+            $annotation = new Named();
             $annotation->setClassName($classConfig['namedProviders'][$name]['class']);
             $annotation->setParameters($parameters);
             return $annotation;
         }
         if (isset($classConfig['provider']) && isset($classConfig['provider']['class'])) {
             $parameters = isset($classConfig['provider']['parameters']) ? $classConfig['provider']['parameters'] : array();
-            $annotation = new \rg\injektor\annotations\Named();
+            $annotation = new Named();
             $annotation->setClassName($classConfig['provider']['class']);
             $annotation->setParameters($parameters);
             return $annotation;
@@ -480,7 +481,7 @@ class DependencyInjectionContainer {
     /**
      * @param string $docComment
      * @param string $name
-     * @return \rg\injektor\annotations\Named
+     * @return Named
      */
     private function getImplementedByAnnotation($docComment, $name) {
         return $this->getMatchingAnnotationByNamedPatter($docComment, '@implementedBy', $name);
@@ -489,7 +490,7 @@ class DependencyInjectionContainer {
     /**
      * @param string $docComment
      * @param string $name
-     * @return \rg\injektor\annotations\Named
+     * @return Named
      */
     private function getProvidedByAnnotation($docComment, $name) {
         return $this->getMatchingAnnotationByNamedPatter($docComment, '@providedBy', $name);
@@ -499,7 +500,7 @@ class DependencyInjectionContainer {
      * @param string $docComment
      * @param string $type
      * @param string $name
-     * @return \rg\injektor\annotations\Named
+     * @return Named
      */
     private function getMatchingAnnotationByNamedPatter($docComment, $type, $name) {
         $matches = array();
@@ -509,7 +510,7 @@ class DependencyInjectionContainer {
         preg_match('/' . $pattern . '/', $docComment, $matches);
 
         if (isset($matches['className'])) {
-            $annotation = new \rg\injektor\annotations\Named();
+            $annotation = new Named();
             $annotation->setName($name);
             $annotation->setClassName($matches['className']);
             if (isset($matches['parameters'])) {
