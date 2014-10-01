@@ -113,27 +113,25 @@ class FileGenerator {
         }
 
         $isSingleton = $this->dic->isConfiguredAsSingleton($classConfig, $classReflection);
+        $isService = $this->dic->isConfiguredAsService($classConfig, $classReflection);
 
         $body = '$i = 0;' . PHP_EOL;
 
-        if ($isSingleton) {
-            $property = new Generator\PropertyGenerator('instance', array(), Generator\PropertyGenerator::FLAG_PRIVATE);
+        if ($isSingleton || $isService) {
+            $defaultValue = new Generator\PropertyValueGenerator(array(), Generator\ValueGenerator::TYPE_ARRAY, Generator\ValueGenerator::OUTPUT_SINGLE_LINE);
+            $property = new Generator\PropertyGenerator('instance', $defaultValue, Generator\PropertyGenerator::FLAG_PRIVATE);
             $property->setStatic(true);
             $factoryClass->addPropertyFromGenerator($property);
+        }
 
+        if ($isSingleton) {
             $body .= '$singletonKey = serialize($parameters) . "#" . getmypid();' . PHP_EOL;
             $body .= 'if (isset(self::$instance[$singletonKey])) {' . PHP_EOL;
             $body .= '    return self::$instance[$singletonKey];' . PHP_EOL;
             $body .= '}' . PHP_EOL . PHP_EOL;
         }
 
-        $isService = $this->dic->isConfiguredAsService($classConfig, $classReflection);
-
         if ($isService) {
-            $property = new Generator\PropertyGenerator('instance', null, Generator\PropertyGenerator::FLAG_PRIVATE);
-            $property->setStatic(true);
-            $factoryClass->addPropertyFromGenerator($property);
-
             $body .= 'if (self::$instance) {' . PHP_EOL;
             $body .= '    return self::$instance;' . PHP_EOL;
             $body .= '}' . PHP_EOL . PHP_EOL;
