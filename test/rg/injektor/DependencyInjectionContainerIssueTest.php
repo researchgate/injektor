@@ -13,7 +13,7 @@ namespace rg\injektor;
 
 include_once 'test_classes_issue.php';
 
-class DependencyInjectionContainerTestIssue extends \PHPUnit_Framework_TestCase
+class DependencyInjectionContainerIssueTest extends \PHPUnit_Framework_TestCase
 {
     public function testGetInstanceOfClassWithUnderscores()
     {
@@ -21,5 +21,12 @@ class DependencyInjectionContainerTestIssue extends \PHPUnit_Framework_TestCase
         $dic = new DependencyInjectionContainer($config);
         $class = $dic->getInstanceOfClass('issue\ClassWithDependencyToClassWithUnderscores');
         $this->assertInstanceOf('issue\Class_With_Underscores', $class->getDependency());
+    }
+
+    public function testGetInstanceOfClassThatInjectsInterfaceInSameNamespace()
+    {
+        $dic = new DependencyInjectionContainer();
+        $class = $dic->getInstanceOfClass('issue9\name\A');
+        $this->assertInstanceOf('issue9\name\A', $class);
     }
 }

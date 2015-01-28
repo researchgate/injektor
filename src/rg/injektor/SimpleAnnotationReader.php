@@ -17,7 +17,7 @@ class SimpleAnnotationReader {
      * @throws InjectionException
      */
     public function getClassFromVarTypeHint($docComment) {
-        return trim($this->getClassFromTypeHint($docComment, '@var'), '\\');
+        return $this->getClassFromTypeHint($docComment, '@var');
     }
 
     /**
