@@ -20,12 +20,12 @@ namespace issue  {
 
         /**
          * @inject
-         * @var issue\Class_With_Underscores
+         * @var \issue\Class_With_Underscores
          */
         protected $dependency;
 
         /**
-         * @param issue\Class_With_Underscores $dependency
+         * @param \issue\Class_With_Underscores $dependency
          * @return ClassWithDependencyToClassWithUnderscores
          */
         public function setDependency($dependency)
@@ -36,7 +36,7 @@ namespace issue  {
         }
 
         /**
-         * @return issue\Class_With_Underscores
+         * @return \issue\Class_With_Underscores
          */
         public function getDependency()
         {
