@@ -15,7 +15,7 @@ It has been tested using PHP5.3 - PHP5.6 and HHVM.
 
 #Installation
 
-You can install the library directly with composer. Just run this comman in your project directory:
+You can install the library directly with composer. Just run this command in your project directory:
 ```bash
 $ composer require rg/injektor
 ```
