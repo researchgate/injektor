@@ -335,7 +335,7 @@ class DependencyInjectionContainer {
             $parser = new PhpParser();
             $useStatements = $parser->parseClass($property->getDeclaringClass());
             if ($property->getDeclaringClass()->inNamespace()) {
-                $useStatements['__NAMESPACE__'] = $property->getDeclaringClass()->getNamespaceName();
+                $parentNamespace = $property->getDeclaringClass()->getNamespaceName();
             }
             // only process names which are not fully qualified, yet
             // fully qualified names must start with a \
@@ -348,11 +348,12 @@ class DependencyInjectionContainer {
                     } else {
                         $fullClassName = $useStatements[$loweredAlias];
                     }
-                } elseif (isset($useStatements['__NAMESPACE__']) && class_exists($useStatements['__NAMESPACE__'] . '\\' . $fullClassName)) {
-                    $fullClassName = $useStatements['__NAMESPACE__'] . '\\' . $fullClassName;
+                } elseif ($parentNamespace) {
+                    $fullClassName = $parentNamespace . '\\' . $fullClassName;
                 }
             }
         }
+
         return $fullClassName;
     }
 
