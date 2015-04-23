@@ -331,7 +331,7 @@ class DependencyInjectionContainer {
      * @return string
      */
     public function getFullClassNameBecauseOfImports($property, $fullClassName) {
-        if (!class_exists($fullClassName) || !interface_exists($fullClassName)) {
+        if (!class_exists($fullClassName) && !interface_exists($fullClassName)) {
             // only process names which are not fully qualified, yet
             // fully qualified names must start with a \
             if ('\\' !== $fullClassName[0]) {
