@@ -331,26 +331,24 @@ class DependencyInjectionContainer {
      * @return string
      */
     public function getFullClassNameBecauseOfImports($property, $fullClassName) {
-        if (!class_exists($fullClassName) && !interface_exists($fullClassName)) {
-            // only process names which are not fully qualified, yet
-            // fully qualified names must start with a \
-            if ('\\' !== $fullClassName[0]) {
-                $parser = new PhpParser();
-                $useStatements = $parser->parseClass($property->getDeclaringClass());
-                if ($property->getDeclaringClass()->inNamespace()) {
-                    $parentNamespace = $property->getDeclaringClass()->getNamespaceName();
-                }
-                $alias = (false === $pos = strpos($fullClassName, '\\')) ? $fullClassName : substr($fullClassName, 0, $pos);
+        // only process names which are not fully qualified, yet
+        // fully qualified names must start with a \
+        if ('\\' !== $fullClassName[0]) {
+            $parser = new PhpParser();
+            $useStatements = $parser->parseClass($property->getDeclaringClass());
+            if ($property->getDeclaringClass()->inNamespace()) {
+                $parentNamespace = $property->getDeclaringClass()->getNamespaceName();
+            }
+            $alias = (false === $pos = strpos($fullClassName, '\\')) ? $fullClassName : substr($fullClassName, 0, $pos);
 
-                if (isset($useStatements[$loweredAlias = strtolower($alias)])) {
-                    if (false !== $pos) {
-                        $fullClassName = $useStatements[$loweredAlias] . substr($fullClassName, $pos);
-                    } else {
-                        $fullClassName = $useStatements[$loweredAlias];
-                    }
-                } elseif (isset($parentNamespace)) {
-                    $fullClassName = $parentNamespace . '\\' . $fullClassName;
+            if (isset($useStatements[$loweredAlias = strtolower($alias)])) {
+                if (false !== $pos) {
+                    $fullClassName = $useStatements[$loweredAlias] . substr($fullClassName, $pos);
+                } else {
+                    $fullClassName = $useStatements[$loweredAlias];
                 }
+            } elseif (isset($parentNamespace)) {
+                $fullClassName = $parentNamespace . '\\' . $fullClassName;
             }
         }
 

@@ -263,7 +263,7 @@ namespace rg\injektor {
 
         public $ar;
 
-        public function __construct($one, $two = 'bar', array $ar = array()) {
+        public function __construct($one, $two = 'bar', array $ar = []) {
             $this->one = $one;
             $this->two = $two;
             $this->ar = $ar;
@@ -299,6 +299,9 @@ namespace rg\injektor {
 
     class DICTestClassNoConstructor {
 
+    }
+
+    class DICTestClassThatAlsoExistsInPublicNamespace {
     }
 
     class DICTestAnnotatedInterfaceImpl implements DICTestAnnotatedInterface {
@@ -661,13 +664,18 @@ namespace rg\injektor {
     }
 }
 
+namespace {
+    class DICTestClassThatAlsoExistsInPublicNamespace {
+    }
+}
+
 namespace some\other\name\space {
 
     use rg\injektor\DICTestClassNoConstructor;
 
     use rg\injektor\DICTestAnnotatedInterface as SomeInterface;
-
     use rg\injektor as injektorNamespace;
+    use rg\injektor\DICTestClassThatAlsoExistsInPublicNamespace;
 
     class ClassPropertyInjectionWithUseStatementSupport {
 
@@ -676,6 +684,24 @@ namespace some\other\name\space {
          * @var DICTestClassNoConstructor
          */
         public $dependency;
+
+        /**
+         * @inject
+         * @var DICTestClassThatAlsoExistsInPublicNamespace
+         */
+        public $dependencyWithOtherClassInPublicNamespace;
+
+        /**
+         * @inject
+         * @var \rg\injektor\DICTestClassThatAlsoExistsInPublicNamespace
+         */
+        public $dependencyWithOtherClassInPublicNamespaceFq;
+
+        /**
+         * @inject
+         * @var \DICTestClassThatAlsoExistsInPublicNamespace
+         */
+        public $dependencyWithOtherClassInPublicNamespaceFqPublic;
 
         /**
          * @inject
