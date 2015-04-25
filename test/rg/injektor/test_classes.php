@@ -263,7 +263,7 @@ namespace rg\injektor {
 
         public $ar;
 
-        public function __construct($one, $two = 'bar', array $ar = []]) {
+        public function __construct($one, $two = 'bar', array $ar = []) {
             $this->one = $one;
             $this->two = $two;
             $this->ar = $ar;
