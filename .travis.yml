@@ -4,6 +4,8 @@ php:
   - 5.6
   - 5.5
   - 5.4
+  - 7.0
+  - nightly
   - hhvm
 
 install:
@@ -11,3 +13,8 @@ install:
   - chmod -R 0777 test/rg/injektor/_factories/
 
 script: phpunit
+
+matrix:
+  allow_failures:
+    - php: nightly
+    - php: 7.0
