@@ -1,5 +1,11 @@
 language: php
 
+sudo: false
+
+cache:
+    directories:
+      - $HOME/.composer/cache/files
+
 php:
   - 5.6
   - 5.5
@@ -9,10 +15,8 @@ php:
   - hhvm
 
 install:
-  - composer --prefer-source install
+  - composer install
   - chmod -R 0777 test/rg/injektor/_factories/
-
-script: phpunit
 
 matrix:
   allow_failures:
