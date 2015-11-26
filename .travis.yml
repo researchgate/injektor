@@ -17,8 +17,3 @@ php:
 install:
   - composer install
   - chmod -R 0777 test/rg/injektor/_factories/
-
-matrix:
-  allow_failures:
-    - php: nightly
-    - php: 7.0
