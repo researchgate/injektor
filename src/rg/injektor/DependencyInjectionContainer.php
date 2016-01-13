@@ -502,6 +502,14 @@ class DependencyInjectionContainer {
     private function getMatchingAnnotationByNamedPatter($docComment, $type, $name) {
         $matches = array();
 
+        // try for default first
+        if (!$name) {
+            $defaultMatch = $this->getMatchingAnnotationByNamedPatter($docComment, $type, 'default');
+            if ($defaultMatch) {
+                return $defaultMatch;
+            }
+        }
+
         $pattern = $this->createNamedPattern($type, $name);
 
         preg_match('/' . $pattern . '/', $docComment, $matches);
@@ -526,8 +534,6 @@ class DependencyInjectionContainer {
         $pattern = $type;
         if ($name) {
             $pattern .= '\s+' . preg_quote($name, '/');
-        } else {
-            $pattern .= '(\s+default)?';
         }
         $pattern .= '\s+(?P<className>[a-zA-Z0-9\\\]+)';
         $pattern .= '(\s+(?P<parameters>{[\s\:\'\",a-zA-Z0-9\\\]+}))?';

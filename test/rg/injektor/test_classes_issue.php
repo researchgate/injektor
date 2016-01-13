@@ -75,3 +75,22 @@ namespace issue9\name {
         protected $myB;
     }
 }
+
+namespace issueImplementedByOrder\name {
+
+    /**
+     * @implementedBy abc issueImplementedByOrder\name\C
+     * @implementedBy default issueImplementedByOrder\name\D
+     */
+    interface B {
+
+    }
+
+    class C implements B {
+
+    }
+
+    class D implements B {
+
+    }
+}

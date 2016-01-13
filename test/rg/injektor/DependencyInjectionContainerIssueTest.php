@@ -29,4 +29,10 @@ class DependencyInjectionContainerIssueTest extends \PHPUnit_Framework_TestCase
         $class = $dic->getInstanceOfClass('issue9\name\A');
         $this->assertInstanceOf('issue9\name\A', $class);
     }
+
+    public function testGetInstanceOfClassWhereDefaultImplementedByIsNotTheFirstItem() {
+        $dic = new DependencyInjectionContainer();
+        $class = $dic->getInstanceOfClass('issueImplementedByOrder\name\B');
+        $this->assertInstanceOf('issueImplementedByOrder\name\D', $class);
+    }
 }
