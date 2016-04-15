@@ -17,7 +17,7 @@ class FactoryOnlyDependencyInjectionContainer extends FactoryDependencyInjection
      * @throws InjectionException
      * @return object
      */
-    public function getInstanceOfClass($className, array $constructorArguments = array()) {
+    protected function createInstanceOfClass($className, array $constructorArguments = array()) {
         $className = trim($className, '\\');
         $classConfig = $this->config->getClassConfig($className);
         $className = $this->getRealConfiguredClassName($classConfig, new \ReflectionClass($className));

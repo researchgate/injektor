@@ -20,7 +20,7 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
      * @param array $constructorArguments
      * @return object
      */
-    public function getInstanceOfClass($className, array $constructorArguments = array()) {
+    protected function createInstanceOfClass($className, array $constructorArguments = array()) {
         $fullFactoryClassName = $this->getFullFactoryClassName($className);
         $factoryClassName = $this->getFactoryClassName($className);
 
@@ -28,7 +28,7 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
             return $fullFactoryClassName::getInstance($constructorArguments);
         }
 
-        return parent::getInstanceOfClass($className, $constructorArguments);
+        return parent::createInstanceOfClass($className, $constructorArguments);
     }
 
     /**

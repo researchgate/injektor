@@ -54,6 +54,13 @@ class DependencyInjectionContainer {
     private $logger;
 
     /**
+     * used for injection loop detection
+     *
+     * @var array
+     */
+    protected $alreadyVisitedClasses = [];
+
+    /**
      * @param Configuration $config
      */
     public function __construct(Configuration $config = null) {
@@ -105,7 +112,37 @@ class DependencyInjectionContainer {
      * @param array $constructorArguments
      * @return object
      */
-    public function getInstanceOfClass($fullClassName, array $constructorArguments = array()) {
+    public function getInstanceOfClass($fullClassName, array $constructorArguments = []) {
+        $this->alreadyVisitedClasses = [];
+
+        return $this->createInstanceOfClass($fullClassName, $constructorArguments);
+    }
+
+    /**
+     * @param string $className
+     * @throws InjectionLoopException
+     */
+    protected function checkForInjectionLoop($className) {
+        foreach ($this->alreadyVisitedClasses as $i => $visitedClass) {
+            if ($visitedClass['name'] === $className &&
+                $visitedClass['iterationDepth'] < $this->iterationDepth &&
+                ($i === 0 || $this->alreadyVisitedClasses[$i] === $this->alreadyVisitedClasses[count($this->alreadyVisitedClasses) - 1]
+            )) {
+                throw new InjectionLoopException('Injection loop detected ' . $className . ' ' . $this->iterationDepth . PHP_EOL . print_r($this->alreadyVisitedClasses, true));
+            }
+        }
+        $this->alreadyVisitedClasses[] = [
+            'name' => $className,
+            'iterationDepth' => $this->iterationDepth
+        ];
+    }
+
+    /**
+     * @param string $fullClassName
+     * @param array $constructorArguments
+     * @return object
+     */
+    protected function createInstanceOfClass($fullClassName, array $constructorArguments = array()) {
         $this->iterationDepth++;
 
         $fullClassName = trim($fullClassName, '\\');
@@ -137,6 +174,8 @@ class DependencyInjectionContainer {
         }
 
         $fullClassName = $this->getRealConfiguredClassName($classConfig, $classReflection);
+
+        $this->checkForInjectionLoop($fullClassName);
 
         $classReflection = $this->getClassReflection($fullClassName);
 
@@ -318,7 +357,7 @@ class DependencyInjectionContainer {
             if ($namedClass) {
                 $fullClassName = $namedClass;
             }
-            $propertyInstance = $this->getInstanceOfClass($fullClassName, is_array($arguments) ? $arguments : array());
+            $propertyInstance = $this->createInstanceOfClass($fullClassName, is_array($arguments) ? $arguments : array());
         }
         $property->setAccessible(true);
         $property->setValue($instance, $propertyInstance);
@@ -466,7 +505,7 @@ class DependencyInjectionContainer {
      */
     private function getRealClassInstanceFromProvider($providerClassName, $originalName, array $parameters = array()) {
         /** @var Provider $provider  */
-        $provider = $this->getInstanceOfClass($providerClassName, $parameters);
+        $provider = $this->createInstanceOfClass($providerClassName, $parameters);
 
         if (!$provider instanceof Provider) {
             throw new InjectionException('Provider class ' . $providerClassName . ' specified in ' . $originalName . ' does not implement rg\injektor\provider');
@@ -655,7 +694,7 @@ class DependencyInjectionContainer {
             return $argumentConfig['value'];
         }
         if (isset($argumentConfig['class'])) {
-            return $this->getInstanceOfClass($argumentConfig['class']);
+            return $this->createInstanceOfClass($argumentConfig['class']);
         }
         return $argumentConfig;
     }
@@ -685,10 +724,10 @@ class DependencyInjectionContainer {
         $namedClassName = $this->getNamedClassOfArgument($argument->getClass()->name, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
 
         if ($namedClassName) {
-            return $this->getInstanceOfClass($namedClassName, $arguments);
+            return $this->createInstanceOfClass($namedClassName, $arguments);
         }
 
-        return $this->getInstanceOfClass($argument->getClass()->name, $arguments);
+        return $this->createInstanceOfClass($argument->getClass()->name, $arguments);
     }
 
     /**
