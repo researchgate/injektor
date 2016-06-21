@@ -14,7 +14,7 @@
     ],
     "require": {
         "php":">=5.5.0",
-        "zendframework/zend-code":"~2.0",
+        "zendframework/zend-code":"~2.0|~3.0",
         "doctrine/annotations" : "~1.0",
         "psr/log":"*"
     },
