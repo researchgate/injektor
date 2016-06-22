@@ -13,6 +13,9 @@ php:
   - nightly
   - hhvm
 
+before_script:
+  - phpenv config-rm xdebug.ini
+
 install:
   - composer install
   - chmod -R 0777 test/rg/injektor/_factories/
