@@ -54,6 +54,13 @@ class DependencyInjectionContainer {
     private $logger;
 
     /**
+     * used for injection loop detection
+     *
+     * @var array
+     */
+    protected $alreadyVisitedClasses = [];
+
+    /**
      * @param Configuration $config
      */
     public function __construct(Configuration $config = null) {
@@ -101,6 +108,22 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @param string $className
+     * @throws InjectionLoopException
+     */
+    protected function checkForInjectionLoop($className) {
+        if ($this->iterationDepth > 1000) {
+            throw new InjectionLoopException(
+                'Injection loop detected ' . $className . ' ' . $this->iterationDepth . PHP_EOL . print_r(
+                    $this->alreadyVisitedClasses,
+                    true
+                )
+            );
+        }
+        $this->alreadyVisitedClasses[] = $className;
+    }
+
+    /**
      * @param string $fullClassName
      * @param array $constructorArguments
      * @return object
@@ -115,6 +138,8 @@ class DependencyInjectionContainer {
         }
 
         $this->log('Trying to get instance of [' . $fullClassName . ']');
+
+        $this->checkForInjectionLoop($fullClassName);
 
         $classConfig = $this->config->getClassConfig($fullClassName);
 
