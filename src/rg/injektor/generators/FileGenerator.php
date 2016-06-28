@@ -451,7 +451,7 @@ class FileGenerator {
      */
     private function createProxyClass($proxyName) {
         $proxyClass = new Generator\ClassGenerator($proxyName);
-        $proxyClass->setExtendedClass('\\' . $this->fullClassName);
+        $proxyClass->setExtendedClass($this->fullClassName);
         foreach ($this->injectableArguments as $injectableArgument) {
             $injectorMethod = new \Zend\Code\Generator\MethodGenerator('propertyInjection' . $injectableArgument->getName());
             $injectorMethod->setBody($injectableArgument->getProcessingBody());
