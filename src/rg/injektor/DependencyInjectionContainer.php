@@ -142,8 +142,10 @@ class DependencyInjectionContainer {
      * @param string $fullClassName
      * @param array $constructorArguments
      * @return object
+     * @throws \rg\injektor\InjectionException
+     * @throws \rg\injektor\InjectionLoopException
      */
-    private function createInstanceOfClass($fullClassName, array $constructorArguments = array()) {
+    protected function createInstanceOfClass($fullClassName, array $constructorArguments = array()) {
         $this->iterationDepth++;
 
         $fullClassName = trim($fullClassName, '\\');
