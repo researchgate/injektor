@@ -127,23 +127,8 @@ class DependencyInjectionContainer {
      * @param string $fullClassName
      * @param array $constructorArguments
      * @return object
-     * @throws InjectionLoopException
      */
-    public function getInstanceOfClass($fullClassName, array $constructorArguments = []) {
-        try {
-            return $this->createInstanceOfClass($fullClassName, $constructorArguments);
-        } catch (InjectionLoopException $e) {
-            // throw new exceptions so that the really long stacktrace of the original exception does not break error loggers and handlers
-            throw new InjectionLoopException($e->getMessage());
-        }
-    }
-
-    /**
-     * @param string $fullClassName
-     * @param array $constructorArguments
-     * @return object
-     */
-    private function createInstanceOfClass($fullClassName, array $constructorArguments = array()) {
+    public function getInstanceOfClass($fullClassName, array $constructorArguments = array()) {
         $this->iterationDepth++;
 
         $fullClassName = trim($fullClassName, '\\');
@@ -358,7 +343,7 @@ class DependencyInjectionContainer {
             if ($namedClass) {
                 $fullClassName = $namedClass;
             }
-            $propertyInstance = $this->createInstanceOfClass($fullClassName, is_array($arguments) ? $arguments : array());
+            $propertyInstance = $this->getInstanceOfClass($fullClassName, is_array($arguments) ? $arguments : array());
         }
         $property->setAccessible(true);
         $property->setValue($instance, $propertyInstance);
@@ -506,7 +491,7 @@ class DependencyInjectionContainer {
      */
     private function getRealClassInstanceFromProvider($providerClassName, $originalName, array $parameters = array()) {
         /** @var Provider $provider  */
-        $provider = $this->createInstanceOfClass($providerClassName, $parameters);
+        $provider = $this->getInstanceOfClass($providerClassName, $parameters);
 
         if (!$provider instanceof Provider) {
             throw new InjectionException('Provider class ' . $providerClassName . ' specified in ' . $originalName . ' does not implement rg\injektor\provider');
@@ -695,7 +680,7 @@ class DependencyInjectionContainer {
             return $argumentConfig['value'];
         }
         if (isset($argumentConfig['class'])) {
-            return $this->createInstanceOfClass($argumentConfig['class']);
+            return $this->getInstanceOfClass($argumentConfig['class']);
         }
         return $argumentConfig;
     }
@@ -725,10 +710,10 @@ class DependencyInjectionContainer {
         $namedClassName = $this->getNamedClassOfArgument($argument->getClass()->name, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
 
         if ($namedClassName) {
-            return $this->createInstanceOfClass($namedClassName, $arguments);
+            return $this->getInstanceOfClass($namedClassName, $arguments);
         }
 
-        return $this->createInstanceOfClass($argument->getClass()->name, $arguments);
+        return $this->getInstanceOfClass($argument->getClass()->name, $arguments);
     }
 
     /**
