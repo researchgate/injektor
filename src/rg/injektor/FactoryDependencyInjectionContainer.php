@@ -19,6 +19,7 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
      * @param string $className
      * @param array $constructorArguments
      * @return object
+     * @throws \rg\injektor\InjectionLoopException
      */
     public function getInstanceOfClass($className, array $constructorArguments = array()) {
         $fullFactoryClassName = $this->getFullFactoryClassName($className);
@@ -29,6 +30,20 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
         }
 
         return parent::getInstanceOfClass($className, $constructorArguments);
+    }
+
+    /**
+     * @param string $className
+     * @param array $constructorArguments
+     * @return object
+     */
+    protected function createInstanceOfClass($className, array $constructorArguments = array()) {
+        $fullFactoryClassName = $this->getFullFactoryClassName($className);
+        $factoryClassName = $this->getFactoryClassName($className);
+        if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
+            return $fullFactoryClassName::getInstance($constructorArguments);
+        }
+        return parent::createInstanceOfClass($className, $constructorArguments);
     }
 
     /**

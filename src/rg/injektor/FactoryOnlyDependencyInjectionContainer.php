@@ -32,6 +32,26 @@ class FactoryOnlyDependencyInjectionContainer extends FactoryDependencyInjection
     }
 
     /**
+     * @param string $className
+     * @param array $constructorArguments
+     * @return object
+     * @throws \rg\injektor\InjectionException
+     */
+    protected function createInstanceOfClass($className, array $constructorArguments = array()) {
+        $className = trim($className, '\\');
+        $classConfig = $this->config->getClassConfig($className);
+        $className = $this->getRealConfiguredClassName($classConfig, new \ReflectionClass($className));
+        $fullFactoryClassName = $this->getFullFactoryClassName($className);
+        $factoryClassName = $this->getFactoryClassName($className);
+
+        if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
+            return $fullFactoryClassName::getInstance($constructorArguments);
+        }
+
+        throw new InjectionException('factory ' . $fullFactoryClassName . ' was not created');
+    }
+
+    /**
      * @param object $object
      * @param string $methodName
      * @param array $additionalArguments
