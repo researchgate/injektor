@@ -134,6 +134,9 @@ class DependencyInjectionContainer {
         $fullClassName = trim($fullClassName, '\\');
 
         if ($fullClassName === __CLASS__) {
+            if ($this->iterationDepth > 0) {
+                $this->iterationDepth--;
+            }
             return $this;
         }
 
