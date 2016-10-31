@@ -17,3 +17,4 @@ install:
 
 before_script:
   - chmod -R 0777 test/rg/injektor/_factories/
+  - 'if [ "${TRAVIS_PHP_VERSION}" != "nightly" ]; then phpenv config-rm xdebug.ini ; fi'
