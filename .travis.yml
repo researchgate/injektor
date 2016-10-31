@@ -12,5 +12,8 @@ php:
   - 7.0
   - nightly
 
+install:		
+  - composer install
+
 before_script:
   - chmod -R 0777 test/rg/injektor/_factories/
