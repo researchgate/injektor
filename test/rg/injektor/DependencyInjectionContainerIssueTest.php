@@ -13,7 +13,7 @@ namespace rg\injektor;
 
 include_once 'test_classes_issue.php';
 
-class DependencyInjectionContainerIssueTest extends \PHPUnit_Framework_TestCase
+class DependencyInjectionContainerIssueTest extends \PHPUnit\Framework\TestCase
 {
     public function testGetInstanceOfClassWithUnderscores()
     {

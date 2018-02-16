@@ -1,7 +1,7 @@
 <?php
 namespace rg\injektor;
 
-class InjectionLoopDetectionTest extends \PHPUnit_Framework_TestCase {
+class InjectionLoopDetectionTest extends \PHPUnit\Framework\TestCase {
 
     /**
      * @expectedException \rg\injektor\InjectionLoopException

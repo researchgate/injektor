@@ -11,7 +11,7 @@ namespace rg\injektor;
 
 include_once 'test_classes.php';
 
-class DependencyInjectionContainerNegativeTest extends \PHPUnit_Framework_TestCase {
+class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCase {
 
     public function testGetInstanceWithInvalidParameterInjectionThrowsException() {
         $this->setExpectedException('rg\injektor\InjectionException', 'Expected tag @var not found in doc comment.');

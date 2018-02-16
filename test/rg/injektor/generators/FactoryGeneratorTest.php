@@ -12,7 +12,7 @@ namespace rg\injektor\generators;
 use rg\injektor\FactoryDependencyInjectionContainer;
 use rg\injektor\Configuration;
 
-class FactoryGeneratorTest extends \PHPUnit_Framework_TestCase {
+class FactoryGeneratorTest extends \PHPUnit\Framework\TestCase {
 
     /**
      * @param string $file
@@ -59,7 +59,7 @@ namespace rg\injektor\generated;
 class rg_injektor_generators_FGTestClassSimpleFactory
 {
 
-    public static function getInstance(array \$parameters = array())
+    public static function getInstance(array \$parameters = [])
     {
         \$i = 0;
 
@@ -95,9 +95,9 @@ class rg_injektor_generators_FGTestClassFourProxy extends \\rg\injektor\generato
 class rg_injektor_generators_FGTestClassFourFactory
 {
 
-    private static \$instance = array();
+    private static \$instance = [];
 
-    public static function getInstance(array \$parameters = array())
+    public static function getInstance(array \$parameters = [])
     {
         \$i = 0;
         \$singletonKey = serialize(\$parameters) . "#" . getmypid();
@@ -124,7 +124,7 @@ class rg_injektor_generators_FGTestClassFourFactory
         return \$instance;
     }
 
-    public static function callGetInstance(\$object, array \$parameters = array())
+    public static function callGetInstance(\$object, array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -161,7 +161,7 @@ require_once 'rg_injektor_generators_FGTestClassFourFactory.php';
 class rg_injektor_generators_FGTestClassThreeFactory
 {
 
-    public static function getInstance(array \$parameters = array())
+    public static function getInstance(array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -210,7 +210,7 @@ require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
 class rg_injektor_generators_FGTestClassTwoFactory
 {
 
-    public static function getInstance(array \$parameters = array())
+    public static function getInstance(array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -268,9 +268,9 @@ class rg_injektor_generators_FGTestClassOneProxy extends \\rg\\injektor\\generat
 class rg_injektor_generators_FGTestClassOneFactory
 {
 
-    private static \$instance = array();
+    private static \$instance = [];
 
-    public static function getInstance(array \$parameters = array())
+    public static function getInstance(array \$parameters = [])
     {
         \$i = 0;
         \$singletonKey = serialize(\$parameters) . "#" . getmypid();
@@ -312,7 +312,7 @@ class rg_injektor_generators_FGTestClassOneFactory
         return \$result;
     }
 
-    public static function callGetSomething(\$object, array \$parameters = array())
+    public static function callGetSomething(\$object, array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -339,7 +339,7 @@ class rg_injektor_generators_FGTestClassOneFactory
         return \$result;
     }
 
-    public static function callGetSomethingNotInjectible(\$object, array \$parameters = array())
+    public static function callGetSomethingNotInjectible(\$object, array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -360,7 +360,7 @@ class rg_injektor_generators_FGTestClassOneFactory
         return \$result;
     }
 
-    public static function callNoTypeHint(\$object, array \$parameters = array())
+    public static function callNoTypeHint(\$object, array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -378,7 +378,7 @@ class rg_injektor_generators_FGTestClassOneFactory
         return \$result;
     }
 
-    public static function callMethodRestriction(\$object, array \$parameters = array())
+    public static function callMethodRestriction(\$object, array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -418,7 +418,7 @@ class TestingFactoryGenerator extends FactoryGenerator {
     public $files = array();
 
     public function processFileForClass($fullClassName) {
-        $file = $this->generateFileForClass($fullClassName, false);
+        $file = $this->generateFileForClass($fullClassName);
         if ($file) {
             $this->files[$fullClassName] = $file->generate();
         }

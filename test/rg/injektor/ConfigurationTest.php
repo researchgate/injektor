@@ -9,7 +9,7 @@
  */
 namespace rg\injektor;
 
-class ConfigurationTest extends \PHPUnit_Framework_TestCase {
+class ConfigurationTest extends \PHPUnit\Framework\TestCase {
 
     public function testLoadConfiguration() {
         $config = new Configuration(__DIR__ . '/test_config.php', '');

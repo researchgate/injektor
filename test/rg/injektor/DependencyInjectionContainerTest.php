@@ -11,7 +11,7 @@ namespace rg\injektor;
 
 include_once 'test_classes.php';
 
-class DependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
+class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
 
     public function testGetInstance() {
         $config = new Configuration(null, __DIR__ . '/_factories');

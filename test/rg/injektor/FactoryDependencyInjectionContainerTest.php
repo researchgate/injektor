@@ -9,7 +9,7 @@
  */
 namespace rg\injektor;
 
-class FactoryDependencyInjectionContainerTest extends \PHPUnit_Framework_TestCase {
+class FactoryDependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
 
     public function testInjectionWithoutFactory() {
         $config = new Configuration(null, '');
