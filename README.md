@@ -1,4 +1,4 @@
-#rg\\injektor
+# rg\\injektor
 
 rg\\injektor is a sophisticated dependency injection container for PHP that was inspired by Guice.
 Unlike other reflection based containers rg\\injektor includes a factory class generator that you can use to prevent
@@ -6,21 +6,21 @@ the use of reflection on production.
 
 [![Build Status](https://travis-ci.org/researchgate/injektor.svg?branch=master)](https://travis-ci.org/researchgate/injektor)
 
-#Prerequisites
+# Prerequisites
 
 This library needs PHP 5.5+.
 
 It has been tested using PHP5.5 - PHP7.0 and HHVM.
 
 
-#Installation
+# Installation
 
 You can install the library directly with composer. Just run this command in your project directory:
 ```bash
 $ composer require rg/injektor
 ```
 
-#Usage
+# Usage
 After you installed rg\\injektor you can use it like this:
 
 ```php
@@ -36,7 +36,7 @@ For more details on the specific features of rg\\injektor see below.
 If you use some kind of MVC framework it is recommended to include rg\\injektor in your front controller to create
 your controller objects and call methods on them.
 
-#Generating Factories
+# Generating Factories
 
 By default rg\\injektor relies heavily on Reflection which is fine for your development environment but would slow down
 your production environment unnecessarily. So you should use the built in possiblity to use generated factory classes
@@ -162,7 +162,7 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
 }
 ```
 
-#Features
+# Features
 
 Constructor Injection
 ---------------------
