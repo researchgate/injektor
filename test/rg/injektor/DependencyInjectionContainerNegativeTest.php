@@ -14,7 +14,8 @@ include_once 'test_classes.php';
 class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCase {
 
     public function testGetInstanceWithInvalidParameterInjectionThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'Expected tag @var not found in doc comment.');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('Expected tag @var not found in doc comment.');
 
         $config = new Configuration(null, '');
 
@@ -24,7 +25,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testGetInstanceWithPrivateParameterInjectionThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'Property two must not be private for property injection.');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('Property two must not be private for property injection.');
 
         $config = new Configuration(null, '');
 
@@ -34,7 +36,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testAbstractInstanceThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'Can not instantiate abstract class rg\injektor\DICTestAbstractClass');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('Can not instantiate abstract class rg\injektor\DICTestAbstractClass');
 
         $config = new Configuration(null, '');
         $dic = $this->getContainer($config);
@@ -43,7 +46,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testGetInstanceWithWrongConfiguredParameterThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'Invalid argument without class typehint class: [rg\injektor\DICTestClassNoTypeHint] method: [__construct] argument: [two]');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('Invalid argument without class typehint class: [rg\injektor\DICTestClassNoTypeHint] method: [__construct] argument: [two]');
         $config = new Configuration(null, '');
         $config->setClassConfig('rg\injektor\DICTestClassNoTypeHint', array(
             'params' => array(
@@ -59,7 +63,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testCallNotInjectableMethodThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'not injectable');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('not injectable');
 
         $config = new Configuration(null, '');
 
@@ -71,7 +76,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testCallMethodWithoutTypehintOnObjectThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'not injectable');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('not injectable');
 
         $config = new Configuration(null, '');
 
@@ -83,7 +89,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testCallUndefinedMethodThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'Method undefined not found in rg\injektor\DICTestClassOne');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('Method undefined not found in rg\injektor\DICTestClassOne');
 
         $config = new Configuration(null, '');
 
@@ -95,7 +102,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testCallMagicMethodThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'not allowed to call magic method');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('not allowed to call magic method');
 
         $config = new Configuration(null, '');
 
@@ -107,7 +115,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testGetInstanceOfNotInjectableClassThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'not injectable');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('not injectable');
 
         $config = new Configuration(null, '');
 
@@ -117,7 +126,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testGetInstanceOfClassWithoNoTypeHintThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'Invalid argument without class typehint class: [rg\injektor\DICTestClassNoTypeHint] method: [__construct] argument: [one]');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('Invalid argument without class typehint class: [rg\injektor\DICTestClassNoTypeHint] method: [__construct] argument: [one]');
 
         $config = new Configuration(null, '');
 
@@ -127,7 +137,8 @@ class DependencyInjectionContainerNegativeTest extends \PHPUnit\Framework\TestCa
     }
 
     public function testUsingNonProviderAsProviderThrowsException() {
-        $this->setExpectedException('rg\injektor\InjectionException', 'Provider class rg\injektor\DICTestProvidedInterfaceImpl1 specified in rg\injektor\DICTestInvalidProvidedInterface does not implement rg\injektor\provider');
+        $this->expectException('rg\injektor\InjectionException');
+        $this->expectExceptionMessage('Provider class rg\injektor\DICTestProvidedInterfaceImpl1 specified in rg\injektor\DICTestInvalidProvidedInterface does not implement rg\injektor\provider');
         $config = new Configuration(null, '');
         $dic = $this->getContainer($config);
 
