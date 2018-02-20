@@ -25,6 +25,7 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
         $factoryClassName = $this->getFactoryClassName($className);
 
         if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
+            $fullFactoryClassName::$proxyFactory = $this->getProxyFactory();
             return $fullFactoryClassName::getInstance($constructorArguments);
         }
 
@@ -114,5 +115,4 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
 
         return false;
     }
-
 }

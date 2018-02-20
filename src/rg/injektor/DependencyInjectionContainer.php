@@ -869,7 +869,7 @@ class DependencyInjectionContainer {
     /**
      * @return LazyLoadingValueHolderFactory|null
      */
-    private function getProxyFactory()
+    protected function getProxyFactory()
     {
         if ($this->supportsLazyLoading && !$this->proxyFactory) {
             $config = new ProxyManagerConfiguration();
@@ -897,4 +897,11 @@ class DependencyInjectionContainer {
         }
     }
 
+    /**
+     * @return bool
+     */
+    public function supportsLazyLoading()
+    {
+        return $this->supportsLazyLoading;
+    }
 }

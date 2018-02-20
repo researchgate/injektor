@@ -99,7 +99,8 @@ class FileGenerator {
         $file = new Generator\FileGenerator();
 
         $factoryClass = new \rg\injektor\generators\FactoryClass($factoryName);
-        $instanceMethod = new \rg\injektor\generators\InstanceMethod($this->factoryGenerator);
+        $createInstanceMethod = new \rg\injektor\generators\CreateInstanceMethod();
+        $getInstanceMethod = new \rg\injektor\generators\GetInstanceMethod();
 
         $arguments = array();
 
@@ -114,9 +115,48 @@ class FileGenerator {
 
         $isSingleton = $this->dic->isConfiguredAsSingleton($classConfig, $classReflection);
         $isService = $this->dic->isConfiguredAsService($classConfig, $classReflection);
+        $isLazy = $this->dic->supportsLazyLoading() && $this->dic->isConfiguredAsLazy($classConfig, $classReflection);
 
-        $body = '$i = 0;' . PHP_EOL;
+        $getInstanceBody = '';
+        if ($isSingleton) {
+            $getInstanceBody .= '$singletonKey = serialize($parameters) . "#" . getmypid();' . PHP_EOL;
+            $getInstanceBody .= 'if (isset(self::$instance[$singletonKey])) {' . PHP_EOL;
+            $getInstanceBody .= '    return self::$instance[$singletonKey];' . PHP_EOL;
+            $getInstanceBody .= '}' . PHP_EOL . PHP_EOL;
+        }
 
+        if ($isService) {
+            $getInstanceBody .= 'if (self::$instance) {' . PHP_EOL;
+            $getInstanceBody .= '    return self::$instance;' . PHP_EOL;
+            $getInstanceBody .= '}' . PHP_EOL . PHP_EOL;
+        }
+
+        if ($isLazy) {
+            $getInstanceBody .= '$instance = self::$proxyFactory->createProxy(' . PHP_EOL;
+            $getInstanceBody .= '    \'' . $classReflection->getName() . '\',' . PHP_EOL;
+            $getInstanceBody .= '    function (&$wrappedObject, $proxy) use ($parameters) {' . PHP_EOL;
+            $getInstanceBody .= '        $proxy->setProxyInitializer(null);' . PHP_EOL;
+            $getInstanceBody .= '        $wrappedObject = ' . $factoryName . '::createInstance($parameters);' . PHP_EOL;
+            $getInstanceBody .= '        return true;' . PHP_EOL;
+            $getInstanceBody .= '    }' . PHP_EOL;
+            $getInstanceBody .= ');' . PHP_EOL;
+        } else {
+            $getInstanceBody .= '$instance = self::createInstance($parameters);' . PHP_EOL;
+        }
+
+        if ($isSingleton) {
+            $getInstanceBody .= 'self::$instance[$singletonKey] = $instance;' . PHP_EOL;
+        }
+        if ($isService) {
+            $getInstanceBody .= 'self::$instance = $instance;' . PHP_EOL;
+        }
+
+        $getInstanceBody .= 'return $instance;' . PHP_EOL;
+
+        $getInstanceMethod->setBody($getInstanceBody);
+        $factoryClass->addMethodFromGenerator($getInstanceMethod);
+
+        $createInstanceBody = '$i = 0;' . PHP_EOL;
         if ($isSingleton || $isService) {
             $defaultValue = new Generator\PropertyValueGenerator(array(), Generator\ValueGenerator::TYPE_ARRAY, Generator\ValueGenerator::OUTPUT_SINGLE_LINE);
             $property = new Generator\PropertyGenerator('instance', $defaultValue, Generator\PropertyGenerator::FLAG_PRIVATE);
@@ -124,24 +164,15 @@ class FileGenerator {
             $factoryClass->addPropertyFromGenerator($property);
         }
 
-        if ($isSingleton) {
-            $body .= '$singletonKey = serialize($parameters) . "#" . getmypid();' . PHP_EOL;
-            $body .= 'if (isset(self::$instance[$singletonKey])) {' . PHP_EOL;
-            $body .= '    return self::$instance[$singletonKey];' . PHP_EOL;
-            $body .= '}' . PHP_EOL . PHP_EOL;
-        }
-
-        if ($isService) {
-            $body .= 'if (self::$instance) {' . PHP_EOL;
-            $body .= '    return self::$instance;' . PHP_EOL;
-            $body .= '}' . PHP_EOL . PHP_EOL;
-        }
+        $property = new Generator\PropertyGenerator('proxyFactory', null, Generator\PropertyGenerator::FLAG_PUBLIC);
+        $property->setStatic(true);
+        $factoryClass->addPropertyFromGenerator($property);
 
         $providerClassName = $this->dic->getProviderClassName($classConfig, new \ReflectionClass($this->fullClassName), null);
         if ($providerClassName && $providerClassName->getClassName()) {
             $argumentFactory = $this->dic->getFullFactoryClassName($providerClassName->getClassName());
             $this->factoryGenerator->processFileForClass($providerClassName->getClassName());
-            $body .= '$instance = \\' . $argumentFactory . '::getInstance(array())->get();' . PHP_EOL;
+            $createInstanceBody .= '$instance = \\' . $argumentFactory . '::getInstance(array())->get();' . PHP_EOL;
             $this->usedFactories[] = $argumentFactory;
         } else {
             // constructor method arguments
@@ -156,7 +187,7 @@ class FileGenerator {
 
                 }
 
-                $body .= 'if (!$parameters) {' . PHP_EOL;
+                $createInstanceBody .= 'if (!$parameters) {' . PHP_EOL;
 
                 foreach ($arguments as $argument) {
                     /** @var \ReflectionParameter $argument */
@@ -176,14 +207,14 @@ class FileGenerator {
                         if ($injectionParameter->getFactoryName()) {
                             $this->usedFactories[] = $injectionParameter->getFactoryName();
                         }
-                        $body .= '    ' . $injectionParameter->getProcessingBody();
+                        $createInstanceBody .= '    ' . $injectionParameter->getProcessingBody();
                     } catch (\Exception $e) {
-                        $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                        $createInstanceBody .= '    ' . $injectionParameter->getDefaultProcessingBody();
                     }
                 }
 
-                $body .= '}' . PHP_EOL;
-                $body .= 'else if (array_key_exists(0, $parameters)) {' . PHP_EOL;
+                $createInstanceBody .= '}' . PHP_EOL;
+                $createInstanceBody .= 'else if (array_key_exists(0, $parameters)) {' . PHP_EOL;
 
                 foreach ($arguments as $argument) {
                     /** @var \ReflectionParameter $argument */
@@ -203,14 +234,14 @@ class FileGenerator {
                         if ($injectionParameter->getFactoryName()) {
                             $this->usedFactories[] = $injectionParameter->getFactoryName();
                         }
-                        $body .= '    ' . $injectionParameter->getProcessingBody();
+                        $createInstanceBody .= '    ' . $injectionParameter->getProcessingBody();
                     } catch (\Exception $e) {
-                        $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                        $createInstanceBody .= '    ' . $injectionParameter->getDefaultProcessingBody();
                     }
                 }
 
-                $body .= '}' . PHP_EOL;
-                $body .= 'else {' . PHP_EOL;
+                $createInstanceBody .= '}' . PHP_EOL;
+                $createInstanceBody .= 'else {' . PHP_EOL;
 
                 foreach ($arguments as $argument) {
                     /** @var \ReflectionParameter $argument */
@@ -230,13 +261,13 @@ class FileGenerator {
                         if ($injectionParameter->getFactoryName()) {
                             $this->usedFactories[] = $injectionParameter->getFactoryName();
                         }
-                        $body .= '    ' . $injectionParameter->getProcessingBody();
+                        $createInstanceBody .= '    ' . $injectionParameter->getProcessingBody();
                     } catch (\Exception $e) {
-                        $body .= '    ' . $injectionParameter->getDefaultProcessingBody();
+                        $createInstanceBody .= '    ' . $injectionParameter->getDefaultProcessingBody();
                     }
                 }
 
-                $body .= '}' . PHP_EOL;
+                $createInstanceBody .= '}' . PHP_EOL;
             }
 
             // Property injection
@@ -246,36 +277,28 @@ class FileGenerator {
                 $proxyName = $this->dic->getProxyClassName($this->fullClassName);
                 if ($this->dic->isSingleton($classReflection)) {
                     $file->setClass($this->createProxyClass($proxyName));
-                    $body .= PHP_EOL . '$instance = ' . $proxyName . '::getInstance(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
+                    $createInstanceBody .= PHP_EOL . '$instance = ' . $proxyName . '::getInstance(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 } else {
                     $file->setClass($this->createProxyClass($proxyName));
-                    $body .= PHP_EOL . '$instance = new ' . $proxyName . '(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
+                    $createInstanceBody .= PHP_EOL . '$instance = new ' . $proxyName . '(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 }
             } else {
                 if ($this->dic->isSingleton($classReflection)) {
-                    $body .= PHP_EOL . '$instance = \\' . $this->fullClassName . '::getInstance(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
+                    $createInstanceBody .= PHP_EOL . '$instance = \\' . $this->fullClassName . '::getInstance(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 } else {
-                    $body .= PHP_EOL . '$instance = new \\' . $this->fullClassName . '(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
+                    $createInstanceBody .= PHP_EOL . '$instance = new \\' . $this->fullClassName . '(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 }
             }
         }
 
-        if ($isSingleton) {
-            $body .= 'self::$instance[$singletonKey] = $instance;' . PHP_EOL;
-        }
-        if ($isService) {
-            $body .= 'self::$instance = $instance;' . PHP_EOL;
-        }
-
         foreach ($this->injectableArguments as $injectableArgument) {
-            $body .= '$instance->propertyInjection' . $injectableArgument->getName() . '();' . PHP_EOL;
+            $createInstanceBody .= '$instance->propertyInjection' . $injectableArgument->getName() . '();' . PHP_EOL;
         }
 
-        $body .= 'return $instance;' . PHP_EOL;
+        $createInstanceBody .= 'return $instance;' . PHP_EOL;
 
-        $instanceMethod->setBody($body);
-        $instanceMethod->setStatic(true);
-        $factoryClass->addMethodFromGenerator($instanceMethod);
+        $createInstanceMethod->setBody($createInstanceBody);
+        $factoryClass->addMethodFromGenerator($createInstanceMethod);
 
         // Add Factory Method
         $methods = $classReflection->getMethods();
