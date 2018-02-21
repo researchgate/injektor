@@ -31,7 +31,7 @@ class FactoryGeneratorTest extends \PHPUnit\Framework\TestCase {
             'singleton' => true
         ));
         $config->setClassConfig('rg\injektor\generators\FGTestClassFour', array(
-            'singleton' => true
+            'service' => true
         ));
         $config->setClassConfig('rg\injektor\generators\FGTestClassThree', array(
             'params' => array(
@@ -59,7 +59,15 @@ namespace rg\injektor\generated;
 class rg_injektor_generators_FGTestClassSimpleFactory
 {
 
+    public static \$proxyFactory = null;
+
     public static function getInstance(array \$parameters = [])
+    {
+        \$instance = self::createInstance(\$parameters);
+        return \$instance;
+    }
+
+    private static function createInstance(array \$parameters = [])
     {
         \$i = 0;
 
@@ -97,14 +105,22 @@ class rg_injektor_generators_FGTestClassFourFactory
 
     private static \$instance = [];
 
+    public static \$proxyFactory = null;
+
     public static function getInstance(array \$parameters = [])
     {
-        \$i = 0;
-        \$singletonKey = serialize(\$parameters) . "#" . getmypid();
-        if (isset(self::\$instance[\$singletonKey])) {
-            return self::\$instance[\$singletonKey];
+        if (self::\$instance) {
+            return self::\$instance;
         }
 
+        \$instance = self::createInstance(\$parameters);
+        self::\$instance = \$instance;
+        return \$instance;
+    }
+
+    private static function createInstance(array \$parameters = [])
+    {
+        \$i = 0;
         if (!\$parameters) {
             \$simple = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
@@ -119,7 +135,6 @@ class rg_injektor_generators_FGTestClassFourFactory
         }
 
         \$instance = rg_injektor_generators_FGTestClassFourProxy::getInstance(\$simple);
-        self::\$instance[\$singletonKey] = \$instance;
         \$instance->propertyInjectioninjectedProperty();
         return \$instance;
     }
@@ -161,7 +176,15 @@ require_once 'rg_injektor_generators_FGTestClassFourFactory.php';
 class rg_injektor_generators_FGTestClassThreeFactory
 {
 
+    public static \$proxyFactory = null;
+
     public static function getInstance(array \$parameters = [])
+    {
+        \$instance = self::createInstance(\$parameters);
+        return \$instance;
+    }
+
+    private static function createInstance(array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -210,7 +233,15 @@ require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
 class rg_injektor_generators_FGTestClassTwoFactory
 {
 
+    public static \$proxyFactory = null;
+
     public static function getInstance(array \$parameters = [])
+    {
+        \$instance = self::createInstance(\$parameters);
+        return \$instance;
+    }
+
+    private static function createInstance(array \$parameters = [])
     {
         \$i = 0;
         if (!\$parameters) {
@@ -270,14 +301,23 @@ class rg_injektor_generators_FGTestClassOneFactory
 
     private static \$instance = [];
 
+    public static \$proxyFactory = null;
+
     public static function getInstance(array \$parameters = [])
     {
-        \$i = 0;
         \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         if (isset(self::\$instance[\$singletonKey])) {
             return self::\$instance[\$singletonKey];
         }
 
+        \$instance = self::createInstance(\$parameters);
+        self::\$instance[\$singletonKey] = \$instance;
+        return \$instance;
+    }
+
+    private static function createInstance(array \$parameters = [])
+    {
+        \$i = 0;
         if (!\$parameters) {
             \$two = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         ));
@@ -298,7 +338,6 @@ class rg_injektor_generators_FGTestClassOneFactory
         }
 
         \$instance = new rg_injektor_generators_FGTestClassOneProxy(\$two, \$three);
-        self::\$instance[\$singletonKey] = \$instance;
         \$instance->propertyInjectionfour();
         return \$instance;
     }
