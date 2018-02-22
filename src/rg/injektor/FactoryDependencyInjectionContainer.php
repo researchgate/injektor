@@ -25,7 +25,6 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
         $factoryClassName = $this->getFactoryClassName($className);
 
         if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
-            $fullFactoryClassName::$proxyFactory = $this->getProxyFactory();
             return $fullFactoryClassName::getInstance($constructorArguments);
         }
 
@@ -78,6 +77,14 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
      */
     public function getProxyClassName($fullClassName) {
         return self::$prefix . $this->getStrippedClassName($fullClassName) . 'Proxy';
+    }
+
+    /**
+     * @param $fullClassName
+     * @return string
+     */
+    public function getLazyProxyClassName($fullClassName) {
+        return self::$prefix . $this->getStrippedClassName($fullClassName) . 'Lazy';
     }
 
     /**

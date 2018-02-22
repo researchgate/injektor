@@ -25,7 +25,6 @@ class FactoryOnlyDependencyInjectionContainer extends FactoryDependencyInjection
         $factoryClassName = $this->getFactoryClassName($className);
 
         if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
-            $fullFactoryClassName::$proxyFactory = $this->getProxyFactory();
             return $fullFactoryClassName::getInstance($constructorArguments);
         }
 

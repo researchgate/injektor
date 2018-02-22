@@ -65,7 +65,7 @@ class DependencyInjectionContainer {
     /**
      * @var LazyLoadingValueHolderFactory|null
      */
-    private $proxyFactory;
+    private $lazyProxyFactory;
 
     /**
      * used for injection loop detection
@@ -235,6 +235,13 @@ class DependencyInjectionContainer {
         return $instance;
     }
 
+    /**
+     * @param array $classConfig
+     * @param \ReflectionClass $classReflection
+     * @param array $constructorArguments
+     *
+     * @return object
+     */
     private function createNewInstance(array $classConfig, \ReflectionClass $classReflection, $constructorArguments)
     {
         $instanceConstructor = function () use ($classReflection, $constructorArguments) {
@@ -242,17 +249,31 @@ class DependencyInjectionContainer {
         };
 
         if ($this->supportsLazyLoading && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
-            return $this->getProxyFactory()->createProxy(
-                $classReflection->getName(),
-                function (&$wrappedObject, LazyLoadingInterface $proxy) use ($instanceConstructor) {
-                    $proxy->setProxyInitializer(null);
-                    $wrappedObject = $instanceConstructor();
-                    return true;
-                }
-            );
+            return $this->wrapInstanceWithLazyProxy($classReflection->getName(), $instanceConstructor);
         } else {
             return $instanceConstructor();
         }
+    }
+
+    /**
+     * @param string $className
+     * @param callable $instanceConstructor
+     *
+     * @return \ProxyManager\Proxy\VirtualProxyInterface
+     */
+    private function wrapInstanceWithLazyProxy($className, $instanceConstructor) {
+        $proxyParameters = [
+
+        ];
+        return $this->getLazyProxyFactory()->createProxy(
+            $className,
+            function (&$wrappedObject, LazyLoadingInterface $proxy) use ($instanceConstructor) {
+                $proxy->setProxyInitializer(null);
+                $wrappedObject = $instanceConstructor();
+                return true;
+            },
+            $proxyParameters
+        );
     }
 
     /**
@@ -455,14 +476,7 @@ class DependencyInjectionContainer {
             };
 
             if ($this->supportsLazyLoading && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
-                return $this->getProxyFactory()->createProxy(
-                    $classReflection->name,
-                    function (&$wrappedObject, LazyLoadingInterface $proxy) use ($instanceConstructor) {
-                        $proxy->setProxyInitializer(null);
-                        $wrappedObject = $instanceConstructor();
-                        return true;
-                    }
-                );
+                return $this->wrapInstanceWithLazyProxy($classReflection->name, $instanceConstructor);
             } else {
                 return $instanceConstructor();
             }
@@ -867,17 +881,24 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @return \ProxyManager\Configuration
+     */
+    private function getLazyProxyFactoryConfiguration() {
+        $config = new ProxyManagerConfiguration();
+        $config->setGeneratorStrategy(new EvaluatingGeneratorStrategy());
+        return $config;
+    }
+
+    /**
      * @return LazyLoadingValueHolderFactory|null
      */
-    protected function getProxyFactory()
-    {
-        if ($this->supportsLazyLoading && !$this->proxyFactory) {
-            $config = new ProxyManagerConfiguration();
-            $config->setGeneratorStrategy(new EvaluatingGeneratorStrategy());
-            $this->proxyFactory = new LazyLoadingValueHolderFactory($config);
+    private function getLazyProxyFactory() {
+        if ($this->supportsLazyLoading && !$this->lazyProxyFactory) {
+            $config = $this->getLazyProxyFactoryConfiguration();
+            $this->lazyProxyFactory = new LazyLoadingValueHolderFactory($config);
         }
 
-        return $this->proxyFactory;
+        return $this->lazyProxyFactory;
     }
 
     /**
