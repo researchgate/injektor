@@ -78,8 +78,6 @@ EOF
 
 namespace rg\\injektor\\generated;
 
-require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
-
 class rg_injektor_generators_FGTestClassFourProxy extends \\rg\injektor\generators\\FGTestClassFour
 {
 
@@ -106,14 +104,17 @@ class rg_injektor_generators_FGTestClassFourFactory
 
         \$i = 0;
         if (!\$parameters) {
+            require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
             \$simple = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
         }
         else if (array_key_exists(0, \$parameters)) {
+            require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
             \$simple = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         )); \$i++;
         }
         else {
+            require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
             \$simple = array_key_exists('simple', \$parameters) ? \$parameters['simple'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
         }
@@ -121,6 +122,7 @@ class rg_injektor_generators_FGTestClassFourFactory
         \$instance = rg_injektor_generators_FGTestClassFourProxy::getInstance(\$simple);
         \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         self::\$instance[\$singletonKey] = \$instance;
+        require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
         \$instance->propertyInjectioninjectedProperty();
         return \$instance;
     }
@@ -129,14 +131,17 @@ class rg_injektor_generators_FGTestClassFourFactory
     {
         \$i = 0;
         if (!\$parameters) {
+            require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
             \$simple = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
         }
         else if (array_key_exists(0, \$parameters)) {
+            require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
             \$simple = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         )); \$i++;
         }
         else {
+            require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
             \$simple = array_key_exists('simple', \$parameters) ? \$parameters['simple'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
         }
@@ -157,8 +162,6 @@ EOF
 
 namespace rg\\injektor\\generated;
 
-require_once 'rg_injektor_generators_FGTestClassFourFactory.php';
-
 class rg_injektor_generators_FGTestClassThreeFactory
 {
 
@@ -167,16 +170,19 @@ class rg_injektor_generators_FGTestClassThreeFactory
         \$i = 0;
         if (!\$parameters) {
             \$foo = 'foo';
+            require_once 'rg_injektor_generators_FGTestClassFourFactory.php';
             \$four = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
         ));
         }
         else if (array_key_exists(0, \$parameters)) {
             \$foo = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : 'foo'; \$i++;
+            require_once 'rg_injektor_generators_FGTestClassFourFactory.php';
             \$four = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
         )); \$i++;
         }
         else {
             \$foo = array_key_exists('foo', \$parameters) ? \$parameters['foo'] : 'foo';
+            require_once 'rg_injektor_generators_FGTestClassFourFactory.php';
             \$four = array_key_exists('four', \$parameters) ? \$parameters['four'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassFourFactory::getInstance(array (
         ));
         }
@@ -206,8 +212,6 @@ EOF
 
 namespace rg\\injektor\\generated;
 
-require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
-
 class rg_injektor_generators_FGTestClassTwoFactory
 {
 
@@ -215,14 +219,17 @@ class rg_injektor_generators_FGTestClassTwoFactory
     {
         \$i = 0;
         if (!\$parameters) {
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
         else if (array_key_exists(0, \$parameters)) {
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         )); \$i++;
         }
         else {
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
@@ -251,9 +258,6 @@ EOF
 
 namespace rg\\injektor\\generated;
 
-require_once 'rg_injektor_generators_FGTestClassTwoFactory.php';
-require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
-
 class rg_injektor_generators_FGTestClassOneProxy extends \\rg\\injektor\\generators\\FGTestClassOne
 {
 
@@ -280,20 +284,26 @@ class rg_injektor_generators_FGTestClassOneFactory
 
         \$i = 0;
         if (!\$parameters) {
+            require_once 'rg_injektor_generators_FGTestClassTwoFactory.php';
             \$two = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         ));
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
         else if (array_key_exists(0, \$parameters)) {
+            require_once 'rg_injektor_generators_FGTestClassTwoFactory.php';
             \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         )); \$i++;
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         )); \$i++;
         }
         else {
+            require_once 'rg_injektor_generators_FGTestClassTwoFactory.php';
             \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         ));
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
@@ -301,6 +311,7 @@ class rg_injektor_generators_FGTestClassOneFactory
         \$instance = new rg_injektor_generators_FGTestClassOneProxy(\$two, \$three);
         \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         self::\$instance[\$singletonKey] = \$instance;
+        require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
         \$instance->propertyInjectionfour();
         return \$instance;
     }
@@ -318,20 +329,26 @@ class rg_injektor_generators_FGTestClassOneFactory
     {
         \$i = 0;
         if (!\$parameters) {
+            require_once 'rg_injektor_generators_FGTestClassTwoFactory.php';
             \$two = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         ));
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
         else if (array_key_exists(0, \$parameters)) {
+            require_once 'rg_injektor_generators_FGTestClassTwoFactory.php';
             \$two = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         )); \$i++;
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = array_key_exists(\$i, \$parameters) ? \$parameters[\$i] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         )); \$i++;
         }
         else {
+            require_once 'rg_injektor_generators_FGTestClassTwoFactory.php';
             \$two = array_key_exists('two', \$parameters) ? \$parameters['two'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         ));
+            require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
             \$three = array_key_exists('three', \$parameters) ? \$parameters['three'] : \\rg\injektor\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
         }
