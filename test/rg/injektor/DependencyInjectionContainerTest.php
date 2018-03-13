@@ -212,7 +212,7 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
     }
 
     public function testGetInstanceOfLazy() {
-        $config = new Configuration(null, __DIR__ . '/_factories');
+        $config = new Configuration(null, __DIR__ . '/_factories', true);
 
         $config->setClassConfig('rg\injektor\DICTestLazy', [
             'lazy' => true
@@ -227,7 +227,7 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
     }
 
     public function testGetInstanceOfAnnotatedLazy() {
-        $config = new Configuration(null, __DIR__ . '/_factories');
+        $config = new Configuration(null, __DIR__ . '/_factories', true);
 
         $config->setClassConfig('rg\injektor\DICTestAnnotatedLazy', []);
         $dic = $this->getContainer($config);
@@ -240,7 +240,7 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
     }
 
     public function testGetInstanceOfLazyService() {
-        $config = new Configuration(null, __DIR__ . '/_factories');
+        $config = new Configuration(null, __DIR__ . '/_factories', true);
 
         $config->setClassConfig('rg\injektor\DICTestLazyService', [
             'lazy' => true,
@@ -259,7 +259,7 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
     }
 
     public function testGetInstanceOfAnnotatedLazyService() {
-        $config = new Configuration(null, __DIR__ . '/_factories');
+        $config = new Configuration(null, __DIR__ . '/_factories', true);
 
         $config->setClassConfig('rg\injektor\DICTestAnnotatedLazyService', []);
         $dic = $this->getContainer($config);

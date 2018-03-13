@@ -25,14 +25,35 @@ class Configuration {
     private $factoryPath;
 
     /**
+     * @var bool
+     */
+    private $lazyLoading;
+
+    /**
+     * @var bool
+     */
+    private $lazyServices;
+
+    /**
+     * @var bool
+     */
+    private $lazySingletons;
+
+    /**
      * @param string $configurationFilePath
      * @param string $factoryPath
+     * @param bool $lazyLoading
+     * @param bool $lazyServices
+     * @param bool $lazySingletons
      */
-    public function __construct($configurationFilePath = null, $factoryPath = '') {
+    public function __construct($configurationFilePath = null, $factoryPath = '', $lazyLoading = false, $lazyServices = false, $lazySingletons = false) {
         if ($configurationFilePath) {
             $this->addConfigFile($configurationFilePath);
         }
         $this->factoryPath = $factoryPath;
+        $this->lazyLoading = $lazyLoading;
+        $this->lazyServices = $lazyServices;
+        $this->lazySingletons = $lazySingletons;
     }
 
     /**
@@ -96,4 +117,24 @@ class Configuration {
         return $this->factoryPath;
     }
 
+    /**
+     * @return bool
+     */
+    public function isLazyLoading() {
+        return $this->lazyLoading;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLazyServices() {
+        return $this->lazyServices;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLazySingletons() {
+        return $this->lazySingletons;
+    }
 }

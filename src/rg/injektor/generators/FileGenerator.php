@@ -114,7 +114,7 @@ class FileGenerator {
 
         $isSingleton = $this->dic->isConfiguredAsSingleton($classConfig, $classReflection);
         $isService = $this->dic->isConfiguredAsService($classConfig, $classReflection);
-        $isLazy = $this->dic->supportsLazyLoading() && $this->dic->isConfiguredAsLazy($classConfig, $classReflection);
+        $isLazy = $this->dic->supportsLazyLoading() && $this->config->isLazyLoading() && $this->dic->isConfiguredAsLazy($classConfig, $classReflection);
 
         $createInstanceBody = '$i = 0;' . PHP_EOL;
         if ($isSingleton || $isService) {

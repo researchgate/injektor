@@ -248,7 +248,7 @@ class DependencyInjectionContainer {
             return $classReflection->newInstanceArgs($constructorArguments ? $constructorArguments : []);
         };
 
-        if ($this->supportsLazyLoading && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
+        if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
             return $this->wrapInstanceWithLazyProxy($classReflection->getName(), $instanceConstructor);
         } else {
             return $instanceConstructor();
@@ -475,7 +475,7 @@ class DependencyInjectionContainer {
                 return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
             };
 
-            if ($this->supportsLazyLoading && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
+            if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
                 return $this->wrapInstanceWithLazyProxy($classReflection->name, $instanceConstructor);
             } else {
                 return $instanceConstructor();
@@ -665,6 +665,21 @@ class DependencyInjectionContainer {
      * @return bool
      */
     public function isConfiguredAsLazy(array $classConfig, \ReflectionClass $classReflection) {
+        // Force no lazy loading
+        if ($this->isConfiguredAsNoLazy($classConfig, $classReflection)) {
+            return false;
+        }
+
+        // Lazy services
+        if ($this->config->isLazyServices() && $this->isConfiguredAsService($classConfig, $classReflection)) {
+            return true;
+        }
+
+        // Lazy singletons
+        if ($this->config->isLazySingletons() && $this->isConfiguredAsSingleton($classConfig, $classReflection)) {
+            return true;
+        }
+
         if (isset($classConfig['lazy'])) {
             return (bool) $classConfig['lazy'];
         }
@@ -672,6 +687,21 @@ class DependencyInjectionContainer {
         $classComment = $classReflection->getDocComment();
 
         return strpos($classComment, '@lazy') !== false;
+    }
+
+    /**
+     * @param array $classConfig
+     * @param \ReflectionClass $classReflection
+     * @return bool
+     */
+    public function isConfiguredAsNoLazy(array $classConfig, \ReflectionClass $classReflection) {
+        if (isset($classConfig['noLazy'])) {
+            return (bool) $classConfig['noLazy'];
+        }
+
+        $classComment = $classReflection->getDocComment();
+
+        return strpos($classComment, '@noLazy') !== false;
     }
 
     /**
