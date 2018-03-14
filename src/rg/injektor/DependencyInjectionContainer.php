@@ -212,10 +212,24 @@ class DependencyInjectionContainer {
             $instance = $classReflection->getMethod('getInstance')->invokeArgs(null, $constructorArguments);
         } else {
             $constructorArguments = $this->getConstructorArguments($classReflection, $classConfig, $constructorArguments);
-            $instance = $this->createNewInstance($classConfig, $classReflection, $constructorArguments);
-        }
+            $instanceConstructor = function () use ($classReflection, $constructorArguments, $isConfiguredAsSingleton, $isConfiguredAsService, $singletonKey, $fullClassName) {
+                $instance = $classReflection->newInstanceArgs($constructorArguments ? $constructorArguments : []);
 
-        $this->log('Created instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . ']');
+                if ($isConfiguredAsSingleton) {
+                    $this->log('Added singleton instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . '], Singleton Key: [' . $singletonKey . ']');
+                    $this->instances[$singletonKey] = $instance;
+                }
+                if ($isConfiguredAsService) {
+                    $this->log('Added service instance [' . spl_object_hash($instance) . '] of class [' .  $fullClassName . ']');
+                    $this->instances[$fullClassName] = $instance;
+                }
+
+                $instance = $this->injectProperties($classReflection, $instance);
+
+                return $instance;
+            };
+            $instance = $this->createNewInstance($classConfig, $classReflection, $instanceConstructor);
+        }
 
         if ($isConfiguredAsSingleton) {
             $this->log('Added singleton instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . '], Singleton Key: [' . $singletonKey . ']');
@@ -228,6 +242,8 @@ class DependencyInjectionContainer {
 
         $instance = $this->injectProperties($classReflection, $instance);
 
+        $this->log('Created instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . ']');
+
         if ($this->iterationDepth > 0) {
             $this->iterationDepth--;
         }
@@ -238,16 +254,11 @@ class DependencyInjectionContainer {
     /**
      * @param array $classConfig
      * @param \ReflectionClass $classReflection
-     * @param array $constructorArguments
+     * @param callable $instanceConstructor
      *
      * @return object
      */
-    private function createNewInstance(array $classConfig, \ReflectionClass $classReflection, $constructorArguments)
-    {
-        $instanceConstructor = function () use ($classReflection, $constructorArguments) {
-            return $classReflection->newInstanceArgs($constructorArguments ? $constructorArguments : []);
-        };
-
+    private function createNewInstance(array $classConfig, \ReflectionClass $classReflection, $instanceConstructor) {
         if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
             return $this->wrapInstanceWithLazyProxy($classReflection->getName(), $instanceConstructor);
         } else {
@@ -347,6 +358,10 @@ class DependencyInjectionContainer {
      * @throws InjectionException
      */
     private function injectProperties($classReflection, $instance) {
+        if ($instance instanceof \ProxyManager\Proxy\LazyLoadingInterface) {
+            return $instance; // Not inject into lazy proxies
+        }
+
         $properties = $this->getInjectableProperties($classReflection);
         foreach ($properties as $property) {
             $this->injectProperty($property, $instance);
