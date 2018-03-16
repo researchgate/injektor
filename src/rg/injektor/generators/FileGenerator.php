@@ -344,7 +344,7 @@ class FileGenerator {
             // When the class is lazy, only load the dependencies when the real instance is created
             $loadDependenciesBody = '';
             foreach ($this->usedFactories as $usedFactory) {
-                $loadDependenciesBody .= 'require_once \'' . $usedFactory . '\';';
+                $loadDependenciesBody .= 'require_once \'' . $usedFactory . '\';' . PHP_EOL;
             }
             $loadDependenciesMethod->setBody($loadDependenciesBody);
             $factoryClass->addMethodFromGenerator($loadDependenciesMethod);
