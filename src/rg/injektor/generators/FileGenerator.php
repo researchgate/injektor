@@ -44,6 +44,11 @@ class FileGenerator {
     /**
      * @var array
      */
+    private $usedFactories = array();
+
+    /**
+     * @var array
+     */
     private $realConstructorArgumentStringParts = array();
 
     /**
@@ -101,7 +106,6 @@ class FileGenerator {
         $createInstanceMethod = new \rg\injektor\generators\CreateInstanceMethod();
 
         $arguments = array();
-        $injectionPropertiesRequireOnce = '';
 
         $constructorMethodReflection = null;
         if ($this->dic->isSingleton($classReflection)) {
@@ -127,10 +131,10 @@ class FileGenerator {
         $fullClassNameRefection = new \ReflectionClass($this->fullClassName);
         $providerClassName = $this->dic->getProviderClassName($classConfig, $fullClassNameRefection, null);
         if ($providerClassName && $providerClassName->getClassName()) {
-            $providerFactory = $this->dic->getFullFactoryClassName($providerClassName->getClassName());
+            $argumentFactory = $this->dic->getFullFactoryClassName($providerClassName->getClassName());
             $this->factoryGenerator->processFileForClass($providerClassName->getClassName());
-            $createInstanceBody .= $this->requireOnceFactoryClass($providerFactory) . PHP_EOL;
-            $createInstanceBody .= '$instance = \\' . $providerFactory . '::getInstance(array())->get();' . PHP_EOL;
+            $createInstanceBody .= '$instance = \\' . $argumentFactory . '::getInstance(array())->get();' . PHP_EOL;
+            $this->usedFactories[] = $argumentFactory;
         } else {
             // constructor method arguments
 
@@ -162,7 +166,7 @@ class FileGenerator {
                             $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
                         }
                         if ($injectionParameter->getFactoryName()) {
-                            $createInstanceBody .= '    ' . $this->requireOnceFactoryClass($injectionParameter->getFactoryName()) . PHP_EOL;
+                            $this->usedFactories[] = $injectionParameter->getFactoryName();
                         }
                         $createInstanceBody .= '    ' . $injectionParameter->getProcessingBody();
                     } catch (\Exception $e) {
@@ -189,7 +193,7 @@ class FileGenerator {
                             $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
                         }
                         if ($injectionParameter->getFactoryName()) {
-                            $createInstanceBody .= '    ' . $this->requireOnceFactoryClass($injectionParameter->getFactoryName()) . PHP_EOL;
+                            $this->usedFactories[] = $injectionParameter->getFactoryName();
                         }
                         $createInstanceBody .= '    ' . $injectionParameter->getProcessingBody();
                     } catch (\Exception $e) {
@@ -216,7 +220,7 @@ class FileGenerator {
                             $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
                         }
                         if ($injectionParameter->getFactoryName()) {
-                            $createInstanceBody .= '    ' . $this->requireOnceFactoryClass($injectionParameter->getFactoryName()) . PHP_EOL;
+                            $this->usedFactories[] = $injectionParameter->getFactoryName();
                         }
                         $createInstanceBody .= '    ' . $injectionParameter->getProcessingBody();
                     } catch (\Exception $e) {
@@ -228,7 +232,8 @@ class FileGenerator {
             }
 
             // Property injection
-            $injectionPropertiesRequireOnce = $this->injectProperties($classConfig, $classReflection);
+            $this->injectProperties($classConfig, $classReflection);
+
             if (count($this->injectableProperties) > 0) {
                 $proxyName = $this->dic->getProxyClassName($this->fullClassName);
                 if ($this->dic->isSingleton($classReflection)) {
@@ -257,7 +262,6 @@ class FileGenerator {
         }
 
         foreach ($this->injectableArguments as $injectableArgument) {
-            $createInstanceBody .= $injectionPropertiesRequireOnce;
             $createInstanceBody .= '$instance->propertyInjection' . $injectableArgument->getName() . '();' . PHP_EOL;
         }
 
@@ -323,6 +327,12 @@ class FileGenerator {
 
         // Generate File
         $file->setNamespace('rg\injektor\generated');
+        $this->usedFactories = array_unique($this->usedFactories);
+        foreach ($this->usedFactories as &$usedFactory) {
+            $usedFactory = str_replace('rg\injektor\generated\\', '', $usedFactory);
+            $usedFactory = $usedFactory . '.php';
+        }
+        $file->setRequiredFiles($this->usedFactories);
         $file->setClass($factoryClass);
         $file->setFilename($this->factoryPath . DIRECTORY_SEPARATOR . $factoryName . '.php');
 
@@ -340,11 +350,8 @@ class FileGenerator {
     /**
      * @param array $classConfig
      * @param \ReflectionClass $classReflection
-     *
-     * @return string
      */
     private function injectProperties(array $classConfig, \ReflectionClass $classReflection) {
-        $requireFactoryStatements = '';
         try {
             $this->injectableProperties = $this->dic->getInjectableProperties($classReflection);
             foreach ($this->injectableProperties as $key => $injectableProperty) {
@@ -364,7 +371,7 @@ class FileGenerator {
                         $this->factoryGenerator->processFileForClass($injectionProperty->getClassName());
                     }
                     if ($injectionProperty->getFactoryName()) {
-                        $requireFactoryStatements .= $this->requireOnceFactoryClass($injectionProperty->getFactoryName()) . PHP_EOL;
+                        $this->usedFactories[] = $injectionProperty->getFactoryName();
                     }
                     $this->injectableArguments[] = $injectionProperty;
                 } catch (\Exception $e) {
@@ -373,8 +380,6 @@ class FileGenerator {
             }
         } catch (\Exception $e) {
         }
-
-        return $requireFactoryStatements;
     }
 
     protected function getFactoryMethod(\ReflectionMethod $method, $classConfig) {
@@ -413,7 +418,7 @@ class FileGenerator {
                         $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
                     }
                     if ($injectionParameter->getFactoryName()) {
-                        $body .= '    ' . $this->requireOnceFactoryClass($injectionParameter->getFactoryName()) . PHP_EOL;
+                        $this->usedFactories[] = $injectionParameter->getFactoryName();
                     }
                     $body .= '    ' . $injectionParameter->getProcessingBody();
                 } catch (\Exception $e) {
@@ -439,7 +444,7 @@ class FileGenerator {
                         $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
                     }
                     if ($injectionParameter->getFactoryName()) {
-                        $body .= '    ' . $this->requireOnceFactoryClass($injectionParameter->getFactoryName()) . PHP_EOL;
+                        $this->usedFactories[] = $injectionParameter->getFactoryName();
                     }
                     $body .= '    ' . $injectionParameter->getProcessingBody();
                 } catch (\Exception $e) {
@@ -465,7 +470,7 @@ class FileGenerator {
                         $this->factoryGenerator->processFileForClass($injectionParameter->getClassName());
                     }
                     if ($injectionParameter->getFactoryName()) {
-                        $body .= '    ' . $this->requireOnceFactoryClass($injectionParameter->getFactoryName()) . PHP_EOL;
+                        $this->usedFactories[] = $injectionParameter->getFactoryName();
                     }
                     $body .= '    ' . $injectionParameter->getProcessingBody();
                 } catch (\Exception $e) {
@@ -496,17 +501,5 @@ class FileGenerator {
             $proxyClass->addMethodFromGenerator($injectorMethod);
         }
         return $proxyClass;
-    }
-
-    /**
-     * @param string $factoryClassName
-     *
-     * @return string
-     */
-    private function requireOnceFactoryClass($factoryClassName) {
-        $factoryClassName = str_replace('rg\injektor\generated\\', '', $factoryClassName);
-        $factoryClassName = $factoryClassName . '.php';
-
-        return 'require_once \'' . $factoryClassName . '\';';
     }
 }
