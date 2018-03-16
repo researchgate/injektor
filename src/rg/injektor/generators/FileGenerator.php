@@ -336,21 +336,22 @@ class FileGenerator {
 
         // Dependency require statements
         $this->usedFactories = array_unique($this->usedFactories);
-        foreach ($this->usedFactories as &$usedFactory) {
+        $requiredFactoryFiles = array();
+        foreach ($this->usedFactories as $usedFactory) {
             $usedFactory = str_replace('rg\injektor\generated\\', '', $usedFactory);
-            $usedFactory = $usedFactory . '.php';
+            $requiredFactoryFiles[] = $usedFactory . '.php';
         }
         if ($isLazy) {
             // When the class is lazy, only load the dependencies when the real instance is created
             $loadDependenciesBody = '';
-            foreach ($this->usedFactories as $usedFactory) {
+            foreach ($requiredFactoryFiles as $usedFactory) {
                 $loadDependenciesBody .= 'require_once \'' . $usedFactory . '\';' . PHP_EOL;
             }
             $loadDependenciesMethod->setBody($loadDependenciesBody);
             $factoryClass->addMethodFromGenerator($loadDependenciesMethod);
         } else {
             // When the class is not lazy loaded, we can get all the dependencies right away, because we'll need them for instance creation
-            $file->setRequiredFiles($this->usedFactories);
+            $file->setRequiredFiles($requiredFactoryFiles);
         }
 
         $file->setClass($factoryClass);
