@@ -99,11 +99,14 @@ class FileGenerator {
             return null;
         }
 
-        $file = new Generator\FileGenerator();
-
         $factoryClass = new \rg\injektor\generators\FactoryClass($factoryName);
         $getInstanceMethod = new \rg\injektor\generators\GetInstanceMethod();
         $createInstanceMethod = new \rg\injektor\generators\CreateInstanceMethod();
+        $loadDependenciesMethod = new \rg\injektor\generators\LoadDependenciesMethod();
+
+        $file = new Generator\FileGenerator();
+        $file->setNamespace('rg\injektor\generated');
+        $file->setFilename($this->factoryPath . DIRECTORY_SEPARATOR . $factoryName . '.php');
 
         $arguments = array();
 
@@ -120,7 +123,13 @@ class FileGenerator {
         $isService = $this->dic->isConfiguredAsService($classConfig, $classReflection);
         $isLazy = $this->dic->supportsLazyLoading() && $this->config->isLazyLoading() && $this->dic->isConfiguredAsLazy($classConfig, $classReflection);
 
-        $createInstanceBody = '$i = 0;' . PHP_EOL;
+        $createInstanceBody = '';
+
+        if ($isLazy) {
+            $createInstanceBody .= 'self::loadDependencies();' . PHP_EOL;
+        }
+
+        $createInstanceBody .= '$i = 0;' . PHP_EOL;
         if ($isSingleton || $isService) {
             $defaultValue = new Generator\PropertyValueGenerator(array(), Generator\ValueGenerator::TYPE_ARRAY, Generator\ValueGenerator::OUTPUT_SINGLE_LINE);
             $property = new Generator\PropertyGenerator('instance', $defaultValue, Generator\PropertyGenerator::FLAG_PRIVATE);
@@ -285,7 +294,7 @@ class FileGenerator {
             $getInstanceBody .= '$instance = ' . $lazyProxyClassName . '::staticProxyConstructor(' . PHP_EOL;
             $getInstanceBody .= '    function (&$wrappedObject, $proxy) use ($parameters) {' . PHP_EOL;
             $getInstanceBody .= '        $proxy->setProxyInitializer(null);' . PHP_EOL;
-            $getInstanceBody .= '        $wrappedObject = ' . $factoryName . '::createInstance($parameters);' . PHP_EOL;
+            $getInstanceBody .= '        $wrappedObject = self::createInstance($parameters);' . PHP_EOL;
             $getInstanceBody .= '        return true;' . PHP_EOL;
             $getInstanceBody .= '    }' . PHP_EOL;
             $getInstanceBody .= ');' . PHP_EOL;
@@ -325,16 +334,26 @@ class FileGenerator {
             }
         }
 
-        // Generate File
-        $file->setNamespace('rg\injektor\generated');
+        // Dependency require statements
         $this->usedFactories = array_unique($this->usedFactories);
         foreach ($this->usedFactories as &$usedFactory) {
             $usedFactory = str_replace('rg\injektor\generated\\', '', $usedFactory);
             $usedFactory = $usedFactory . '.php';
         }
-        $file->setRequiredFiles($this->usedFactories);
+        if ($isLazy) {
+            // When the class is lazy, only load the dependencies when the real instance is created
+            $loadDependenciesBody = '';
+            foreach ($this->usedFactories as $usedFactory) {
+                $loadDependenciesBody .= 'require_once \'' . $usedFactory . '\';';
+            }
+            $loadDependenciesMethod->setBody($loadDependenciesBody);
+            $factoryClass->addMethodFromGenerator($loadDependenciesMethod);
+        } else {
+            // When the class is not lazy loaded, we can get all the dependencies right away, because we'll need them for instance creation
+            $file->setRequiredFiles($this->usedFactories);
+        }
+
         $file->setClass($factoryClass);
-        $file->setFilename($this->factoryPath . DIRECTORY_SEPARATOR . $factoryName . '.php');
 
         // Add lazy proxy class
         if ($isLazy) {
