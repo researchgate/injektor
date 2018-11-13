@@ -441,6 +441,49 @@ namespace rg\injektor {
         }
     }
 
+    class DICTestLazy {
+        public function __construct($arg) {
+
+        }
+        public function someMethod() {
+            return 'success';
+        }
+    }
+
+    /**
+     * @lazy
+     */
+    class DICTestAnnotatedLazy {
+        public function __construct($arg) {
+
+        }
+        public function someMethod() {
+            return 'success';
+        }
+    }
+
+    class DICTestLazyService {
+        public function __construct($arg) {
+
+        }
+        public function someMethod() {
+            return 'success';
+        }
+    }
+
+    /**
+     * @lazy
+     * @service
+     */
+    class DICTestAnnotatedLazyService {
+        public function __construct($arg) {
+
+        }
+        public function someMethod() {
+            return 'success';
+        }
+    }
+
     class DICTestProvidedInterfaceImpl1 implements DICTestProvidedInterface {
 
     }

@@ -22,7 +22,11 @@
     "psr/log": "~1.0.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "~7.0.0"
+    "phpunit/phpunit": "~7.0.0",
+    "ocramius/proxy-manager": "^2.1.0"
+  },
+  "suggest": {
+    "ocramius/proxy-manager": "For lazy loading"
   },
   "autoload": {
     "psr-0": {

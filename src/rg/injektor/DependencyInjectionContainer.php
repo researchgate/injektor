@@ -10,6 +10,10 @@
 namespace rg\injektor;
 
 use Doctrine\Common\Annotations\PhpParser;
+use ProxyManager\Configuration as ProxyManagerConfiguration;
+use ProxyManager\Factory\LazyLoadingValueHolderFactory;
+use ProxyManager\GeneratorStrategy\EvaluatingGeneratorStrategy;
+use ProxyManager\Proxy\LazyLoadingInterface;
 use Psr\Log\LoggerInterface;
 use rg\injektor\annotations\Named;
 
@@ -54,6 +58,16 @@ class DependencyInjectionContainer {
     private $logger;
 
     /**
+     * @var bool
+     */
+    private $supportsLazyLoading = false;
+
+    /**
+     * @var LazyLoadingValueHolderFactory|null
+     */
+    private $lazyProxyFactory;
+
+    /**
      * used for injection loop detection
      *
      * @var array
@@ -71,6 +85,7 @@ class DependencyInjectionContainer {
         }
 
         $this->annotationReader = new SimpleAnnotationReader();
+        $this->supportsLazyLoading = class_exists('ProxyManager\Configuration');
     }
 
     /**
@@ -197,14 +212,24 @@ class DependencyInjectionContainer {
             $instance = $classReflection->getMethod('getInstance')->invokeArgs(null, $constructorArguments);
         } else {
             $constructorArguments = $this->getConstructorArguments($classReflection, $classConfig, $constructorArguments);
-            if ($constructorArguments) {
-                $instance = $classReflection->newInstanceArgs($constructorArguments);
-            } else {
-                $instance = $classReflection->newInstanceArgs(array());
-            }
-        }
+            $instanceConstructor = function () use ($classReflection, $constructorArguments, $isConfiguredAsSingleton, $isConfiguredAsService, $singletonKey, $fullClassName) {
+                $instance = $classReflection->newInstanceArgs($constructorArguments ? $constructorArguments : []);
 
-        $this->log('Created instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . ']');
+                if ($isConfiguredAsSingleton) {
+                    $this->log('Added singleton instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . '], Singleton Key: [' . $singletonKey . ']');
+                    $this->instances[$singletonKey] = $instance;
+                }
+                if ($isConfiguredAsService) {
+                    $this->log('Added service instance [' . spl_object_hash($instance) . '] of class [' .  $fullClassName . ']');
+                    $this->instances[$fullClassName] = $instance;
+                }
+
+                $instance = $this->injectProperties($classReflection, $instance);
+
+                return $instance;
+            };
+            $instance = $this->createNewInstance($classConfig, $classReflection, $instanceConstructor);
+        }
 
         if ($isConfiguredAsSingleton) {
             $this->log('Added singleton instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . '], Singleton Key: [' . $singletonKey . ']');
@@ -217,11 +242,49 @@ class DependencyInjectionContainer {
 
         $instance = $this->injectProperties($classReflection, $instance);
 
+        $this->log('Created instance [' . spl_object_hash($instance) . '] of class [' . get_class($instance) . ']');
+
         if ($this->iterationDepth > 0) {
             $this->iterationDepth--;
         }
 
         return $instance;
+    }
+
+    /**
+     * @param array $classConfig
+     * @param \ReflectionClass $classReflection
+     * @param callable $instanceConstructor
+     *
+     * @return object
+     */
+    private function createNewInstance(array $classConfig, \ReflectionClass $classReflection, $instanceConstructor) {
+        if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
+            return $this->wrapInstanceWithLazyProxy($classReflection->getName(), $instanceConstructor);
+        } else {
+            return $instanceConstructor();
+        }
+    }
+
+    /**
+     * @param string $className
+     * @param callable $instanceConstructor
+     *
+     * @return \ProxyManager\Proxy\VirtualProxyInterface
+     */
+    private function wrapInstanceWithLazyProxy($className, $instanceConstructor) {
+        $proxyParameters = [
+
+        ];
+        return $this->getLazyProxyFactory()->createProxy(
+            $className,
+            function (&$wrappedObject, LazyLoadingInterface $proxy) use ($instanceConstructor) {
+                $proxy->setProxyInitializer(null);
+                $wrappedObject = $instanceConstructor();
+                return true;
+            },
+            $proxyParameters
+        );
     }
 
     /**
@@ -295,6 +358,10 @@ class DependencyInjectionContainer {
      * @throws InjectionException
      */
     private function injectProperties($classReflection, $instance) {
+        if ($instance instanceof \ProxyManager\Proxy\LazyLoadingInterface) {
+            return $instance; // Not inject into lazy proxies
+        }
+
         $properties = $this->getInjectableProperties($classReflection);
         foreach ($properties as $property) {
             $this->injectProperty($property, $instance);
@@ -419,7 +486,15 @@ class DependencyInjectionContainer {
      */
     public function getProvidedConfiguredClass($classConfig, \ReflectionClass $classReflection, $name = null, $additionalArgumentsForProvider = array()) {
         if ($namedAnnotation = $this->getProviderClassName($classConfig, $classReflection, $name)) {
-            return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
+            $instanceConstructor = function () use ($namedAnnotation, $classReflection, $additionalArgumentsForProvider) {
+                return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
+            };
+
+            if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
+                return $this->wrapInstanceWithLazyProxy($classReflection->name, $instanceConstructor);
+            } else {
+                return $instanceConstructor();
+            }
         }
 
         return null;
@@ -597,6 +672,51 @@ class DependencyInjectionContainer {
         $classComment = $classReflection->getDocComment();
 
         return strpos($classComment, '@service') !== false;
+    }
+
+    /**
+     * @param array $classConfig
+     * @param \ReflectionClass $classReflection
+     * @return bool
+     */
+    public function isConfiguredAsLazy(array $classConfig, \ReflectionClass $classReflection) {
+        // Force no lazy loading
+        if ($this->isConfiguredAsNoLazy($classConfig, $classReflection)) {
+            return false;
+        }
+
+        // Lazy services
+        if ($this->config->isLazyServices() && $this->isConfiguredAsService($classConfig, $classReflection)) {
+            return true;
+        }
+
+        // Lazy singletons
+        if ($this->config->isLazySingletons() && $this->isConfiguredAsSingleton($classConfig, $classReflection)) {
+            return true;
+        }
+
+        if (isset($classConfig['lazy'])) {
+            return (bool) $classConfig['lazy'];
+        }
+
+        $classComment = $classReflection->getDocComment();
+
+        return strpos($classComment, '@lazy') !== false;
+    }
+
+    /**
+     * @param array $classConfig
+     * @param \ReflectionClass $classReflection
+     * @return bool
+     */
+    public function isConfiguredAsNoLazy(array $classConfig, \ReflectionClass $classReflection) {
+        if (isset($classConfig['noLazy'])) {
+            return (bool) $classConfig['noLazy'];
+        }
+
+        $classComment = $classReflection->getDocComment();
+
+        return strpos($classComment, '@noLazy') !== false;
     }
 
     /**
@@ -806,6 +926,27 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @return \ProxyManager\Configuration
+     */
+    private function getLazyProxyFactoryConfiguration() {
+        $config = new ProxyManagerConfiguration();
+        $config->setGeneratorStrategy(new EvaluatingGeneratorStrategy());
+        return $config;
+    }
+
+    /**
+     * @return LazyLoadingValueHolderFactory|null
+     */
+    private function getLazyProxyFactory() {
+        if ($this->supportsLazyLoading && !$this->lazyProxyFactory) {
+            $config = $this->getLazyProxyFactoryConfiguration();
+            $this->lazyProxyFactory = new LazyLoadingValueHolderFactory($config);
+        }
+
+        return $this->lazyProxyFactory;
+    }
+
+    /**
      * @param $docComment
      * @return bool
      */
@@ -822,4 +963,11 @@ class DependencyInjectionContainer {
         }
     }
 
+    /**
+     * @return bool
+     */
+    public function supportsLazyLoading()
+    {
+        return $this->supportsLazyLoading;
+    }
 }

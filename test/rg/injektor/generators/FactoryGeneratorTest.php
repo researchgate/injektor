@@ -99,12 +99,12 @@ class rg_injektor_generators_FGTestClassFourFactory
 
     public static function getInstance(array \$parameters = [])
     {
-        \$i = 0;
         \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         if (isset(self::\$instance[\$singletonKey])) {
             return self::\$instance[\$singletonKey];
         }
 
+        \$i = 0;
         if (!\$parameters) {
             \$simple = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
@@ -119,6 +119,7 @@ class rg_injektor_generators_FGTestClassFourFactory
         }
 
         \$instance = rg_injektor_generators_FGTestClassFourProxy::getInstance(\$simple);
+        \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         self::\$instance[\$singletonKey] = \$instance;
         \$instance->propertyInjectioninjectedProperty();
         return \$instance;
@@ -272,12 +273,12 @@ class rg_injektor_generators_FGTestClassOneFactory
 
     public static function getInstance(array \$parameters = [])
     {
-        \$i = 0;
         \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         if (isset(self::\$instance[\$singletonKey])) {
             return self::\$instance[\$singletonKey];
         }
 
+        \$i = 0;
         if (!\$parameters) {
             \$two = \\rg\injektor\generated\\rg_injektor_generators_FGTestClassTwoFactory::getInstance(array (
         ));
@@ -298,6 +299,7 @@ class rg_injektor_generators_FGTestClassOneFactory
         }
 
         \$instance = new rg_injektor_generators_FGTestClassOneProxy(\$two, \$three);
+        \$singletonKey = serialize(\$parameters) . "#" . getmypid();
         self::\$instance[\$singletonKey] = \$instance;
         \$instance->propertyInjectionfour();
         return \$instance;

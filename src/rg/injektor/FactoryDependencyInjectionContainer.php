@@ -80,6 +80,14 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
     }
 
     /**
+     * @param $fullClassName
+     * @return string
+     */
+    public function getLazyProxyClassName($fullClassName) {
+        return self::$prefix . $this->getStrippedClassName($fullClassName) . 'Lazy';
+    }
+
+    /**
      * @param string $fullClassName
      * @return string
      */
@@ -114,5 +122,4 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
 
         return false;
     }
-
 }

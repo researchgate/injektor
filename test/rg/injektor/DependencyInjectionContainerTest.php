@@ -202,15 +202,76 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
     public function testGetInstanceOfAnnotatedService() {
         $config = new Configuration(null, __DIR__ . '/_factories');
 
-        $config->setClassConfig('rg\injektor\DICTestAnnotatedService', [
-            'service' => true
-        ]);
+        $config->setClassConfig('rg\injektor\DICTestAnnotatedService', []);
         $dic = $this->getContainer($config);
         $instance = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedService', ['arg' => 123]);
 
         $instanceTwo = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedService', ['arg' => 123]);
 
         $this->assertSame($instance, $instanceTwo);
+    }
+
+    public function testGetInstanceOfLazy() {
+        $config = new Configuration(null, __DIR__ . '/_factories', true);
+
+        $config->setClassConfig('rg\injektor\DICTestLazy', [
+            'lazy' => true
+        ]);
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestLazy', ['arg' => 123]);
+
+        $this->assertInstanceOf('rg\injektor\DICTestLazy', $instance);
+        $this->assertInstanceOf('ProxyManager\Proxy\LazyLoadingInterface', $instance);
+
+        $this->assertEquals('success', $instance->someMethod(), 'Must be able to call someMethod() on proxy object');
+    }
+
+    public function testGetInstanceOfAnnotatedLazy() {
+        $config = new Configuration(null, __DIR__ . '/_factories', true);
+
+        $config->setClassConfig('rg\injektor\DICTestAnnotatedLazy', []);
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedLazy', ['arg' => 123]);
+
+        $this->assertInstanceOf('rg\injektor\DICTestAnnotatedLazy', $instance);
+        $this->assertInstanceOf('ProxyManager\Proxy\LazyLoadingInterface', $instance);
+
+        $this->assertEquals('success', $instance->someMethod(), 'Must be able to call someMethod() on proxy object');
+    }
+
+    public function testGetInstanceOfLazyService() {
+        $config = new Configuration(null, __DIR__ . '/_factories', true);
+
+        $config->setClassConfig('rg\injektor\DICTestLazyService', [
+            'lazy' => true,
+            'service' => true,
+        ]);
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestLazyService', ['arg' => 123]);
+        $instance2 = $dic->getInstanceOfClass('rg\injektor\DICTestLazyService', ['arg' => 123]);
+
+        $this->assertSame($instance, $instance2);
+
+        $this->assertInstanceOf('rg\injektor\DICTestLazyService', $instance);
+        $this->assertInstanceOf('ProxyManager\Proxy\LazyLoadingInterface', $instance);
+
+        $this->assertEquals('success', $instance->someMethod(), 'Must be able to call someMethod() on proxy object');
+    }
+
+    public function testGetInstanceOfAnnotatedLazyService() {
+        $config = new Configuration(null, __DIR__ . '/_factories', true);
+
+        $config->setClassConfig('rg\injektor\DICTestAnnotatedLazyService', []);
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedLazyService', ['arg' => 123]);
+        $instance2 = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedLazyService', ['arg' => 123]);
+
+        $this->assertSame($instance, $instance2);
+
+        $this->assertInstanceOf('rg\injektor\DICTestAnnotatedLazyService', $instance);
+        $this->assertInstanceOf('ProxyManager\Proxy\LazyLoadingInterface', $instance);
+
+        $this->assertEquals('success', $instance->someMethod(), 'Must be able to call someMethod() on proxy object');
     }
 
     public function testGetInstanceOfServiceWithDifferentArgumentsStillReturnSameInstance() {
