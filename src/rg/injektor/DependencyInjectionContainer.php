@@ -835,8 +835,14 @@ class DependencyInjectionContainer {
         if ($namedClassName) {
             return $this->getInstanceOfClass($namedClassName, $arguments);
         }
+        
+        try {
+            $inst = $this->getInstanceOfClass($argument->getClass()->name, $arguments);
+        } catch (\Exception $error) {
+            throw new InjectionException('Error while injecting class: [' . $argument->getDeclaringClass()->name . '] method: [' . $argument->getDeclaringFunction()->name . '] argument: [' . $argument->name . ']', null, $error);
+        }
 
-        return $this->getInstanceOfClass($argument->getClass()->name, $arguments);
+        return $inst;
     }
 
     /**
