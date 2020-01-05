@@ -837,12 +837,10 @@ class DependencyInjectionContainer {
         }
         
         try {
-            $inst = $this->getInstanceOfClass($argument->getClass()->name, $arguments);
+            return $this->getInstanceOfClass($argument->getClass()->name, $arguments);
         } catch (\Exception $error) {
-            throw new InjectionException('Error while injecting class: [' . $argument->getDeclaringClass()->name . '] method: [' . $argument->getDeclaringFunction()->name . '] argument: [' . $argument->name . ']', null, $error);
+            throw new InjectionException('Error while injecting class: [' . $argument->getDeclaringClass()->name . '] method: [' . $argument->getDeclaringFunction()->name . '] argument: [' . $argument->name . ']', $error->getCode(), $error);
         }
-
-        return $inst;
     }
 
     /**
