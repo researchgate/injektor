@@ -15,11 +15,11 @@ require_once 'DependencyInjectionContainerTest.php';
 
 class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionContainerTest {
 
-    public static function setUpBeforeClass() {
+    public static function setUpBeforeClass(): void {
         WritingFactoryGenerator::cleanUpGenerationDirectory(__DIR__ . '/_factories');
     }
 
-    public function setUp() {
+    public function setUp(): void {
         FactoryDependencyInjectionContainer::$prefix = 'a' . uniqid();
     }
 
@@ -40,11 +40,11 @@ class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionCon
         return new FactoryOnlyDependencyInjectionContainer($config);
     }
 
-    public function tearDown() {
+    public function tearDown(): void {
         FactoryDependencyInjectionContainer::$prefix = '';
     }
 
-    public static function tearDownAfterClass() {
+    public static function tearDownAfterClass(): void {
         WritingFactoryGenerator::cleanUpGenerationDirectory(__DIR__ . '/_factories');
     }
 }

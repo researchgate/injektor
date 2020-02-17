@@ -3,53 +3,43 @@ namespace rg\injektor;
 
 class InjectionLoopDetectionTest extends \PHPUnit\Framework\TestCase {
 
-    /**
-     * @expectedException \rg\injektor\InjectionLoopException
-     */
     public function testInjectionLoopDetectionA() {
         $config = new Configuration();
         $dic = new DependencyInjectionContainer($config);
 
+        $this->expectException(InjectionLoopException::class);
         $dic->getInstanceOfClass(InjectionLoopDetectionTest_DepA::class);
     }
 
-    /**
-     * @expectedException \rg\injektor\InjectionLoopException
-     */
     public function testInjectionLoopDetectionB() {
         $config = new Configuration();
         $dic = new DependencyInjectionContainer($config);
 
+        $this->expectException(InjectionLoopException::class);
         $dic->getInstanceOfClass(InjectionLoopDetectionTest_DepB::class);
     }
 
-    /**
-     * @expectedException \rg\injektor\InjectionLoopException
-     */
     public function testInjectionLoopDetectionC() {
         $config = new Configuration();
         $dic = new DependencyInjectionContainer($config);
 
+        $this->expectException(InjectionLoopException::class);
         $dic->getInstanceOfClass(InjectionLoopDetectionTest_DepC::class);
     }
 
-    /**
-     * @expectedException \rg\injektor\InjectionLoopException
-     */
     public function testInjectionLoopDetectionD() {
         $config = new Configuration();
         $dic = new DependencyInjectionContainer($config);
 
+        $this->expectException(InjectionLoopException::class);
         $dic->getInstanceOfClass(InjectionLoopDetectionTest_DepD::class);
     }
 
-    /**
-     * @expectedException \rg\injektor\InjectionLoopException
-     */
     public function testInjectionLoopDetectionE() {
         $config = new Configuration();
         $dic = new DependencyInjectionContainer($config);
 
+        $this->expectException(InjectionLoopException::class);
         $dic->getInstanceOfClass(InjectionLoopDetectionTest_DepE::class);
     }
 
