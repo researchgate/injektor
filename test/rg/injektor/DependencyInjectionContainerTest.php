@@ -833,11 +833,11 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
         $this->assertInstanceOf('rg\injektor\DICTestClassThatAlsoExistsInPublicNamespace', $instance->dependencyWithOtherClassInPublicNamespace);
     }
 
-    public function testDestroyDoesNotThrow() {
+    public function testClearDoesNotThrow() {
         $config = new Configuration(null, __DIR__ . '/_factories');
         $dic = $this->getContainer($config);
 
-        $this->assertNull($dic->destroy());
+        $this->assertNull($dic->clear());
     }
 
     /**

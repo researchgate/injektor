@@ -978,7 +978,7 @@ class DependencyInjectionContainer {
      * In order to avoid cyclic memory leaks, it is advised to call this before creating 
      * a new instance of this class.
      */
-    public function destroy()
+    public function clear()
     {
         $this->alreadyVisitedClasses = [];
         $this->instances = [];
