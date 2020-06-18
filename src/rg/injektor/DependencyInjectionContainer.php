@@ -33,7 +33,7 @@ class DependencyInjectionContainer {
     /**
      * @var array
      */
-    private $instances = array();
+    private $instances = [];
 
     /**
      * @var DependencyInjectionContainer
@@ -969,5 +969,18 @@ class DependencyInjectionContainer {
     public function supportsLazyLoading()
     {
         return $this->supportsLazyLoading;
+    }
+
+    /**
+     * This clears all internal caches and memories.
+     * 
+     * This can be useful in tests where a new injector is created for each test.
+     * In order to avoid cyclic memory leaks, it is advised to call this before creating 
+     * a new instance of this class.
+     */
+    public function destroy()
+    {
+        $this->alreadyVisitedClasses = [];
+        $this->instances = [];
     }
 }
