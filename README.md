@@ -142,7 +142,7 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
 
         require_once $fullpath;
 
-        $fileReflection = new \Zend\Code\Reflection\FileReflection($fullpath);
+        $fileReflection = new \Laminas\Code\Reflection\FileReflection($fullpath);
         $classes = $fileReflection->getClasses();
         foreach ($classes as $class) {
             $this->processClass($class);
@@ -150,9 +150,9 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
     }
 
     /**
-     * @param \Zend\Code\Reflection\ClassReflection $class
+     * @param \Laminas\Code\Reflection\ClassReflection $class
      */
-    private function processClass(\Zend\Code\Reflection\ClassReflection $class)
+    private function processClass(\Laminas\Code\Reflection\ClassReflection $class)
     {
         if (!$class->isInstantiable()) {
             return;

@@ -9,6 +9,6 @@
  */
 namespace rg\injektor\generators;
 
-class FactoryClass extends \Zend\Code\Generator\ClassGenerator {
+class FactoryClass extends \Laminas\Code\Generator\ClassGenerator {
 
 }

@@ -30,7 +30,7 @@ class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionCon
     public function getContainer(Configuration $config) {
         $generator = new WritingFactoryGenerator($config, __DIR__ . '/_factories');
 
-        $fileReflection = new \Zend\Code\Reflection\FileReflection(__DIR__ . '/test_classes.php');
+        $fileReflection = new \Laminas\Code\Reflection\FileReflection(__DIR__ . '/test_classes.php');
         $classes = $fileReflection->getClasses();
         foreach ($classes as $class) {
             /** @var \ReflectionClass $class */

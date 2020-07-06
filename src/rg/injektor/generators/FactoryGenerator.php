@@ -45,7 +45,7 @@ abstract class FactoryGenerator {
 
     /**
      * @param string $fullClassName
-     * @return null|\Zend\Code\Generator\FileGenerator
+     * @return null|\Laminas\Code\Generator\FileGenerator
      */
     protected function generateFileForClass($fullClassName) {
         $fullClassName = trim($fullClassName, '\\');

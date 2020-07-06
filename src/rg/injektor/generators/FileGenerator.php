@@ -10,7 +10,7 @@ namespace rg\injektor\generators;
  */
 use ProxyManager\Generator\ClassGenerator;
 use ProxyManager\ProxyGenerator\LazyLoadingValueHolderGenerator;
-use Zend\Code\Generator;
+use Laminas\Code\Generator;
 use rg\injektor\Configuration;
 use rg\injektor\FactoryDependencyInjectionContainer;
 
@@ -86,7 +86,7 @@ class FileGenerator {
     }
 
     /**
-     * @return \Zend\Code\Generator\FileGenerator|null
+     * @return \Laminas\Code\Generator\FileGenerator|null
      */
     public function getGeneratedFile() {
         $classConfig = $this->config->getClassConfig($this->fullClassName);
@@ -413,7 +413,7 @@ class FileGenerator {
         $methodArgumentStringParts = array();
 
         if (count($arguments) > 0) {
-            $factoryMethod->setParameter(new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array()));
+            $factoryMethod->setParameter(new \Laminas\Code\Generator\ParameterGenerator('parameters', 'array', array()));
 
             foreach ($arguments as $argument) {
                 /** @var \ReflectionParameter $argument */
@@ -510,13 +510,13 @@ class FileGenerator {
 
     /**
      * @param string $proxyName
-     * @return \Zend\Code\Generator\ClassGenerator
+     * @return \Laminas\Code\Generator\ClassGenerator
      */
     private function createProxyClass($proxyName) {
         $proxyClass = new Generator\ClassGenerator($proxyName);
         $proxyClass->setExtendedClass($this->fullClassName);
         foreach ($this->injectableArguments as $injectableArgument) {
-            $injectorMethod = new \Zend\Code\Generator\MethodGenerator('propertyInjection' . $injectableArgument->getName());
+            $injectorMethod = new \Laminas\Code\Generator\MethodGenerator('propertyInjection' . $injectableArgument->getName());
             $injectorMethod->setBody($injectableArgument->getProcessingBody());
             $proxyClass->addMethodFromGenerator($injectorMethod);
         }

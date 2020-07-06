@@ -9,12 +9,12 @@
  */
 namespace rg\injektor\generators;
 
-class GetInstanceMethod extends \Zend\Code\Generator\MethodGenerator {
+class GetInstanceMethod extends \Laminas\Code\Generator\MethodGenerator {
 
     public function __construct() {
         parent::__construct('getInstance', [], self::FLAG_PUBLIC | self::FLAG_STATIC);
 
-        $parameter = new \Zend\Code\Generator\ParameterGenerator('parameters', 'array', array());
+        $parameter = new \Laminas\Code\Generator\ParameterGenerator('parameters', 'array', array());
         $this->setParameter($parameter);
     }
 }

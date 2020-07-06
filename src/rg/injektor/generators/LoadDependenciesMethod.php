@@ -9,7 +9,7 @@
  */
 namespace rg\injektor\generators;
 
-class LoadDependenciesMethod extends \Zend\Code\Generator\MethodGenerator {
+class LoadDependenciesMethod extends \Laminas\Code\Generator\MethodGenerator {
 
     public function __construct() {
         parent::__construct('loadDependencies', [], self::FLAG_PRIVATE | self::FLAG_STATIC);
