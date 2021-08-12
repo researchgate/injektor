@@ -4,7 +4,7 @@ rg\\injektor is a sophisticated dependency injection container for PHP that was 
 Unlike other reflection based containers rg\\injektor includes a factory class generator that you can use to prevent
 the use of reflection on production.
 
-[![Build Status](https://travis-ci.com/researchgate/injektor.svg?branch=master)](https://travis-ci.com/researchgate/injektor)
+![Test status](https://github.com/researchgate/injektor/actions/workflows/tests.yml/badge.svg)
 
 # Prerequisites
 
