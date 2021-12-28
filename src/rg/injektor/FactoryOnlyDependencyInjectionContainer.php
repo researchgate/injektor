@@ -12,17 +12,20 @@ namespace rg\injektor;
 class FactoryOnlyDependencyInjectionContainer extends FactoryDependencyInjectionContainer {
 
     /**
-     * @param string $className
+     * @template InstanceType
+     *
+     * @param class-string<InstanceType> $fullClassName
      * @param array $constructorArguments
+     *
+     * @return InstanceType
      * @throws InjectionException
-     * @return object
      */
-    public function getInstanceOfClass($className, array $constructorArguments = array()) {
-        $className = trim($className, '\\');
-        $classConfig = $this->config->getClassConfig($className);
-        $className = $this->getRealConfiguredClassName($classConfig, new \ReflectionClass($className));
-        $fullFactoryClassName = $this->getFullFactoryClassName($className);
-        $factoryClassName = $this->getFactoryClassName($className);
+    public function getInstanceOfClass($fullClassName, array $constructorArguments = array()) {
+        $fullClassName = trim($fullClassName, '\\');
+        $classConfig = $this->config->getClassConfig($fullClassName);
+        $fullClassName = $this->getRealConfiguredClassName($classConfig, new \ReflectionClass($fullClassName));
+        $fullFactoryClassName = $this->getFullFactoryClassName($fullClassName);
+        $factoryClassName = $this->getFactoryClassName($fullClassName);
 
         if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
             return $fullFactoryClassName::getInstance($constructorArguments);

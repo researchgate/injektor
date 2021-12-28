@@ -139,9 +139,12 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param string $fullClassName
+     * @template InstanceType
+     *
+     * @param class-string<InstanceType> $fullClassName
      * @param array $constructorArguments
-     * @return object
+     *
+     * @return InstanceType
      */
     public function getInstanceOfClass($fullClassName, array $constructorArguments = array()) {
         $this->iterationDepth++;

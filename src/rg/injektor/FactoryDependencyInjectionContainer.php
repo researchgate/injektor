@@ -16,19 +16,22 @@ class FactoryDependencyInjectionContainer extends DependencyInjectionContainer {
     public static $prefix = '';
 
     /**
-     * @param string $className
+     * @template InstanceType
+     *
+     * @param class-string<InstanceType> $fullClassName
      * @param array $constructorArguments
-     * @return object
+     *
+     * @return InstanceType
      */
-    public function getInstanceOfClass($className, array $constructorArguments = array()) {
-        $fullFactoryClassName = $this->getFullFactoryClassName($className);
-        $factoryClassName = $this->getFactoryClassName($className);
+    public function getInstanceOfClass($fullClassName, array $constructorArguments = array()) {
+        $fullFactoryClassName = $this->getFullFactoryClassName($fullClassName);
+        $factoryClassName = $this->getFactoryClassName($fullClassName);
 
         if ($this->factoryClassExists($fullFactoryClassName, $factoryClassName)) {
             return $fullFactoryClassName::getInstance($constructorArguments);
         }
 
-        return parent::getInstanceOfClass($className, $constructorArguments);
+        return parent::getInstanceOfClass($fullClassName, $constructorArguments);
     }
 
     /**
