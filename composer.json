@@ -22,6 +22,7 @@
     "psr/log": "^1.0.0"
   },
   "require-dev": {
+    "composer/package-versions-deprecated": "^1.0",
     "phpunit/phpunit": "^9.0.0",
     "ocramius/proxy-manager": "^2.1.0"
   },
@@ -35,7 +36,7 @@
   },
   "config": {
     "allow-plugins": {
-      "ocramius/package-versions": true
+      "composer/package-versions-deprecated": true
     }
   }
 }
