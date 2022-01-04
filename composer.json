@@ -32,5 +32,10 @@
     "psr-0": {
       "rg\\injektor": "src/"
     }
+  },
+  "config": {
+    "allow-plugins": {
+      "ocramius/package-versions": true
+    }
   }
 }

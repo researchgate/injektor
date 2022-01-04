@@ -35,7 +35,7 @@ jobs:
     - name: Install dependencies
       uses: php-actions/composer@v6
       with:
-        version: 1
+        version: 2
         php_version: ${{ matrix.php-versions }}
 
     - name: Run test suite
