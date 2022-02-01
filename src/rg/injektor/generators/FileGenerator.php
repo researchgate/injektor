@@ -376,7 +376,7 @@ class FileGenerator {
             $this->injectableProperties = $this->dic->getInjectableProperties($classReflection);
             foreach ($this->injectableProperties as $key => $injectableProperty) {
                 /** @var \ReflectionProperty $injectableProperty */
-                $propertyClass = $this->dic->getClassFromVarTypeHint($injectableProperty->getDocComment());
+                $propertyClass = $this->dic->getClassFromProperty($injectableProperty);
                 if (!$propertyClass) {
                     unset($this->injectableProperties[$key]);
                     continue;

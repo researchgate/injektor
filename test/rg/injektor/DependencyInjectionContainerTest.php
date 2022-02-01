@@ -9,6 +9,8 @@
  */
 namespace rg\injektor;
 
+use const PHP_VERSION_ID;
+
 include_once 'test_classes.php';
 
 class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
@@ -831,6 +833,25 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
         $this->assertInstanceOf('rg\injektor\DICTestClassThatAlsoExistsInPublicNamespace', $instance->dependencyWithOtherClassInPublicNamespaceFq);
         $this->assertInstanceOf('DICTestClassThatAlsoExistsInPublicNamespace', $instance->dependencyWithOtherClassInPublicNamespaceFqPublic);
         $this->assertInstanceOf('rg\injektor\DICTestClassThatAlsoExistsInPublicNamespace', $instance->dependencyWithOtherClassInPublicNamespace);
+    }
+
+    public function test_getInstanceOfClass_givenClassWithTypedProperties_injectsCorrectClassesIntoProperties() {
+        if (PHP_VERSION_ID < 70400) {
+            $this->markTestSkipped('Needs PHP 7.4 or higher');
+        }
+        include_once 'test_classes_php74.php';
+
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestClassWithTypedProperties');
+
+        $this->assertInstanceOf('rg\injektor\DICTestClassWithTypedProperties', $instance);
+
+        $this->assertInstanceOf('rg\injektor\DICTestClassOne', $instance->one);
+        $this->assertInstanceOf('rg\injektor\DICTestClassTwo', $instance->two);
+        $this->assertInstanceOf('rg\injektor\DICTestClassThree', $instance->three);
     }
 
     public function testClearDoesNotThrow() {

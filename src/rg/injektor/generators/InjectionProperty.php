@@ -46,7 +46,7 @@ class InjectionProperty extends InjectionParameter {
     }
 
     protected function getClass() {
-        return $this->dic->getFullClassNameBecauseOfImports($this->property, $this->dic->getClassFromVarTypeHint($this->docComment));
+        return $this->dic->getFullClassNameBecauseOfImports($this->property, $this->dic->getClassFromProperty($this->property));
     }
 
     public function getProcessingBody() {
