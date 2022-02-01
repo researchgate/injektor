@@ -15,7 +15,10 @@ use ProxyManager\Factory\LazyLoadingValueHolderFactory;
 use ProxyManager\GeneratorStrategy\EvaluatingGeneratorStrategy;
 use ProxyManager\Proxy\LazyLoadingInterface;
 use Psr\Log\LoggerInterface;
+use ReflectionNamedType;
+use ReflectionProperty;
 use rg\injektor\annotations\Named;
+use const PHP_VERSION_ID;
 
 /**
  * @implementedBy rg\injektor\FactoryDependencyInjectionContainer
@@ -400,9 +403,9 @@ class DependencyInjectionContainer {
      * @throws InjectionException
      */
     private function injectProperty($property, $instance) {
-        $fullClassName = $this->getClassFromVarTypeHint($property->getDocComment());
+        $fullClassName = $this->getClassFromProperty($property);
         if (!$fullClassName) {
-            throw new InjectionException('Expected tag @var not found in doc comment.');
+            throw new InjectionException('Expected tag @var not found in doc comment. A typed property was also not found.');
         }
 
         $fullClassName = $this->getFullClassNameBecauseOfImports($property, $fullClassName);
@@ -454,12 +457,20 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param string $docComment
-     * @return string
-     * @throws InjectionException
+     * @param ReflectionProperty $property
+     * @return string|null
      */
-    public function getClassFromVarTypeHint($docComment) {
-        return $this->annotationReader->getClassFromVarTypeHint($docComment);
+    public function getClassFromProperty($property) {
+        $fullClassName = $this->annotationReader->getClassFromVarTypeHint($property->getDocComment());
+
+        if (!$fullClassName && PHP_VERSION_ID >= 70400) {
+            $namedType = $property->getType();
+            if ($namedType instanceof ReflectionNamedType && $namedType->getName()) {
+                $fullClassName = '\\' . $namedType->getName();
+            }
+        }
+
+        return $fullClassName;
     }
 
     /**

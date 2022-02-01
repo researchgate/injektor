@@ -14,7 +14,6 @@ class SimpleAnnotationReader {
     /**
      * @param string $docComment
      * @return string
-     * @throws InjectionException
      */
     public function getClassFromVarTypeHint($docComment) {
         return $this->getClassFromTypeHint($docComment, '@var');
@@ -24,7 +23,6 @@ class SimpleAnnotationReader {
      * @param string $docComment
      * @param string $tag
      * @return string mixed
-     * @throws InjectionException
      */
     private function getClassFromTypeHint($docComment, $tag) {
         $matches = array();

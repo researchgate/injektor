@@ -9,7 +9,9 @@
  */
 namespace rg\injektor;
 
+use Laminas\Code\Reflection\FileReflection;
 use rg\injektor\generators\WritingFactoryGenerator;
+use const PHP_VERSION_ID;
 
 require_once 'DependencyInjectionContainerTest.php';
 
@@ -30,11 +32,10 @@ class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionCon
     public function getContainer(Configuration $config) {
         $generator = new WritingFactoryGenerator($config, __DIR__ . '/_factories');
 
-        $fileReflection = new \Laminas\Code\Reflection\FileReflection(__DIR__ . '/test_classes.php');
-        $classes = $fileReflection->getClasses();
-        foreach ($classes as $class) {
-            /** @var \ReflectionClass $class */
-            $generator->processFileForClass($class->getName());
+        $this->processClassesOfFile(__DIR__ . '/test_classes.php', $generator);
+
+        if (PHP_VERSION_ID >= 70400) {
+            $this->processClassesOfFile(__DIR__ . '/test_classes_php74.php', $generator);
         }
 
         return new FactoryOnlyDependencyInjectionContainer($config);
@@ -46,5 +47,14 @@ class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionCon
 
     public static function tearDownAfterClass(): void {
         WritingFactoryGenerator::cleanUpGenerationDirectory(__DIR__ . '/_factories');
+    }
+
+    private function processClassesOfFile(string $fileName, WritingFactoryGenerator $generator): void
+    {
+        $fileReflection = new FileReflection($fileName);
+        $classes = $fileReflection->getClasses();
+        foreach ($classes as $class) {
+            $generator->processFileForClass($class->getName());
+        }
     }
 }
