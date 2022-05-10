@@ -22,11 +22,11 @@ class SimpleAnnotationReader {
     /**
      * @param string $docComment
      * @param string $tag
-     * @return string mixed
+     * @return string|null
      */
-    private function getClassFromTypeHint($docComment, $tag) {
+    private function getClassFromTypeHint($docComment, $tag): ?string {
         $matches = array();
-        preg_match('/' . $tag . '\s([a-zA-Z0-9\_\\\\\[\\]]+)/', $docComment, $matches);
+        preg_match('/' . $tag . '\s([a-zA-Z0-9_\\\\\[\\]]+)/', $docComment, $matches);
         if (isset($matches[1])) {
             return $matches[1];
         }

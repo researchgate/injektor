@@ -16,15 +16,15 @@
     }
   ],
   "require": {
-    "php": "^7.2",
-    "laminas/laminas-code": "^3.0.0",
+    "php": "^7.4 || ^8.0",
     "doctrine/annotations": "^1.0.0",
+    "laminas/laminas-code": "^4.0.0",
     "psr/log": "^1.0.0"
   },
   "require-dev": {
-    "composer/package-versions-deprecated": "^1.0",
+    "ocramius/proxy-manager": "^2.1.0",
     "phpunit/phpunit": "^9.0.0",
-    "ocramius/proxy-manager": "^2.1.0"
+    "roave/better-reflection": "^4.0.0 || ^5.0.0"
   },
   "suggest": {
     "ocramius/proxy-manager": "For lazy loading"

@@ -142,6 +142,20 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
 
         require_once $fullpath;
 
+        $astLocator = (new \Roave\BetterReflection\BetterReflection())->astLocator();
+        
+        // for roave/better-reflection 4.x (PHP 7.4)
+        $reflector  = new \Roave\BetterReflection\Reflector\ClassReflector(new Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator($fileName, $astLocator));
+        $classes = $reflector->getAllClasses();
+
+        // for roave/better-reflection 5.x (PHP 8.0)
+        $reflector  = new \Roave\BetterReflection\Reflector\DefaultReflector(new Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator($fileName, $astLocator));
+        $classes = $reflector->reflectAllClasses();
+
+        foreach ($classes as $class) {
+            $generator->processFileForClass($class->getName());
+        }
+
         $fileReflection = new \Laminas\Code\Reflection\FileReflection($fullpath);
         $classes = $fileReflection->getClasses();
         foreach ($classes as $class) {

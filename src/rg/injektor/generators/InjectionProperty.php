@@ -9,19 +9,22 @@
  */
 namespace rg\injektor\generators;
 
-use rg\injektor\InjectionException;
+use ReflectionProperty;
+use rg\injektor\Configuration;
+use rg\injektor\DependencyInjectionContainer;
+use const PHP_VERSION_ID;
 
 class InjectionProperty extends InjectionParameter {
 
-    /**
-     * @var \ReflectionProperty
-     */
-    private $property;
+    private ReflectionProperty $property;
 
-
-    public function __construct(\ReflectionProperty $property, array $classConfig,
-                                \rg\injektor\Configuration $config,
-                                \rg\injektor\DependencyInjectionContainer $dic) {
+    public function __construct(
+        ReflectionProperty $property,
+        array $classConfig,
+        Configuration $config,
+        DependencyInjectionContainer $dic
+    )
+    {
         $this->property = $property;
         $this->classConfig = $classConfig;
         $this->config = $config;
@@ -33,23 +36,27 @@ class InjectionProperty extends InjectionParameter {
         $this->analyze();
     }
 
-    protected function hasDefaultValue() {
+    protected function hasDefaultValue(): bool {
         return (boolean) $this->getDefaultValue();
     }
 
     protected function getDefaultValue() {
-        return $this->property->getValue();
+        if (PHP_VERSION_ID >= 80000) {
+            return $this->property->getDefaultValue();
+        } else {
+            return $this->property->getValue();
+        }
     }
 
-    protected function hasClass() {
+    protected function hasClass(): bool {
         return (boolean) $this->getClass();
     }
 
-    protected function getClass() {
+    protected function getClass(): ?string {
         return $this->dic->getFullClassNameBecauseOfImports($this->property, $this->dic->getClassFromProperty($this->property));
     }
 
-    public function getProcessingBody() {
+    public function getProcessingBody(): string {
         return '$this->' . $this->name . ' = ' . $this->defaultValue . ';' . PHP_EOL;
     }
 

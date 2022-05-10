@@ -411,7 +411,7 @@ namespace rg\injektor {
          * @inject
          * @static
          * @param DICTestClassNoConstructor $instance
-         * @return Singleton
+         * @return DICTestSingleton
          */
         public static function getInstance(DICTestClassNoConstructor $instance) {
             return new static('foo', $instance);
@@ -704,6 +704,24 @@ namespace rg\injektor {
         public function __construct(DICTestInterface $interface = null) {
             $this->interface = $interface;
         }
+    }
+
+    class DICTestClassWithTypedProperties {
+
+        /**
+         * @inject
+         */
+        public DICTestClassOne $one;
+
+        /**
+         * @inject
+         */
+        public \rg\injektor\DICTestClassTwo $two;
+
+        /**
+         * @inject
+         */
+        public ?DICTestClassThree $three;
     }
 }
 
