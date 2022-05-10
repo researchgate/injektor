@@ -153,13 +153,7 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
         $classes = $reflector->reflectAllClasses();
 
         foreach ($classes as $class) {
-            $generator->processFileForClass($class->getName());
-        }
-
-        $fileReflection = new \Laminas\Code\Reflection\FileReflection($fullpath);
-        $classes = $fileReflection->getClasses();
-        foreach ($classes as $class) {
-            $this->processClass($class);
+            $generator->processClass($class->getName());
         }
     }
 
