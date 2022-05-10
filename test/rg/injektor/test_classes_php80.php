@@ -9,23 +9,25 @@
  */
 namespace rg\injektor {
 
+    use PHPUnit\Framework\MockObject\MockObject;
+
     require_once 'test_classes.php';
 
-    class DICTestClassWithTypedProperties {
+    class DICTestClassWithUnionTypedProperties {
 
         /**
          * @inject
          */
-        public DICTestClassOne $one;
+        public DICTestClassOne|MockObject $one;
 
         /**
          * @inject
          */
-        public \rg\injektor\DICTestClassTwo $two;
+        public \rg\injektor\DICTestClassTwo|MockObject $two;
 
         /**
          * @inject
          */
-        public ?DICTestClassThree $three;
+        public DICTestClassThree|MockObject|null $three;
     }
 }

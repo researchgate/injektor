@@ -9,11 +9,12 @@
  */
 namespace rg\injektor;
 
+use PHPUnit\Framework\TestCase;
 use const PHP_VERSION_ID;
 
 include_once 'test_classes.php';
 
-class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
+class DependencyInjectionContainerTest extends TestCase {
 
     public function testGetInstance() {
         $config = new Configuration(null, __DIR__ . '/_factories');
@@ -328,13 +329,6 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
             ],
         ]);
 
-        [
-            'keywords' => [
-                123,
-                456
-            ]
-        ];
-
         $dic = $this->getContainer($config);
 
         $instance = $dic->getInstanceOfClass('rg\injektor\DICTestClassNoTypeHint');
@@ -488,7 +482,7 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
 
     public function testAnnotatedSingleton() {
         $config = new Configuration(null, __DIR__ . '/_factories');
-        ;
+
         $dic = $this->getContainer($config);
 
         $instanceOne = $dic->getInstanceOfClass('rg\injektor\DICTestAnnotatedSingleton');
@@ -836,11 +830,6 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
     }
 
     public function test_getInstanceOfClass_givenClassWithTypedProperties_injectsCorrectClassesIntoProperties() {
-        if (PHP_VERSION_ID < 70400) {
-            $this->markTestSkipped('Needs PHP 7.4 or higher');
-        }
-        include_once 'test_classes_php74.php';
-
         $config = new Configuration(null, __DIR__ . '/_factories');
 
         $dic = $this->getContainer($config);
@@ -854,18 +843,34 @@ class DependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
         $this->assertInstanceOf('rg\injektor\DICTestClassThree', $instance->three);
     }
 
+    public function test_getInstanceOfClass_givenClassWithUnionTypedProperties_injectsCorrectClassesIntoProperties() {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('Needs PHP 8.0 or higher');
+        }
+        include_once 'test_classes_php80.php';
+
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $dic = $this->getContainer($config);
+
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestClassWithUnionTypedProperties');
+
+        $this->assertInstanceOf('rg\injektor\DICTestClassWithUnionTypedProperties', $instance);
+
+        $this->assertInstanceOf('rg\injektor\DICTestClassOne', $instance->one);
+        $this->assertInstanceOf('rg\injektor\DICTestClassTwo', $instance->two);
+        $this->assertInstanceOf('rg\injektor\DICTestClassThree', $instance->three);
+    }
+
     public function testClearDoesNotThrow() {
         $config = new Configuration(null, __DIR__ . '/_factories');
         $dic = $this->getContainer($config);
 
-        $this->assertNull($dic->clear());
+        $dic->clear();
+        $this->assertTrue(true);
     }
 
-    /**
-     * @param Configuration $config
-     * @return DependencyInjectionContainer
-     */
-    public function getContainer(Configuration $config) {
+    public function getContainer(Configuration $config): DependencyInjectionContainer {
         return new DependencyInjectionContainer($config);
     }
 }

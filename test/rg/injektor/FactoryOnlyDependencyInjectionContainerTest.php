@@ -9,9 +9,10 @@
  */
 namespace rg\injektor;
 
-use Laminas\Code\Reflection\FileReflection;
 use rg\injektor\generators\WritingFactoryGenerator;
-use const PHP_VERSION_ID;
+use Roave\BetterReflection\BetterReflection;
+use Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator;
+use function class_exists;
 
 require_once 'DependencyInjectionContainerTest.php';
 
@@ -25,17 +26,13 @@ class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionCon
         FactoryDependencyInjectionContainer::$prefix = 'a' . uniqid();
     }
 
-    /**
-     * @param Configuration $config
-     * @return FactoryDependencyInjectionContainer
-     */
-    public function getContainer(Configuration $config) {
+    public function getContainer(Configuration $config): FactoryOnlyDependencyInjectionContainer {
         $generator = new WritingFactoryGenerator($config, __DIR__ . '/_factories');
 
         $this->processClassesOfFile(__DIR__ . '/test_classes.php', $generator);
 
-        if (PHP_VERSION_ID >= 70400) {
-            $this->processClassesOfFile(__DIR__ . '/test_classes_php74.php', $generator);
+        if (PHP_VERSION_ID >= 80000) {
+            $this->processClassesOfFile(__DIR__ . '/test_classes_php80.php', $generator);
         }
 
         return new FactoryOnlyDependencyInjectionContainer($config);
@@ -51,8 +48,17 @@ class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionCon
 
     private function processClassesOfFile(string $fileName, WritingFactoryGenerator $generator): void
     {
-        $fileReflection = new FileReflection($fileName);
-        $classes = $fileReflection->getClasses();
+        require_once $fileName;
+
+        $astLocator = (new BetterReflection())->astLocator();
+        // bc break between v4 and v5. Can be switched to DefaultReflector fully when min version is PHP 8.0
+        if (class_exists(\Roave\BetterReflection\Reflector\ClassReflector::class)) {
+            $reflector  = new \Roave\BetterReflection\Reflector\ClassReflector(new SingleFileSourceLocator($fileName, $astLocator));
+            $classes = $reflector->getAllClasses();
+        } else {
+            $reflector  = new \Roave\BetterReflection\Reflector\DefaultReflector(new SingleFileSourceLocator($fileName, $astLocator));
+            $classes = $reflector->reflectAllClasses();
+        }
         foreach ($classes as $class) {
             $generator->processFileForClass($class->getName());
         }

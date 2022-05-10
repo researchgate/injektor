@@ -9,7 +9,14 @@
  */
 namespace rg\injektor\generators;
 
+use ReflectionClass;
+use ReflectionException;
+use ReflectionParameter;
+use rg\injektor\Configuration;
+use rg\injektor\DependencyInjectionContainer;
+use rg\injektor\FactoryDependencyInjectionContainer;
 use rg\injektor\InjectionException;
+use rg\injektor\ReflectionClassHelper;
 
 class InjectionParameter {
 
@@ -17,35 +24,20 @@ class InjectionParameter {
     const MODE_NUMERIC = 'numeric';
     const MODE_STRING = 'string';
 
-    /**
-     * @var \ReflectionParameter
-     */
-    private $parameter;
+    private ReflectionParameter $parameter;
+
+    protected array $classConfig;
+
+    protected Configuration $config;
 
     /**
-     * @var array
-     */
-    protected $classConfig;
-
-    /**
-     * @var \rg\injektor\Configuration
-     */
-    protected $config;
-
-    /**
-     * @var \rg\injektor\FactoryDependencyInjectionContainer
+     * @var FactoryDependencyInjectionContainer
      */
     protected $dic;
 
-    /**
-     * @var string
-     */
-    protected $factoryName;
+    protected ?string $factoryName = null;
 
-    /**
-     * @var string
-     */
-    protected $className;
+    protected ?string $className = null;
 
     protected $defaultValue;
 
@@ -59,10 +51,13 @@ class InjectionParameter {
 
     protected $mode;
 
-    public function __construct(\ReflectionParameter $parameter, array $classConfig,
-                                \rg\injektor\Configuration $config,
-                                \rg\injektor\DependencyInjectionContainer $dic,
-                                $mode) {
+    public function __construct(
+        ReflectionParameter $parameter,
+        array $classConfig,
+        Configuration $config,
+        DependencyInjectionContainer $dic,
+        $mode)
+    {
         $this->parameter = $parameter;
         $this->classConfig = $classConfig;
         $this->config = $config;
@@ -81,7 +76,7 @@ class InjectionParameter {
         return $this->name;
     }
 
-    public function getProcessingBody() {
+    public function getProcessingBody(): string {
         if ($this->mode === self::MODE_NO_ARGUMENTS) {
             return '$' . $this->name . ' = ' . $this->defaultValue . ';' . PHP_EOL;
         } else if ($this->mode === self::MODE_NUMERIC) {
@@ -90,7 +85,7 @@ class InjectionParameter {
         return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : ' . $this->defaultValue . ';' . PHP_EOL;
     }
 
-    public function getDefaultProcessingBody() {
+    public function getDefaultProcessingBody(): string {
         if ($this->mode === self::MODE_NO_ARGUMENTS) {
             return '$' . $this->name . ' = null;' . PHP_EOL;
         } else if ($this->mode === self::MODE_NUMERIC) {
@@ -99,6 +94,9 @@ class InjectionParameter {
         return '$' . $this->name . ' = array_key_exists(\'' . $this->name . '\', $parameters) ? $parameters[\'' . $this->name . '\'] : null;' . PHP_EOL;
     }
 
+    /**
+     * @throws ReflectionException
+     */
     protected function analyze() {
         $argumentClass = null;
 
@@ -128,7 +126,7 @@ class InjectionParameter {
             if ($argumentClass === 'rg\injektor\DependencyInjectionContainer') {
                 $this->defaultValue = '\\' . $argumentClass . '::getDefaultInstance()';
             } else {
-                $providerClassName = $this->dic->getProviderClassName($this->config->getClassConfig($argumentClass), new \ReflectionClass($argumentClass),
+                $providerClassName = $this->dic->getProviderClassName($this->config->getClassConfig($argumentClass), new ReflectionClass($argumentClass),
                     $this->dic->getImplementationName($this->docComment, $this->nameForAnnotationParsing));
                 if ($providerClassName && $providerClassName->getClassName()) {
                     $argumentFactory = $this->dic->getFullFactoryClassName($providerClassName->getClassName());
@@ -136,9 +134,9 @@ class InjectionParameter {
                     $this->factoryName = $argumentFactory;
                     $this->defaultValue = '\\' . $argumentFactory . '::getInstance(' . var_export(array_merge($providerClassName->getParameters(), $this->additionalArguments), true) . ')->get()';
                 } else {
-                    $argumentClass = $this->dic->getRealConfiguredClassName($this->config->getClassConfig($argumentClass), new \ReflectionClass($argumentClass));
+                    $argumentClass = $this->dic->getRealConfiguredClassName($this->config->getClassConfig($argumentClass), new ReflectionClass($argumentClass));
 
-                    $argumentClassReflection = new \ReflectionClass($argumentClass);
+                    $argumentClassReflection = new ReflectionClass($argumentClass);
                     if (! $argumentClassReflection->isInstantiable() && ! $argumentClassReflection->hasMethod('getInstance')) {
                         $this->setParameterToDefault();
                         return;
@@ -172,16 +170,19 @@ class InjectionParameter {
         return $this->parameter->isDefaultValueAvailable();
     }
 
+    /**
+     * @throws ReflectionException
+     */
     protected function getDefaultValue() {
         return $this->parameter->getDefaultValue();
     }
 
-    protected function hasClass() {
-        return $this->parameter->getClass();
+    protected function hasClass(): bool {
+        return ReflectionClassHelper::getClassNameFromReflectionParameter($this->parameter) !== null;
     }
 
-    protected function getClass() {
-        return $this->parameter->getClass()->name;
+    protected function getClass(): ?string {
+        return ReflectionClassHelper::getClassNameFromReflectionParameter($this->parameter);
     }
 
     public function getFactoryName() {

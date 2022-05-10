@@ -16,8 +16,12 @@ use ProxyManager\GeneratorStrategy\EvaluatingGeneratorStrategy;
 use ProxyManager\Proxy\LazyLoadingInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionNamedType;
+use ReflectionParameter;
 use ReflectionProperty;
 use rg\injektor\annotations\Named;
+use UnexpectedValueException;
+use function get_class;
+use function method_exists;
 use const PHP_VERSION_ID;
 
 /**
@@ -26,61 +30,33 @@ use const PHP_VERSION_ID;
  */
 class DependencyInjectionContainer {
 
-    public static $CLASS = __CLASS__;
+    public static string $CLASS = __CLASS__;
 
-    /**
-     * @var Configuration
-     */
-    protected $config;
+    protected Configuration $config;
 
-    /**
-     * @var array
-     */
-    private $instances = [];
+    private array $instances = [];
 
-    /**
-     * @var DependencyInjectionContainer
-     */
-    private static $defaultInstance;
+    private static ?DependencyInjectionContainer $defaultInstance = null;
 
-    /**
-     * @var SimpleAnnotationReader
-     */
-    private $annotationReader;
+    private SimpleAnnotationReader $annotationReader;
 
     /**
      * iteration depth used for intelligent logging, makes it easier to detect circular iterations
-     *
-     * @var int
      */
-    private $iterationDepth = 0;
+    private int $iterationDepth = 0;
 
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
+    private ?LoggerInterface $logger = null;
 
-    /**
-     * @var bool
-     */
-    private $supportsLazyLoading = false;
+    private bool $supportsLazyLoading;
 
-    /**
-     * @var LazyLoadingValueHolderFactory|null
-     */
-    private $lazyProxyFactory;
+    private ?LazyLoadingValueHolderFactory $lazyProxyFactory = null;
 
     /**
      * used for injection loop detection
-     *
-     * @var array
      */
-    protected $alreadyVisitedClasses = [];
+    protected array $alreadyVisitedClasses = [];
 
-    /**
-     * @param Configuration $config
-     */
-    public function __construct(Configuration $config = null) {
+    public function __construct(?Configuration $config = null) {
         $this->config = $config ? : new Configuration();
 
         if (!self::$defaultInstance) {
@@ -92,11 +68,9 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @static
      * @throws InjectionException
-     * @return DependencyInjectionContainer
      */
-    public static function getDefaultInstance() {
+    public static function getDefaultInstance(): DependencyInjectionContainer {
         if (self::$defaultInstance) {
             return self::$defaultInstance;
         }
@@ -104,32 +78,22 @@ class DependencyInjectionContainer {
         throw new InjectionException('dependency injection container was not instantiated yet');
     }
 
-    /**
-     * @param DependencyInjectionContainer $instance
-     */
     public static function setDefaultInstance(DependencyInjectionContainer $instance) {
         self::$defaultInstance = $instance;
     }
 
-    /**
-     * @param LoggerInterface $logger
-     */
     public function setLogger(LoggerInterface $logger) {
         $this->logger = $logger;
     }
 
-    /**
-     * @return Configuration
-     */
-    public function getConfig() {
+    public function getConfig(): Configuration {
         return $this->config;
     }
 
     /**
-     * @param string $className
      * @throws InjectionLoopException
      */
-    protected function checkForInjectionLoop($className) {
+    protected function checkForInjectionLoop(string $className) {
         if ($this->iterationDepth > 1000) {
             throw new InjectionLoopException(
                 'Injection loop detected ' . $className . ' ' . $this->iterationDepth . PHP_EOL . print_r(
@@ -431,12 +395,12 @@ class DependencyInjectionContainer {
      * @param string $fullClassName
      * @return string
      */
-    public function getFullClassNameBecauseOfImports($property, $fullClassName) {
+    public function getFullClassNameBecauseOfImports(ReflectionProperty $property, string $fullClassName) {
         // only process names which are not fully qualified, yet
         // fully qualified names must start with a \
         if ('\\' !== $fullClassName[0]) {
             $parser = new PhpParser();
-            $useStatements = $parser->parseClass($property->getDeclaringClass());
+            $useStatements = $parser->parseUseStatements($property->getDeclaringClass());
             if ($property->getDeclaringClass()->inNamespace()) {
                 $parentNamespace = $property->getDeclaringClass()->getNamespaceName();
             }
@@ -456,17 +420,20 @@ class DependencyInjectionContainer {
         return trim($fullClassName, '\\');
     }
 
-    /**
-     * @param ReflectionProperty $property
-     * @return string|null
-     */
-    public function getClassFromProperty($property) {
+    public function getClassFromProperty(ReflectionProperty $property): ?string {
         $fullClassName = $this->annotationReader->getClassFromVarTypeHint($property->getDocComment());
 
-        if (!$fullClassName && PHP_VERSION_ID >= 70400) {
-            $namedType = $property->getType();
-            if ($namedType instanceof ReflectionNamedType && $namedType->getName()) {
-                $fullClassName = '\\' . $namedType->getName();
+        if (!$fullClassName) {
+            $type = $property->getType();
+            if ($type instanceof ReflectionNamedType && $type->isBuiltin() === false && $type->getName()) {
+                $fullClassName = '\\' . $type->getName();
+            } elseif ($type !== null && method_exists($type, 'getTypes')) {
+                foreach ($type->getTypes() as $namedType) {
+                    if ($namedType->isBuiltin() === false && $namedType->getName()) {
+                        $fullClassName = '\\' . $namedType->getName();
+                    }
+                    break;
+                }
             }
         }
 
@@ -788,7 +755,7 @@ class DependencyInjectionContainer {
 
         $isNumericDefaultArguments = !(bool) count(array_filter(array_keys($defaultArguments), 'is_string'));
         foreach ($arguments as $key => $argument) {
-            /** @var \ReflectionParameter $argument */
+            /** @var ReflectionParameter $argument */
             if ($isNumericDefaultArguments && array_key_exists($key, $defaultArguments)) {
                 $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$key]);
             } else if (array_key_exists($argument->name, $defaultArguments)) {
@@ -823,41 +790,42 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionParameter $argument
+     * @param ReflectionParameter $argument
      * @return object
-     * @throws InjectionException
+     * @throws InjectionException|UnexpectedValueException
      */
-    private function getInstanceOfArgument(\ReflectionParameter $argument) {
-        if (!$argument->getClass()) {
+    private function getInstanceOfArgument(ReflectionParameter $argument) {
+        $className = ReflectionClassHelper::getClassNameFromReflectionParameter($argument);
+        if (!$className) {
             if ($argument->isOptional()) {
                 return $argument->getDefaultValue();
             }
             throw new InjectionException('Invalid argument without class typehint class: [' . $argument->getDeclaringClass()->name . '] method: [' . $argument->getDeclaringFunction()->name . '] argument: [' . $argument->name . ']');
         }
 
-        $argumentClassConfig = $this->config->getClassConfig($argument->getClass()->name);
+        $argumentClassConfig = $this->config->getClassConfig($className);
 
         $arguments = $this->getParamsFromTypeHint($argument);
 
-        $providedInstance = $this->getNamedProvidedInstance($argument->getClass()->name, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name, $arguments);
+        $providedInstance = $this->getNamedProvidedInstance($className, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name, $arguments);
         if ($providedInstance) {
             return $providedInstance;
         }
 
-        $namedClassName = $this->getNamedClassOfArgument($argument->getClass()->name, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
+        $namedClassName = $this->getNamedClassOfArgument($className, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
 
         if ($namedClassName) {
             return $this->getInstanceOfClass($namedClassName, $arguments);
         }
 
-        return $this->getInstanceOfClass($argument->getClass()->name, $arguments);
+        return $this->getInstanceOfClass($className, $arguments);
     }
 
     /**
-     * @param \ReflectionParameter $argument
+     * @param ReflectionParameter $argument
      * @return array
      */
-    public function getParamsFromTypeHint(\ReflectionParameter $argument) {
+    public function getParamsFromTypeHint(ReflectionParameter $argument) {
         return $this->annotationReader->getParamsFromTypeHint($argument->getDeclaringFunction()->getDocComment(), $argument->name, 'param');
     }
 

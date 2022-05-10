@@ -58,7 +58,6 @@ namespace rg\injektor\generated;
 
 class rg_injektor_generators_FGTestClassSimpleFactory
 {
-
     public static function getInstance(array \$parameters = [])
     {
         \$i = 0;
@@ -66,8 +65,6 @@ class rg_injektor_generators_FGTestClassSimpleFactory
         \$instance = new \\rg\\injektor\\generators\\FGTestClassSimple();
         return \$instance;
     }
-
-
 }
 
 
@@ -82,19 +79,15 @@ require_once 'rg_injektor_generators_FGTestClassSimpleFactory.php';
 
 class rg_injektor_generators_FGTestClassFourProxy extends \\rg\injektor\generators\\FGTestClassFour
 {
-
     public function propertyInjectioninjectedProperty()
     {
         \$this->injectedProperty = \\rg\injektor\\generated\\rg_injektor_generators_FGTestClassSimpleFactory::getInstance(array (
         ));
     }
-
-
 }
 
 class rg_injektor_generators_FGTestClassFourFactory
 {
-
     private static \$instance = [];
 
     public static function getInstance(array \$parameters = [])
@@ -145,8 +138,6 @@ class rg_injektor_generators_FGTestClassFourFactory
 
         return \$result;
     }
-
-
 }
 
 
@@ -161,7 +152,6 @@ require_once 'rg_injektor_generators_FGTestClassFourFactory.php';
 
 class rg_injektor_generators_FGTestClassThreeFactory
 {
-
     public static function getInstance(array \$parameters = [])
     {
         \$i = 0;
@@ -193,8 +183,6 @@ class rg_injektor_generators_FGTestClassThreeFactory
 
         return \$result;
     }
-
-
 }
 
 
@@ -210,7 +198,6 @@ require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
 
 class rg_injektor_generators_FGTestClassTwoFactory
 {
-
     public static function getInstance(array \$parameters = [])
     {
         \$i = 0;
@@ -239,8 +226,6 @@ class rg_injektor_generators_FGTestClassTwoFactory
 
         return \$result;
     }
-
-
 }
 
 
@@ -256,19 +241,15 @@ require_once 'rg_injektor_generators_FGTestClassThreeFactory.php';
 
 class rg_injektor_generators_FGTestClassOneProxy extends \\rg\\injektor\\generators\\FGTestClassOne
 {
-
     public function propertyInjectionfour()
     {
         \$this->four = \\rg\injektor\\generated\\rg_injektor_generators_FGTestClassThreeFactory::getInstance(array (
         ));
     }
-
-
 }
 
 class rg_injektor_generators_FGTestClassOneFactory
 {
-
     private static \$instance = [];
 
     public static function getInstance(array \$parameters = [])
@@ -397,8 +378,6 @@ class rg_injektor_generators_FGTestClassOneFactory
 
         return \$result;
     }
-
-
 }
 
 
