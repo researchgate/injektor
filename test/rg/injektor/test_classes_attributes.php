@@ -9,16 +9,15 @@
  */
 namespace rg\injektor {
 
-    use rg\injektor\attributes\ImplementedBy;
     use rg\injektor\attributes\Inject;
     use rg\injektor\attributes\Lazy;
     use rg\injektor\attributes\Named;
     use rg\injektor\attributes\Params;
-    use rg\injektor\attributes\ProvidedBy;
     use rg\injektor\attributes\Service;
     use rg\injektor\attributes\Singleton;
 
     require_once 'test_classes.php';
+    require_once 'test_classes_attributes_not_injectable.php';
 
     class DICTestClassWithAttributes {
 
@@ -98,11 +97,6 @@ namespace rg\injektor {
         }
     }
 
-    #[ImplementedBy(DICTestAttributedInterfaceImpl::class)]
-    interface DICTestAttributedInterface {
-
-    }
-
     class DICTestAttributedInterfaceImpl implements DICTestAttributedInterface {
 
     }
@@ -130,13 +124,6 @@ namespace rg\injektor {
         public function doSomething(#[Named('implOne')] DICTestAttributedInterface $one) {
             return $one;
         }
-    }
-
-    #[ImplementedBy(DICTestAttributedInterfaceNamedConfigImpl::class, name: 'default')]
-    #[ImplementedBy(DICTestAttributedInterfaceNamedConfigImplOne::class, name: 'implOne')]
-    #[ImplementedBy(DICTestAttributedInterfaceNamedConfigImplTwo::class, name: 'implTwo')]
-    interface DICTestAttributedInterfaceNamedConfig {
-
     }
 
     class DICTestAttributedInterfaceNamedConfigImpl implements DICTestAttributedInterfaceNamedConfig {
@@ -202,22 +189,11 @@ namespace rg\injektor {
         }
     }
 
-    #[ProvidedBy(DICTestProviderForAnnotatedInterface::class, name: 'impl1', params: ['name' => 'impl1'])]
-    #[ProvidedBy(DICTestProviderForAnnotatedInterface::class, name: 'impl2', params: ['name' => 'impl2'])]
-    interface DICTestProvidedAnnotatedInterface {
-
-    }
-
     class DICTestProvidedAnnotatedInterfaceImpl1 implements DICTestProvidedAnnotatedInterface {
 
     }
 
     class DICTestProvidedAnnotatedInterfaceImpl2 implements DICTestProvidedAnnotatedInterface {
-
-    }
-
-    #[ProvidedBy(DICSimpleTestProviderForAnnotatedInterface::class)]
-    interface DICTestSimpleProvidedAnnotatedInterface {
 
     }
 
