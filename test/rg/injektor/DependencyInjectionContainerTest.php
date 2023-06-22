@@ -792,7 +792,7 @@ class DependencyInjectionContainerTest extends TestCase {
 
         $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHintNamedUserDefault', $instance);
 
-        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHint', $instance->provided);
+        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHintNamed', $instance->provided);
 
         $this->assertEquals('1f', $instance->provided->one);
         $this->assertEquals('2f', $instance->provided->two);
@@ -807,7 +807,7 @@ class DependencyInjectionContainerTest extends TestCase {
 
         $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHintNamedUserSomeName', $instance);
 
-        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHint', $instance->provided);
+        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHintNamed', $instance->provided);
 
         $this->assertEquals('3f', $instance->provided->one);
         $this->assertEquals('4f', $instance->provided->two);

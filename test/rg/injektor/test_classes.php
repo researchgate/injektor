@@ -133,6 +133,22 @@ namespace rg\injektor {
         }
     }
 
+    class DICProvidedTestClassNoTypeHintNamedProvider implements Provider {
+
+        private $one;
+
+        private $two;
+
+        public function __construct($one, $two) {
+            $this->one = $one;
+            $this->two = $two;
+        }
+
+        public function get() {
+            return new DICProvidedTestClassNoTypeHintNamed($this->one . 'f', $this->two . 'f');
+        }
+    }
+
     class DICProvidedTestClassArgumentsWithParameters {
 
         public $class;
@@ -196,8 +212,8 @@ namespace rg\injektor {
     }
 
     /**
-     * @providedBy default \rg\injektor\DICProvidedTestClassNoTypeHintProvider {"one":1,"two":2}
-     * @providedBy someName \rg\injektor\DICProvidedTestClassNoTypeHintProvider {"one":3,"two":4}
+     * @providedBy default \rg\injektor\DICProvidedTestClassNoTypeHintNamedProvider {"one":1,"two":2}
+     * @providedBy someName \rg\injektor\DICProvidedTestClassNoTypeHintNamedProvider {"one":3,"two":4}
      */
     class DICProvidedTestClassNoTypeHintNamed {
 
