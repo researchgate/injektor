@@ -24,7 +24,7 @@
   "require-dev": {
     "friendsofphp/proxy-manager-lts": "^1.0",
     "phpunit/phpunit": "^9.0.0",
-    "roave/better-reflection": "^4.0.0 || ^5.0.0"
+    "roave/better-reflection": "^5.0.0"
   },
   "suggest": {
     "ocramius/proxy-manager": "For lazy loading"
