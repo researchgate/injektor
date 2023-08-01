@@ -12,6 +12,7 @@ namespace rg\injektor;
 use rg\injektor\generators\WritingFactoryGenerator;
 use Roave\BetterReflection\BetterReflection;
 use Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator;
+use Roave\BetterReflection\Reflector\DefaultReflector;
 use function class_exists;
 
 require_once 'DependencyInjectionContainerTest.php';
@@ -51,14 +52,9 @@ class FactoryOnlyDependencyInjectionContainerTest extends DependencyInjectionCon
         require_once $fileName;
 
         $astLocator = (new BetterReflection())->astLocator();
-        // bc break between v4 and v5. Can be switched to DefaultReflector fully when min version is PHP 8.0
-        if (class_exists(\Roave\BetterReflection\Reflector\ClassReflector::class)) {
-            $reflector  = new \Roave\BetterReflection\Reflector\ClassReflector(new SingleFileSourceLocator($fileName, $astLocator));
-            $classes = $reflector->getAllClasses();
-        } else {
-            $reflector  = new \Roave\BetterReflection\Reflector\DefaultReflector(new SingleFileSourceLocator($fileName, $astLocator));
-            $classes = $reflector->reflectAllClasses();
-        }
+        $reflector  = new DefaultReflector(new SingleFileSourceLocator($fileName, $astLocator));
+        $classes = $reflector->reflectAllClasses();
+
         foreach ($classes as $class) {
             $generator->processFileForClass($class->getName());
         }

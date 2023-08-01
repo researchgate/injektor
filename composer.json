@@ -16,7 +16,7 @@
     }
   ],
   "require": {
-    "php": ">=7.4",
+    "php": ">=8.0.",
     "doctrine/annotations": "^2.0.0",
     "laminas/laminas-code": "^4.7.0",
     "psr/log": "^1.0.0"

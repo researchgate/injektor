@@ -10,7 +10,6 @@
 namespace rg\injektor;
 
 use PHPUnit\Framework\TestCase;
-use const PHP_VERSION_ID;
 
 include_once 'test_classes.php';
 
@@ -844,9 +843,6 @@ class DependencyInjectionContainerTest extends TestCase {
     }
 
     public function test_getInstanceOfClass_givenClassWithUnionTypedProperties_injectsCorrectClassesIntoProperties() {
-        if (PHP_VERSION_ID < 80000) {
-            $this->markTestSkipped('Needs PHP 8.0 or higher');
-        }
         include_once 'test_classes_php80.php';
 
         $config = new Configuration(null, __DIR__ . '/_factories');
