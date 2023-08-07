@@ -8,9 +8,9 @@ the use of reflection on production.
 
 # Prerequisites
 
-This library needs PHP 7.4+.
+This library needs PHP 8.0+.
 
-It has been tested using PHP 7.4 - PHP 8.0.
+It has been tested using PHP 8.0 - PHP 8.1 - PHP 8.2.
 
 
 # Installation
