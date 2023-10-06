@@ -18,7 +18,7 @@
   "require": {
     "php": ">=8.0",
     "doctrine/annotations": "^2.0.0",
-    "laminas/laminas-code": "^4.7.0",
+    "laminas/laminas-code": "4.7.x-dev",
     "psr/log": "^1.0.0"
   },
   "require-dev": {
@@ -29,6 +29,12 @@
   "suggest": {
     "ocramius/proxy-manager": "For lazy loading"
   },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/researchgate/laminas-code-rg"
+    }
+  ],
   "autoload": {
     "psr-0": {
       "rg\\injektor": "src/"
