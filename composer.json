@@ -18,7 +18,7 @@
   "require": {
     "php": ">=8.0",
     "doctrine/annotations": "^2.0.0",
-    "laminas/laminas-code": "4.7.x-dev",
+    "laminas/laminas-code": "4.7.3",
     "psr/log": "^1.0.0"
   },
   "require-dev": {
