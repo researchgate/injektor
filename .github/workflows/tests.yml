@@ -11,6 +11,7 @@ jobs:
     strategy:
       matrix:
         php-versions: ['8.0', '8.1', '8.2']
+        dependency-versions: ['lowest', 'highest']
         
     runs-on: ubuntu-latest
 
@@ -35,7 +36,7 @@ jobs:
     - name: Install dependencies
       uses: ramsey/composer-install@v2
       with:
-        dependency-versions: ${{ matrix.php-versions }}
+        dependency-versions: ${{ matrix.dependency-versions }}
 
     - name: Run test suite
       run: vendor/bin/phpunit
