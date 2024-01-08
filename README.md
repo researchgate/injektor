@@ -8,9 +8,9 @@ the use of reflection on production.
 
 # Prerequisites
 
-This library needs PHP 8.0+.
+This library needs PHP 8.1+.
 
-It has been tested using PHP 8.0 - PHP 8.1 - PHP 8.2.
+It has been tested using PHP 8.1, PHP 8.2 and PHP 8.3.
 
 
 # Installation
@@ -143,12 +143,7 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
         require_once $fullpath;
 
         $astLocator = (new \Roave\BetterReflection\BetterReflection())->astLocator();
-        
-        // for roave/better-reflection 4.x (PHP 7.4)
-        $reflector  = new \Roave\BetterReflection\Reflector\ClassReflector(new Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator($fileName, $astLocator));
-        $classes = $reflector->getAllClasses();
 
-        // for roave/better-reflection 5.x (PHP 8.0)
         $reflector  = new \Roave\BetterReflection\Reflector\DefaultReflector(new Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator($fileName, $astLocator));
         $classes = $reflector->reflectAllClasses();
 
