@@ -8,6 +8,8 @@
  */
 namespace issue  {
 
+    use rg\injektor\attributes\Inject;
+
     interface Class_With_Underscores {
 
     }
@@ -19,9 +21,9 @@ namespace issue  {
     class ClassWithDependencyToClassWithUnderscores {
 
         /**
-         * @inject
          * @var \issue\Class_With_Underscores
          */
+        #[Inject]
         protected $dependency;
 
         /**
@@ -49,6 +51,8 @@ namespace issue  {
 
 namespace issue9\name {
 
+    use rg\injektor\attributes\Inject;
+
     /**
      * @implementedBy default issue9\name\D
      * @implementedBy abc issue9\name\C
@@ -68,10 +72,10 @@ namespace issue9\name {
     class A {
 
         /**
-         * @inject
          * @named abc
          * @var B
          */
+        #[Inject]
         protected $myB;
     }
 }

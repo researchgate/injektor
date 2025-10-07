@@ -9,6 +9,8 @@
  */
 namespace rg\injektor;
 
+use rg\injektor\attributes\Inject;
+
 class FactoryDependencyInjectionContainerTest extends \PHPUnit\Framework\TestCase {
 
     public function testInjectionWithoutFactory() {
@@ -53,9 +55,9 @@ class FDICTestClassOne {
     public $three;
 
     /**
-     * @inject
      * @var \rg\injektor\FDICTestClassThree
      */
+    #[Inject]
     protected $four;
 
     /**
@@ -66,21 +68,21 @@ class FDICTestClassOne {
     }
 
     /**
-     * @inject
      * @param FDICTestClassTwo $two
      * @param FDICTestClassThree $three
      */
+    #[Inject]
     public function __construct(FDICTestClassTwo $two, FDICTestClassThree $three) {
         $this->two = $two;
         $this->three = $three;
     }
 
     /**
-     * @inject
      * @param FDICTestClassTwo $two
      * @param FDICTestClassThree $three
      * @return string
      */
+    #[Inject]
     public function getSomething(FDICTestClassTwo $two, FDICTestClassThree $three) {
         return $two->getSomething() . $three->getSomething();
     }
@@ -102,9 +104,9 @@ class FDICTestClassTwo {
     public $three;
 
     /**
-     * @inject
      * @param FDICTestClassThree $three
      */
+    #[Inject]
     public function __construct(FDICTestClassThree $three) {
         $this->three = $three;
     }

@@ -15,10 +15,12 @@ use ProxyManager\Factory\LazyLoadingValueHolderFactory;
 use ProxyManager\GeneratorStrategy\EvaluatingGeneratorStrategy;
 use ProxyManager\Proxy\LazyLoadingInterface;
 use Psr\Log\LoggerInterface;
+use ReflectionAttribute;
 use ReflectionNamedType;
 use ReflectionParameter;
 use ReflectionProperty;
 use rg\injektor\annotations\Named;
+use rg\injektor\attributes\Inject;
 use UnexpectedValueException;
 use function get_class;
 use function method_exists;
@@ -350,7 +352,8 @@ class DependencyInjectionContainer {
         $injectableProperties = array();
 
         foreach ($properties as $property) {
-            if ($this->isInjectable($property->getDocComment())) {
+            $attributes = $property->getAttributes(Inject::class);
+            if ($this->isInjectable($property->getDocComment(), $attributes)) {
                 if ($property->isPrivate()) {
                     throw new InjectionException('Property ' . $property->name . ' must not be private for property injection.');
                 }
@@ -749,7 +752,8 @@ class DependencyInjectionContainer {
     public function getMethodArguments(\ReflectionMethod $methodReflection, array $defaultArguments = array()) {
         $arguments = $methodReflection->getParameters();
 
-        $methodIsMarkedInjectible = $this->isInjectable($methodReflection->getDocComment());
+        $attributes = $methodReflection->getAttributes(Inject::class);
+        $methodIsMarkedInjectible = $this->isInjectable($methodReflection->getDocComment(), $attributes);
 
         $argumentValues = array();
 
@@ -929,11 +933,19 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param $docComment
+     * @param string $docComment
+     * @param ReflectionAttribute[] $attributes
      * @return bool
      */
-    public function isInjectable($docComment) {
-        return strpos($docComment, '@inject') !== false;
+    public function isInjectable($docComment, $attributes = []) {
+        foreach ($attributes as $attr) {
+            if ($attr->getName() === Inject::class) {
+                return true;
+            }
+        }
+
+        // For backwards compatibility check with @inject doc annotation
+        return str_contains($docComment, '@inject');
     }
 
     /**

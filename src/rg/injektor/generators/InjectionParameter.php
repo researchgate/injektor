@@ -9,9 +9,11 @@
  */
 namespace rg\injektor\generators;
 
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionParameter;
+use rg\injektor\attributes\Inject;
 use rg\injektor\Configuration;
 use rg\injektor\DependencyInjectionContainer;
 use rg\injektor\FactoryDependencyInjectionContainer;
@@ -25,6 +27,9 @@ class InjectionParameter {
     const MODE_STRING = 'string';
 
     private ReflectionParameter $parameter;
+
+    /** @var ReflectionAttribute[] */
+    protected array $attributes = [];
 
     protected array $classConfig;
 
@@ -69,6 +74,8 @@ class InjectionParameter {
         $this->additionalArguments = $this->dic->getParamsFromTypeHint($this->parameter);
         $this->mode = $mode;
 
+        $this->attributes = $parameter->getDeclaringFunction()->getAttributes(Inject::class);
+
         $this->analyze();
     }
 
@@ -100,7 +107,7 @@ class InjectionParameter {
     protected function analyze() {
         $argumentClass = null;
 
-        $isInjectable = $this->dic->isInjectable($this->docComment);
+        $isInjectable = $this->dic->isInjectable($this->docComment, $this->attributes);
 
         if (!empty($this->classConfig['params'][$this->name]['class'])) {
             $argumentClass = $this->classConfig['params'][$this->name]['class'];
