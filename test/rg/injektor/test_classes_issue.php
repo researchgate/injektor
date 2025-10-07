@@ -72,10 +72,9 @@ namespace issue9\name {
     class A {
 
         /**
-         * @named abc
          * @var B
          */
-        #[Inject]
+        #[Inject(named: 'abc')]
         protected $myB;
     }
 }

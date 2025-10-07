@@ -666,22 +666,20 @@ use rg\injektor\attributes\Inject;
 
 class Foo
 {
-    /**
-     * @var Bar
-     * @named barOne
-     */
-    protected $bar;
+    #[Inject(named: 'barOne')]
+    protected Bar $bar;
 
-    /**
-     * @param Bar $one
-     * @param Bar $two
-     * @param Bar $default
-     * @named barOne $one
-     * @named barTwo $two
-     */
     #[Inject]
-    public function __construct(Bar $one, Bar $two, Bar $default)
-    {
+    public function __construct(
+        #[Inject(named: 'barOne')]
+        Bar $one,
+        #[Inject(named: 'barTwo')]
+        Bar $two,
+        // default implementation, requires #[Inject] on the constructor level
+        Bar $default,
+        #[Inject] // works the same as above, but doesn't require #[Inject] on the constructor level
+        Bar $default2,
+    ) {
 
     }
 }
@@ -773,22 +771,17 @@ use rg\injektor\attributes\Inject;
 
 class Foo
 {
-    /**
-     * @var Bar
-     * @named barOne
-     */
-    protected $bar;
+    #[Inject(named: 'barOne')]
+    protected Bar $bar;
 
-    /**
-     * @param Bar $one
-     * @param Bar $two
-     * @param Bar $default
-     * @named barOne $one
-     * @named barTwo $two
-     */
     #[Inject]
-    public function __construct(Bar $one, Bar $two, Bar $default)
-    {
+    public function __construct(
+        #[Inject(named: 'barOne')]
+        Bar $one,
+        #[Inject(named: 'barTwo')]
+        Bar $two,
+        Bar $default,
+    ) {
     }
 }
 

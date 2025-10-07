@@ -528,6 +528,22 @@ class DependencyInjectionContainerTest extends TestCase {
         $this->assertInstanceOf('rg\injektor\DICTestAnnotatedInterfaceImplTwo', $instance->two);
     }
 
+    public function testNamedAndDefault() {
+        $config = new Configuration(null, __DIR__ . '/_factories');
+
+        $config->setClassConfig('rg\injektor\DICTestAnnotatedInterface', [
+            'named' => [
+                'implOne' => 'rg\injektor\DICTestAnnotatedInterfaceImplOne',
+                'implTwo' => 'rg\injektor\DICTestAnnotatedInterfaceImplTwo'
+            ]
+        ]);
+        $dic = $this->getContainer($config);
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestNamedAndDefault');
+
+        $this->assertInstanceOf('rg\injektor\DICTestAnnotatedInterfaceImplOne', $instance->one);
+        $this->assertInstanceOf('rg\injektor\DICTestAnnotatedInterfaceImplTwo', $instance->two);
+    }
+
     public function testNamedAnnotationWithAnnotationConfiguration() {
         $config = new Configuration(null, __DIR__ . '/_factories');
 

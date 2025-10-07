@@ -380,9 +380,10 @@ class DependencyInjectionContainer {
         $arguments = $this->getParamsFromPropertyTypeHint($property);
 
         $argumentClassConfig = $this->config->getClassConfig($fullClassName);
-        $propertyInstance = $this->getNamedProvidedInstance($fullClassName, $argumentClassConfig, $property->getDocComment(), null, $arguments);
+        $attributes = $property->getAttributes(Inject::class);
+        $propertyInstance = $this->getNamedProvidedInstance($attributes, $fullClassName, $argumentClassConfig, $property->getDocComment(), null, $arguments);
         if (!$propertyInstance) {
-            $namedClass = $this->getNamedClassOfArgument($fullClassName, $property->getDocComment());
+            $namedClass = $this->getNamedClassOfArgument($attributes, $fullClassName, $property->getDocComment());
             if ($namedClass) {
                 $fullClassName = $namedClass;
             }
@@ -760,10 +761,24 @@ class DependencyInjectionContainer {
         $isNumericDefaultArguments = !(bool) count(array_filter(array_keys($defaultArguments), 'is_string'));
         foreach ($arguments as $key => $argument) {
             /** @var ReflectionParameter $argument */
+
+            $argumentAttributes = $argument->getAttributes(Inject::class);
+
             if ($isNumericDefaultArguments && array_key_exists($key, $defaultArguments)) {
                 $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$key]);
             } else if (array_key_exists($argument->name, $defaultArguments)) {
                 $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$argument->name]);
+            } else if ($argumentAttributes !== []) {
+                foreach ($argumentAttributes as $attr) {
+                    $instance = $attr->newInstance();
+                    if ($instance->named !== null) {
+                        if (array_key_exists($instance->named, $defaultArguments)) {
+                            $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$instance->named]);
+                        } else {
+                            $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
+                        }
+                    }
+                }
             } else if ($methodIsMarkedInjectible) {
                 $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
             } else if ($argument->isOptional()) {
@@ -811,12 +826,13 @@ class DependencyInjectionContainer {
 
         $arguments = $this->getParamsFromTypeHint($argument);
 
-        $providedInstance = $this->getNamedProvidedInstance($className, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name, $arguments);
+        $attributes = $argument->getAttributes(Inject::class);
+        $providedInstance = $this->getNamedProvidedInstance($attributes, $className, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name, $arguments);
         if ($providedInstance) {
             return $providedInstance;
         }
 
-        $namedClassName = $this->getNamedClassOfArgument($className, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
+        $namedClassName = $this->getNamedClassOfArgument($attributes, $className, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
 
         if ($namedClassName) {
             return $this->getInstanceOfClass($namedClassName, $arguments);
@@ -842,6 +858,7 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @param ReflectionAttribute[] $attributes
      * @param string $argumentClass
      * @param array $classConfig
      * @param string$docComment
@@ -849,22 +866,23 @@ class DependencyInjectionContainer {
      * @param array $additionalArgumentsForProvider
      * @return null|object
      */
-    public function getNamedProvidedInstance($argumentClass, array $classConfig, $docComment, $argumentName = null, $additionalArgumentsForProvider = array()) {
-        $implementationName = $this->getImplementationName($docComment, $argumentName);
+    public function getNamedProvidedInstance(array $attributes, string $argumentClass, array $classConfig, $docComment, $argumentName = null, $additionalArgumentsForProvider = array()) {
+        $implementationName = $this->getImplementationName($docComment, $attributes, $argumentName);
 
         return $this->getProvidedConfiguredClass($classConfig, new \ReflectionClass($argumentClass), $implementationName, $additionalArgumentsForProvider);
     }
 
     /**
+     * @param ReflectionAttribute[] $attributes
      * @param string $argumentClass
      * @param string $docComment
      * @param string $argumentName
      * @return string
      */
-    public function getNamedClassOfArgument($argumentClass, $docComment, $argumentName = null) {
+    public function getNamedClassOfArgument(array $attributes, $argumentClass, $docComment, $argumentName = null) {
         $argumentClassConfig = $this->config->getClassConfig($argumentClass);
 
-        $implementationName = $this->getImplementationName($docComment, $argumentName);
+        $implementationName = $this->getImplementationName($docComment, $attributes, $argumentName);
 
         if ($implementationName) {
             return $this->getImplementingClassBecauseOfName($argumentClass, $argumentClassConfig, $implementationName);
@@ -874,10 +892,20 @@ class DependencyInjectionContainer {
 
     /**
      * @param string $docComment
+     * @param ReflectionAttribute[] $attributes
      * @param string $argumentName
      * @return string
      */
-    public function getImplementationName($docComment, $argumentName) {
+    public function getImplementationName($docComment, array $attributes = [], $argumentName) {
+        foreach ($attributes as $attr) {
+            if ($attr->getName() === Inject::class) {
+                $inject = $attr->newInstance();
+                if ($inject->named !== null) {
+                    return $inject->named;
+                }
+            }
+        }
+
         $matches = array();
         $pattern = '@named\s+([a-zA-Z0-9\\\]+)';
         if ($argumentName) {

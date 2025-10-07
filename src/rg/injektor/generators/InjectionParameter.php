@@ -74,7 +74,10 @@ class InjectionParameter {
         $this->additionalArguments = $this->dic->getParamsFromTypeHint($this->parameter);
         $this->mode = $mode;
 
-        $this->attributes = $parameter->getDeclaringFunction()->getAttributes(Inject::class);
+        $this->attributes = $parameter->getAttributes(Inject::class);
+        if ($this->attributes === []) {
+            $this->attributes = $parameter->getDeclaringFunction()->getAttributes(Inject::class);
+        }
 
         $this->analyze();
     }
@@ -121,6 +124,7 @@ class InjectionParameter {
 
             try {
                 $namedClass = $this->dic->getNamedClassOfArgument(
+                    $this->attributes,
                     $argumentClass,
                     $this->docComment,
                     $this->nameForAnnotationParsing
@@ -134,7 +138,7 @@ class InjectionParameter {
                 $this->defaultValue = '\\' . $argumentClass . '::getDefaultInstance()';
             } else {
                 $providerClassName = $this->dic->getProviderClassName($this->config->getClassConfig($argumentClass), new ReflectionClass($argumentClass),
-                    $this->dic->getImplementationName($this->docComment, $this->nameForAnnotationParsing));
+                    $this->dic->getImplementationName($this->docComment, $this->attributes, $this->nameForAnnotationParsing));
                 if ($providerClassName && $providerClassName->getClassName()) {
                     $argumentFactory = $this->dic->getFullFactoryClassName($providerClassName->getClassName());
                     $this->className = $providerClassName->getClassName();

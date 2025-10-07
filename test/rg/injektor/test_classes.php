@@ -191,9 +191,8 @@ namespace rg\injektor {
 
         /**
          * @var \rg\injektor\DICProvidedTestClassNoTypeHintNamed
-         * @named someName
          */
-        #[Inject]
+        #[Inject(named: 'someName')]
         public $provided;
     }
 
@@ -318,30 +317,31 @@ namespace rg\injektor {
 
         public $one;
 
-        /**
-         * @var \rg\injektor\DICTestAnnotatedInterface
-         * @named implTwo
-         */
-        #[Inject]
-        public $two;
+        #[Inject(named: 'implTwo')]
+        public DICTestAnnotatedInterface $two;
 
-        /**
-         * @param DICTestAnnotatedInterface $one
-         * @named implOne $one
-         */
-        #[Inject]
-        public function __construct(DICTestAnnotatedInterface $one) {
+        public function __construct(
+            #[Inject(named: 'implOne')]
+            DICTestAnnotatedInterface $one
+        ) {
             $this->one = $one;
         }
 
-        /**
-         * @param DICTestAnnotatedInterface $one
-         * @named implOne $one
-         * @return \rg\injektor\DICTestAnnotatedInterface
-         */
-        #[Inject]
-        public function doSomething(DICTestAnnotatedInterface $one) {
+        public function doSomething(
+            #[Inject(named: 'implOne')]
+            DICTestAnnotatedInterface $one
+        ) {
             return $one;
+        }
+    }
+
+    class DICTestNamedAndDefault {
+        #[Inject]
+        public function __construct(
+            #[Inject(named: 'implOne')]
+            public DICTestAnnotatedInterface $one,
+            public DICTestAnnotatedInterfaceImplTwo $two, // Notice this is autowired, we require #[Inject] at the constructor
+        ) {
         }
     }
 
@@ -363,27 +363,21 @@ namespace rg\injektor {
 
         /**
          * @var \rg\injektor\DICTestAnnotatedInterfaceNamedConfig
-         * @named implTwo
          */
-        #[Inject]
+        #[Inject(named: 'implTwo')]
         public $two;
 
-        /**
-         * @param DICTestAnnotatedInterfaceNamedConfig $one
-         * @named implOne $one
-         */
-        #[Inject]
-        public function __construct(DICTestAnnotatedInterfaceNamedConfig $one) {
+        public function __construct(
+            #[Inject(named: 'implOne')]
+            DICTestAnnotatedInterfaceNamedConfig $one
+        ) {
             $this->one = $one;
         }
 
-        /**
-         * @param DICTestAnnotatedInterfaceNamedConfig $one
-         * @named implOne $one
-         * @return \rg\injektor\DICTestAnnotatedInterfaceNamedConfig
-         */
-        #[Inject]
-        public function doSomething(DICTestAnnotatedInterfaceNamedConfig $one) {
+        public function doSomething(
+            #[Inject(named: 'implOne')]
+            DICTestAnnotatedInterfaceNamedConfig $one
+        ) {
             return $one;
         }
     }
@@ -522,12 +516,12 @@ namespace rg\injektor {
 
         public $providedInterface2;
 
-        /**
-         * @named impl1 $providedInterface1
-         * @named impl2 $providedInterface2
-         */
-        #[Inject]
-        public function __construct(DICTestProvidedInterface $providedInterface1, DICTestProvidedInterface $providedInterface2) {
+        public function __construct(
+            #[Inject(named: 'impl1')]
+            DICTestProvidedInterface $providedInterface1,
+            #[Inject(named: 'impl2')]
+            DICTestProvidedInterface $providedInterface2
+        ) {
             $this->providedInterface1 = $providedInterface1;
             $this->providedInterface2 = $providedInterface2;
         }
@@ -640,11 +634,10 @@ namespace rg\injektor {
 
         public $dependency;
 
-        /**
-         * @named impl1 $dependency
-         */
-        #[Inject]
-        public function __construct(DICTestProvidedInterface $dependency) {
+        public function __construct(
+            #[Inject(named: 'impl1')]
+            DICTestProvidedInterface $dependency
+        ) {
             $this->dependency = $dependency;
         }
     }
@@ -653,11 +646,10 @@ namespace rg\injektor {
 
         public $dependency;
 
-        /**
-         * @named impl1 $dependency
-         */
-        #[Inject]
-        public function __construct(\rg\injektor\DICTestProvidedInterfaceNoConfig $dependency) {
+        public function __construct(
+            #[Inject(named: 'impl1')]
+            \rg\injektor\DICTestProvidedInterfaceNoConfig $dependency
+        ) {
             $this->dependency = $dependency;
         }
     }
