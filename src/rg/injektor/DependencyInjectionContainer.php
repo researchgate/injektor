@@ -24,6 +24,7 @@ use rg\injektor\attributes\Inject;
 use rg\injektor\attributes\Lazy;
 use rg\injektor\attributes\NoLazy;
 use rg\injektor\attributes\Service;
+use rg\injektor\attributes\Singleton;
 use UnexpectedValueException;
 use function get_class;
 use function method_exists;
@@ -640,6 +641,11 @@ class DependencyInjectionContainer {
     public function isConfiguredAsSingleton(array $classConfig, \ReflectionClass $classReflection) {
         if (isset($classConfig['singleton'])) {
             return (bool) $classConfig['singleton'];
+        }
+
+        $attributes = $classReflection->getAttributes(Singleton::class);
+        if ($attributes !== []) {
+            return true;
         }
 
         $classComment = $classReflection->getDocComment();

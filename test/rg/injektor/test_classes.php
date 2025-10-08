@@ -13,6 +13,7 @@ namespace rg\injektor {
     use rg\injektor\attributes\Param;
     use rg\injektor\attributes\Inject;
     use rg\injektor\attributes\Service;
+    use rg\injektor\attributes\Singleton;
 
     require_once 'test_classes_not_injectable.php';
 
@@ -421,9 +422,7 @@ namespace rg\injektor {
         }
     }
 
-    /**
-     * @singleton
-     */
+    #[Singleton]
     class DICTestAnnotatedSingleton {
 
     }
