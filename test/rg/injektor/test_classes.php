@@ -9,6 +9,7 @@
  */
 namespace rg\injektor {
 
+    use rg\injektor\attributes\Lazy;
     use rg\injektor\attributes\Param;
     use rg\injektor\attributes\Inject;
     use rg\injektor\attributes\Service;
@@ -450,9 +451,7 @@ namespace rg\injektor {
         }
     }
 
-    /**
-     * @lazy
-     */
+    #[Lazy]
     class DICTestAnnotatedLazy {
         public function __construct($arg) {
 
@@ -471,10 +470,8 @@ namespace rg\injektor {
         }
     }
 
-    /**
-     * @lazy
-     */
     #[Service]
+    #[Lazy]
     class DICTestAnnotatedLazyService {
         public function __construct($arg) {
 

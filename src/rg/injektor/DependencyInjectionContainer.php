@@ -21,6 +21,8 @@ use ReflectionParameter;
 use ReflectionProperty;
 use rg\injektor\annotations\Named;
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Lazy;
+use rg\injektor\attributes\NoLazy;
 use rg\injektor\attributes\Service;
 use UnexpectedValueException;
 use function get_class;
@@ -690,6 +692,10 @@ class DependencyInjectionContainer {
             return (bool) $classConfig['lazy'];
         }
 
+        $attributes = $classReflection->getAttributes(Lazy::class);
+        if ($attributes !== []) {
+            return true;
+        }
         $classComment = $classReflection->getDocComment();
 
         return strpos($classComment, '@lazy') !== false;
@@ -703,6 +709,11 @@ class DependencyInjectionContainer {
     public function isConfiguredAsNoLazy(array $classConfig, \ReflectionClass $classReflection) {
         if (isset($classConfig['noLazy'])) {
             return (bool) $classConfig['noLazy'];
+        }
+
+        $attributes = $classReflection->getAttributes(NoLazy::class);
+        if ($attributes !== []) {
+            return true;
         }
 
         $classComment = $classReflection->getDocComment();
