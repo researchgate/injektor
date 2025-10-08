@@ -9,6 +9,7 @@
  */
 namespace rg\injektor {
 
+    use rg\injektor\attributes\Arg;
     use rg\injektor\attributes\Inject;
 
     require_once 'test_classes_not_injectable.php';
@@ -141,25 +142,29 @@ namespace rg\injektor {
 
         public $methodClass;
 
-        /**
-         * @var \rg\injektor\DICProvidedTestClassNoTypeHint {"one":"foo","two":"bar"}
-         */
-        #[Inject]
-        public $injectedProperty;
+        #[Inject(overwriteParams: [
+            new Arg(name: 'one', value: 'foo'),
+            new Arg(name: 'two', value: 'bar'),
+        ])]
+        public \rg\injektor\DICProvidedTestClassNoTypeHint $injectedProperty;
 
-        /**
-         * @param DICProvidedTestClassNoTypeHint $class {"one":"foo","two":"bar"}
-         */
-        #[Inject]
-        public function __construct(DICProvidedTestClassNoTypeHint $class) {
+        public function __construct(
+            #[Inject(overwriteParams: [
+                new Arg(name: 'one', value: 'foo'),
+                new Arg(name: 'two', value: 'bar'),
+            ])]
+            DICProvidedTestClassNoTypeHint $class
+        ) {
             $this->class = $class;
         }
 
-        /**
-         * @param DICProvidedTestClassNoTypeHint $class {"one":"foo","two":"bar"}
-         */
-        #[Inject]
-        public function someMethod(DICProvidedTestClassNoTypeHint $class) {
+        public function someMethod(
+            #[Inject(overwriteParams: [
+                new Arg(name: 'one', value: 'foo'),
+                new Arg(name: 'two', value: 'bar'),
+            ])]
+            DICProvidedTestClassNoTypeHint $class
+        ) {
             $this->methodClass = $class;
         }
     }
@@ -218,25 +223,29 @@ namespace rg\injektor {
 
         public $methodClass;
 
-        /**
-         * @var \rg\injektor\DICTestClassNoTypeHint {"one":"foo","two":"bar"}
-         */
-        #[Inject]
-        public $injectedProperty;
+        #[Inject(overwriteParams: [
+            new Arg(name: 'one', value: 'foo'),
+            new Arg(name: 'two', value: 'bar'),
+        ])]
+        public DICTestClassNoTypeHint $injectedProperty;
 
-        /**
-         * @param DICTestClassNoTypeHint $class {"one":"foo","two":"bar"}
-         */
-        #[Inject]
-        public function __construct(DICTestClassNoTypeHint $class) {
+        public function __construct(
+            #[Inject(overwriteParams: [
+                new Arg(name: 'one', value: 'foo'),
+                new Arg(name: 'two', value: 'bar'),
+            ])]
+            DICTestClassNoTypeHint $class
+        ) {
             $this->class = $class;
         }
 
-        /**
-         * @param DICTestClassNoTypeHint $class {"one":"foo","two":"bar"}
-         */
-        #[Inject]
-        public function someMethod(DICTestClassNoTypeHint $class) {
+        public function someMethod(
+            #[Inject(overwriteParams: [
+                new Arg(name: 'one', value: 'foo'),
+                new Arg(name: 'two', value: 'bar'),
+            ])]
+            DICTestClassNoTypeHint $class
+        ) {
             $this->methodClass = $class;
         }
     }

@@ -770,13 +770,19 @@ class DependencyInjectionContainer {
                 $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$argument->name]);
             } else if ($argumentAttributes !== []) {
                 foreach ($argumentAttributes as $attr) {
+                    /** @var Inject $instance */
                     $instance = $attr->newInstance();
+
                     if ($instance->named !== null) {
                         if (array_key_exists($instance->named, $defaultArguments)) {
                             $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$instance->named]);
                         } else {
                             $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
                         }
+                    }
+
+                    if ($instance->overwriteParams !== []) {
+                        $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
                     }
                 }
             } else if ($methodIsMarkedInjectible) {
@@ -846,6 +852,12 @@ class DependencyInjectionContainer {
      * @return array
      */
     public function getParamsFromTypeHint(ReflectionParameter $argument) {
+        $attributes = $argument->getAttributes(Inject::class);
+        $params = $this->getOverwrittenParamsFromAttributes($attributes);
+        if ($params !== []) {
+            return $params;
+        }
+
         return $this->annotationReader->getParamsFromTypeHint($argument->getDeclaringFunction()->getDocComment(), $argument->name, 'param');
     }
 
@@ -854,7 +866,32 @@ class DependencyInjectionContainer {
      * @return array
      */
     public function getParamsFromPropertyTypeHint(\ReflectionProperty $property) {
+        $attributes = $property->getAttributes(Inject::class);
+        $params = $this->getOverwrittenParamsFromAttributes($attributes);
+
+        if ($params !== []) {
+            return $params;
+        }
+
         return $this->annotationReader->getParamsFromTypeHint($property->getDocComment(), $property->name, 'var');
+    }
+
+    private function getOverwrittenParamsFromAttributes(array $attributes): array
+    {
+        $arguments = [];
+        foreach ($attributes as $attr) {
+            /** @var Inject $inst */
+            $inst = $attr->newInstance();
+            if ($inst->overwriteParams === []) {
+                continue;
+            }
+
+            foreach ($inst->overwriteParams as $arg) {
+                $arguments[$arg->name] = $arg->value;
+            }
+        }
+
+        return $arguments;
     }
 
     /**
