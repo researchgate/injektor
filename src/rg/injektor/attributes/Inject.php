@@ -16,7 +16,7 @@ class Inject
         public ?string $named = null,
         /**
          * This can only be used in the context of a class property or method parameter.
-         * @var Arg[] $overwriteParams
+         * @var Param[] $overwriteParams
          */
         public array   $overwriteParams = [],
     ) {

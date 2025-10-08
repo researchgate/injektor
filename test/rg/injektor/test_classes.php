@@ -9,7 +9,7 @@
  */
 namespace rg\injektor {
 
-    use rg\injektor\attributes\Arg;
+    use rg\injektor\attributes\Param;
     use rg\injektor\attributes\Inject;
 
     require_once 'test_classes_not_injectable.php';
@@ -143,15 +143,15 @@ namespace rg\injektor {
         public $methodClass;
 
         #[Inject(overwriteParams: [
-            new Arg(name: 'one', value: 'foo'),
-            new Arg(name: 'two', value: 'bar'),
+            new Param(name: 'one', value: 'foo'),
+            new Param(name: 'two', value: 'bar'),
         ])]
         public \rg\injektor\DICProvidedTestClassNoTypeHint $injectedProperty;
 
         public function __construct(
             #[Inject(overwriteParams: [
-                new Arg(name: 'one', value: 'foo'),
-                new Arg(name: 'two', value: 'bar'),
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
             ])]
             DICProvidedTestClassNoTypeHint $class
         ) {
@@ -160,8 +160,8 @@ namespace rg\injektor {
 
         public function someMethod(
             #[Inject(overwriteParams: [
-                new Arg(name: 'one', value: 'foo'),
-                new Arg(name: 'two', value: 'bar'),
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
             ])]
             DICProvidedTestClassNoTypeHint $class
         ) {
@@ -224,15 +224,15 @@ namespace rg\injektor {
         public $methodClass;
 
         #[Inject(overwriteParams: [
-            new Arg(name: 'one', value: 'foo'),
-            new Arg(name: 'two', value: 'bar'),
+            new Param(name: 'one', value: 'foo'),
+            new Param(name: 'two', value: 'bar'),
         ])]
         public DICTestClassNoTypeHint $injectedProperty;
 
         public function __construct(
             #[Inject(overwriteParams: [
-                new Arg(name: 'one', value: 'foo'),
-                new Arg(name: 'two', value: 'bar'),
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
             ])]
             DICTestClassNoTypeHint $class
         ) {
@@ -241,8 +241,8 @@ namespace rg\injektor {
 
         public function someMethod(
             #[Inject(overwriteParams: [
-                new Arg(name: 'one', value: 'foo'),
-                new Arg(name: 'two', value: 'bar'),
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
             ])]
             DICTestClassNoTypeHint $class
         ) {
