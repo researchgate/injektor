@@ -21,6 +21,7 @@ use ReflectionParameter;
 use ReflectionProperty;
 use rg\injektor\annotations\Named;
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Service;
 use UnexpectedValueException;
 use function get_class;
 use function method_exists;
@@ -650,6 +651,11 @@ class DependencyInjectionContainer {
      * @return bool
      */
     public function isConfiguredAsService(array $classConfig, \ReflectionClass $classReflection) {
+        $attributes = $classReflection->getAttributes(Service::class);
+        if ($attributes !== []) {
+            return true;
+        }
+
         if (isset($classConfig['service'])) {
             return (bool) $classConfig['service'];
         }

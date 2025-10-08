@@ -11,6 +11,7 @@ namespace rg\injektor {
 
     use rg\injektor\attributes\Param;
     use rg\injektor\attributes\Inject;
+    use rg\injektor\attributes\Service;
 
     require_once 'test_classes_not_injectable.php';
 
@@ -433,9 +434,7 @@ namespace rg\injektor {
         }
     }
 
-    /**
-     * @service
-     */
+    #[Service]
     class DICTestAnnotatedService {
         public function __construct($arg) {
 
@@ -474,8 +473,8 @@ namespace rg\injektor {
 
     /**
      * @lazy
-     * @service
      */
+    #[Service]
     class DICTestAnnotatedLazyService {
         public function __construct($arg) {
 
