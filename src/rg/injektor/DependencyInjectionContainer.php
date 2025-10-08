@@ -659,13 +659,13 @@ class DependencyInjectionContainer {
      * @return bool
      */
     public function isConfiguredAsService(array $classConfig, \ReflectionClass $classReflection) {
+        if (isset($classConfig['service'])) {
+            return (bool) $classConfig['service'];
+        }
+
         $attributes = $classReflection->getAttributes(Service::class);
         if ($attributes !== []) {
             return true;
-        }
-
-        if (isset($classConfig['service'])) {
-            return (bool) $classConfig['service'];
         }
 
         $classComment = $classReflection->getDocComment();
