@@ -51,13 +51,12 @@ namespace issue  {
 
 namespace issue9\name {
 
+    use rg\injektor\attributes\ImplementedBy;
     use rg\injektor\attributes\Inject;
 
-    /**
-     * @implementedBy default issue9\name\D
-     * @implementedBy abc issue9\name\C
-     * @implementedBy abd issue9\name\D
-     */
+    #[ImplementedBy(className: 'issue9\name\D', named: 'default')]
+    #[ImplementedBy(className: 'issue9\name\C', named: 'abc')]
+    #[ImplementedBy(className: 'issue9\name\D', named: 'abd')]
     interface B {
 
     }
@@ -81,10 +80,10 @@ namespace issue9\name {
 
 namespace issueImplementedByOrder\name {
 
-    /**
-     * @implementedBy abc issueImplementedByOrder\name\C
-     * @implementedBy default issueImplementedByOrder\name\D
-     */
+    use rg\injektor\attributes\ImplementedBy;
+
+    #[ImplementedBy(className: 'issueImplementedByOrder\name\D', named: 'default')]
+    #[ImplementedBy(className: 'issueImplementedByOrder\name\C', named: 'abc')]
     interface B {
 
     }

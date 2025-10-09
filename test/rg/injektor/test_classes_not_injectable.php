@@ -9,6 +9,8 @@
  */
 namespace rg\injektor;
 
+use rg\injektor\attributes\ImplementedBy;
+
 abstract class DICTestAbstractClass {
 
 }
@@ -17,18 +19,14 @@ interface DICTestInterface {
 
 }
 
-/**
- * @implementedBy rg\injektor\DICTestAnnotatedInterfaceImpl
- */
+#[ImplementedBy(className: DICTestAnnotatedInterfaceImpl::class)]
 interface DICTestAnnotatedInterface {
 
 }
 
-/**
- * @implementedBy default rg\injektor\DICTestAnnotatedInterfaceNamedConfigImpl
- * @implementedBy implOne rg\injektor\DICTestAnnotatedInterfaceNamedConfigImplOne
- * @implementedBy implTwo rg\injektor\DICTestAnnotatedInterfaceNamedConfigImplTwo
- */
+#[ImplementedBy(className: DICTestAnnotatedInterfaceNamedConfigImpl::class)]
+#[ImplementedBy(className: DICTestAnnotatedInterfaceNamedConfigImplOne::class, named: 'implOne')]
+#[ImplementedBy(className: DICTestAnnotatedInterfaceNamedConfigImplTwo::class, named: 'implTwo')]
 interface DICTestAnnotatedInterfaceNamedConfig {
 
 }

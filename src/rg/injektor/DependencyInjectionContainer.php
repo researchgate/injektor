@@ -16,10 +16,12 @@ use ProxyManager\GeneratorStrategy\EvaluatingGeneratorStrategy;
 use ProxyManager\Proxy\LazyLoadingInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionAttribute;
+use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use ReflectionProperty;
 use rg\injektor\annotations\Named;
+use rg\injektor\attributes\ImplementedBy;
 use rg\injektor\attributes\Inject;
 use rg\injektor\attributes\Lazy;
 use rg\injektor\attributes\NoLazy;
@@ -145,7 +147,7 @@ class DependencyInjectionContainer {
             return $configuredInstance;
         }
 
-        $classReflection = new \ReflectionClass($fullClassName);
+        $classReflection = new ReflectionClass($fullClassName);
 
         if ($providedClass = $this->getProvidedConfiguredClass($classConfig, $classReflection)) {
             $this->log('Got provided instance [' . spl_object_hash($providedClass) . '] of class [' . get_class($providedClass) . ']');
@@ -229,12 +231,12 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param callable $instanceConstructor
      *
      * @return object
      */
-    private function createNewInstance(array $classConfig, \ReflectionClass $classReflection, $instanceConstructor) {
+    private function createNewInstance(array $classConfig, ReflectionClass $classReflection, $instanceConstructor) {
         if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
             return $this->wrapInstanceWithLazyProxy($classReflection->getName(), $instanceConstructor);
         } else {
@@ -285,10 +287,10 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isSingleton(\ReflectionClass $classReflection) {
+    public function isSingleton(ReflectionClass $classReflection) {
         return $classReflection->hasMethod('__construct') &&
             !$classReflection->getMethod('__construct')->isPublic() &&
             $classReflection->hasMethod('getInstance') &&
@@ -297,7 +299,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param array $classConfig
      * @param array $defaultConstructorArguments
      * @param string $constructorMethod
@@ -328,7 +330,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param object $instance
      * @return object
      * @throws InjectionException
@@ -346,7 +348,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @throws InjectionException
      * @return array
      */
@@ -450,11 +452,11 @@ class DependencyInjectionContainer {
 
     /**
      * @param string $fullClassName
-     * @return \ReflectionClass
+     * @return ReflectionClass
      * @throws InjectionException
      */
     public function getClassReflection($fullClassName) {
-        $classReflection = new \ReflectionClass($fullClassName);
+        $classReflection = new ReflectionClass($fullClassName);
 
         if ($classReflection->isAbstract()) {
             throw new InjectionException('Can not instantiate abstract class ' . $fullClassName);
@@ -468,12 +470,12 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param string $name
      * @param array $additionalArgumentsForProvider
      * @return null|object
      */
-    public function getProvidedConfiguredClass($classConfig, \ReflectionClass $classReflection, $name = null, $additionalArgumentsForProvider = array()) {
+    public function getProvidedConfiguredClass($classConfig, ReflectionClass $classReflection, $name = null, $additionalArgumentsForProvider = array()) {
         if ($namedAnnotation = $this->getProviderClassName($classConfig, $classReflection, $name)) {
             $instanceConstructor = function () use ($namedAnnotation, $classReflection, $additionalArgumentsForProvider) {
                 return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
@@ -491,7 +493,7 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param string $name
      * @return annotations\Named
      */
@@ -518,10 +520,10 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return string
      */
-    public function getRealConfiguredClassName($classConfig, \ReflectionClass $classReflection) {
+    public function getRealConfiguredClassName($classConfig, ReflectionClass $classReflection) {
         if (isset($classConfig['class'])) {
             return $classConfig['class'];
         }
@@ -535,14 +537,15 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param null $name
      * @return string
      */
-    private function getAnnotatedImplementationClass(\ReflectionClass $classReflection, $name = null) {
+    private function getAnnotatedImplementationClass(ReflectionClass $classReflection, $name = null) {
         $docComment = $classReflection->getDocComment();
 
-        if ($namedAnnotation = $this->getImplementedByAnnotation($docComment, $name)) {
+        $attributes = $classReflection->getAttributes(ImplementedBy::class);
+        if ($namedAnnotation = $this->getImplementedByAnnotation($attributes, $docComment, $name)) {
             return $namedAnnotation->getClassName();
         }
 
@@ -568,11 +571,30 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @param ReflectionAttribute[] $attributes
      * @param string $docComment
      * @param string $name
      * @return Named
      */
-    private function getImplementedByAnnotation($docComment, $name) {
+    private function getImplementedByAnnotation(array $attributes, $docComment, $name) {
+        $pickDefault = $name === null || 'default';
+
+        foreach ($attributes as $attr) {
+            if ($attr->getName() !== ImplementedBy::class) {
+                continue;
+            }
+
+            /** @var ImplementedBy $inst */
+            $inst = $attr->newInstance();
+            if ($inst->named === $name || ($inst->named === 'default' && $pickDefault)) {
+                $named = new Named();
+                $named->setName($name);
+                $named->setClassName($inst->className);
+
+                return $named;
+            }
+        }
+
         return $this->getMatchingAnnotationByNamedPatter($docComment, '@implementedBy', $name);
     }
 
@@ -635,10 +657,10 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isConfiguredAsSingleton(array $classConfig, \ReflectionClass $classReflection) {
+    public function isConfiguredAsSingleton(array $classConfig, ReflectionClass $classReflection) {
         if (isset($classConfig['singleton'])) {
             return (bool) $classConfig['singleton'];
         }
@@ -655,10 +677,10 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isConfiguredAsService(array $classConfig, \ReflectionClass $classReflection) {
+    public function isConfiguredAsService(array $classConfig, ReflectionClass $classReflection) {
         if (isset($classConfig['service'])) {
             return (bool) $classConfig['service'];
         }
@@ -675,10 +697,10 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isConfiguredAsLazy(array $classConfig, \ReflectionClass $classReflection) {
+    public function isConfiguredAsLazy(array $classConfig, ReflectionClass $classReflection) {
         // Force no lazy loading
         if ($this->isConfiguredAsNoLazy($classConfig, $classReflection)) {
             return false;
@@ -709,10 +731,10 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isConfiguredAsNoLazy(array $classConfig, \ReflectionClass $classReflection) {
+    public function isConfiguredAsNoLazy(array $classConfig, ReflectionClass $classReflection) {
         if (isset($classConfig['noLazy'])) {
             return (bool) $classConfig['noLazy'];
         }
@@ -750,12 +772,12 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param string $methodName
      * @return null|\ReflectionMethod
      * @throws InjectionException
      */
-    private function getMethodReflection(\ReflectionClass $classReflection, $methodName) {
+    private function getMethodReflection(ReflectionClass $classReflection, $methodName) {
         if (!$classReflection->hasMethod($methodName)) {
             if ($methodName === '__construct') {
                 return null;
@@ -929,7 +951,7 @@ class DependencyInjectionContainer {
     public function getNamedProvidedInstance(array $attributes, string $argumentClass, array $classConfig, $docComment, $argumentName = null, $additionalArgumentsForProvider = array()) {
         $implementationName = $this->getImplementationName($docComment, $attributes, $argumentName);
 
-        return $this->getProvidedConfiguredClass($classConfig, new \ReflectionClass($argumentClass), $implementationName, $additionalArgumentsForProvider);
+        return $this->getProvidedConfiguredClass($classConfig, new ReflectionClass($argumentClass), $implementationName, $additionalArgumentsForProvider);
     }
 
     /**
@@ -988,7 +1010,17 @@ class DependencyInjectionContainer {
      */
     private function getImplementingClassBecauseOfName($argumentClass, $classConfig, $name) {
         if (!isset($classConfig['named']) || !isset($classConfig['named'][$name])) {
-            $classReflection = new \ReflectionClass($argumentClass);
+            $classReflection = new ReflectionClass($argumentClass);
+
+            $attributes = $classReflection->getAttributes(ImplementedBy::class);
+            foreach ($attributes as $attr) {
+                /** @var ImplementedBy $inst */
+                $inst = $attr->newInstance();
+                if ($inst->named === $name) {
+                    return $inst->className;
+                }
+            }
+
             $annotatedConfigurationClassName = $this->getAnnotatedImplementationClass($classReflection, $name);
             if ($annotatedConfigurationClassName) {
                 return $annotatedConfigurationClassName;
