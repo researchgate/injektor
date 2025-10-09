@@ -12,6 +12,7 @@ namespace rg\injektor {
     use rg\injektor\attributes\Lazy;
     use rg\injektor\attributes\Param;
     use rg\injektor\attributes\Inject;
+    use rg\injektor\attributes\ProvidedBy;
     use rg\injektor\attributes\Service;
     use rg\injektor\attributes\Singleton;
 
@@ -172,9 +173,7 @@ namespace rg\injektor {
         }
     }
 
-    /**
-     * @providedBy \rg\injektor\DICProvidedTestClassNoTypeHintProvider
-     */
+    #[ProvidedBy(className: DICProvidedTestClassNoTypeHintProvider::class)]
     class DICProvidedTestClassNoTypeHint {
 
         public $one;
@@ -204,10 +203,14 @@ namespace rg\injektor {
         public $provided;
     }
 
-    /**
-     * @providedBy default \rg\injektor\DICProvidedTestClassNoTypeHintProvider {"one":1,"two":2}
-     * @providedBy someName \rg\injektor\DICProvidedTestClassNoTypeHintProvider {"one":3,"two":4}
-     */
+    #[ProvidedBy(className: DICProvidedTestClassNoTypeHintProvider::class, overwriteParams: [
+        new Param(name: 'one', value: 1),
+        new Param(name: 'two', value: 2),
+    ])]
+    #[ProvidedBy(className: DICProvidedTestClassNoTypeHintProvider::class, named: 'someName', overwriteParams: [
+        new Param(name: 'one', value: 3),
+        new Param(name: 'two', value: 4),
+    ])]
     class DICProvidedTestClassNoTypeHintNamed {
 
         public $one;

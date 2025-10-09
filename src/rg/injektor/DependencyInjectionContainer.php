@@ -25,6 +25,7 @@ use rg\injektor\attributes\ImplementedBy;
 use rg\injektor\attributes\Inject;
 use rg\injektor\attributes\Lazy;
 use rg\injektor\attributes\NoLazy;
+use rg\injektor\attributes\ProvidedBy;
 use rg\injektor\attributes\Service;
 use rg\injektor\attributes\Singleton;
 use UnexpectedValueException;
@@ -476,6 +477,36 @@ class DependencyInjectionContainer {
      * @return null|object
      */
     public function getProvidedConfiguredClass($classConfig, ReflectionClass $classReflection, $name = null, $additionalArgumentsForProvider = array()) {
+        $pickDefault = $name === null || $name === 'default';
+
+        $attributes = $classReflection->getAttributes(ProvidedBy::class);
+        foreach ($attributes as $attr) {
+            /** @var ProvidedBy $inst */
+            $inst = $attr->newInstance();
+
+            if (($pickDefault && $inst->named === 'default') || $inst->named === $name) {
+                $params = [];
+                foreach ($inst->overwriteParams as $param) {
+                    $params[$param->name] = $param->value;
+                }
+
+                $namedAnnotation = new Named();
+                $namedAnnotation->setName($inst->named);
+                $namedAnnotation->setClassName($inst->className);
+                $namedAnnotation->setParameters($params);
+
+                $instanceConstructor = function () use ($namedAnnotation, $classReflection, $additionalArgumentsForProvider) {
+                    return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
+                };
+
+                if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
+                    return $this->wrapInstanceWithLazyProxy($classReflection->name, $instanceConstructor);
+                } else {
+                    return $instanceConstructor();
+                }
+            }
+        }
+
         if ($namedAnnotation = $this->getProviderClassName($classConfig, $classReflection, $name)) {
             $instanceConstructor = function () use ($namedAnnotation, $classReflection, $additionalArgumentsForProvider) {
                 return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
@@ -515,7 +546,11 @@ class DependencyInjectionContainer {
             return $annotation;
         }
 
-        return $this->getProvidedByAnnotation($classReflection->getDocComment(), $name);
+        return $this->getProvidedByAnnotation(
+            $classReflection->getAttributes(ProvidedBy::class),
+            $classReflection->getDocComment(),
+            $name,
+        );
     }
 
     /**
@@ -577,7 +612,7 @@ class DependencyInjectionContainer {
      * @return Named
      */
     private function getImplementedByAnnotation(array $attributes, $docComment, $name) {
-        $pickDefault = $name === null || 'default';
+        $pickDefault = $name === null || $name === 'default';
 
         foreach ($attributes as $attr) {
             if ($attr->getName() !== ImplementedBy::class) {
@@ -599,11 +634,36 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @param ReflectionAttribute[] $attributes
      * @param string $docComment
      * @param string $name
      * @return Named
      */
-    private function getProvidedByAnnotation($docComment, $name) {
+    private function getProvidedByAnnotation($attributes, $docComment, $name) {
+        $pickDefault = $name === null || $name === 'default';
+
+        foreach ($attributes as $attr) {
+            if ($attr->getName() !== ProvidedBy::class) {
+                continue;
+            }
+
+            /** @var ProvidedBy $inst */
+            $inst = $attr->newInstance();
+
+            if (($pickDefault && $inst->named === 'default') || $inst->named === $name) {
+                $named = new Named();
+                $named->setName($inst->named);
+                $named->setClassName($inst->className);
+                $params = [];
+                foreach ($inst->overwriteParams as $param) {
+                    $params[$param->name] = $param->value;
+                }
+                $named->setParameters($params);
+
+                return $named;
+            }
+        }
+
         return $this->getMatchingAnnotationByNamedPatter($docComment, '@providedBy', $name);
     }
 

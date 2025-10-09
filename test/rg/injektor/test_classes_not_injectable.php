@@ -10,6 +10,8 @@
 namespace rg\injektor;
 
 use rg\injektor\attributes\ImplementedBy;
+use rg\injektor\attributes\Param;
+use rg\injektor\attributes\ProvidedBy;
 
 abstract class DICTestAbstractClass {
 
@@ -31,10 +33,12 @@ interface DICTestAnnotatedInterfaceNamedConfig {
 
 }
 
-/**
- * @providedBy impl1 rg\injektor\DICTestProvider {"name" : "impl1"}
- * @providedBy impl2 rg\injektor\DICTestProvider {"name" : "impl2"}
- */
+#[ProvidedBy(className: DICTestProvider::class, named: 'impl1', overwriteParams: [
+    new Param('name', 'impl1')
+])]
+#[ProvidedBy(className: DICTestProvider::class, named: 'impl2', overwriteParams: [
+    new Param('name', 'impl2')
+])]
 interface DICTestProvidedInterface {
 
 }
@@ -43,16 +47,12 @@ interface DICTestProvidedInterfaceNoConfig {
 
 }
 
-/**
- * @providedBy rg\injektor\DICSimpleTestProvider
- */
+#[ProvidedBy(className: DICSimpleTestProvider::class)]
 interface DICTestSimpleProvidedInterface {
 
 }
 
-/**
- * @providedBy rg\injektor\DICTestProvidedInterfaceImpl1
- */
+#[ProvidedBy(className: DICTestProvidedInterfaceImpl1::class)]
 interface DICTestInvalidProvidedInterface {
 
 }
