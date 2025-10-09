@@ -490,13 +490,13 @@ class DependencyInjectionContainer {
                     $params[$param->name] = $param->value;
                 }
 
-                $namedAnnotation = new Named();
-                $namedAnnotation->setName($inst->named);
-                $namedAnnotation->setClassName($inst->className);
-                $namedAnnotation->setParameters($params);
+                $namedAttribute = new Named();
+                $namedAttribute->setName($inst->named);
+                $namedAttribute->setClassName($inst->className);
+                $namedAttribute->setParameters($params);
 
-                $instanceConstructor = function () use ($namedAnnotation, $classReflection, $additionalArgumentsForProvider) {
-                    return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
+                $instanceConstructor = function () use ($namedAttribute, $classReflection, $additionalArgumentsForProvider) {
+                    return $this->getRealClassInstanceFromProvider($namedAttribute->getClassName(), $classReflection->name, array_merge($namedAttribute->getParameters(), $additionalArgumentsForProvider));
                 };
 
                 if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
