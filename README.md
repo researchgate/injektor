@@ -60,20 +60,11 @@ use rg\injektor\WritingFactoryGenerator;
 
 class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Command\Command
 {
-    /**
-     * @var \rg\injektor\DependencyInjectionContainer
-     */
-    private $dic;
+    private \rg\injektor\DependencyInjectionContainer $dic;
 
-    /**
-     * @var \rg\injektor\WritingFactoryGenerator
-     */
-    private $factoryGenerator;
+    private \rg\injektor\WritingFactoryGenerator $factoryGenerator;
 
-    /**
-     * @var string
-     */
-    private $root;
+    private string $root;
 
     protected function configure()
     {
@@ -81,10 +72,6 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
         $this->setHelp('generates factories for dependency injection container');
     }
 
-    /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $output->writeln('Generating Factories');
@@ -109,19 +96,12 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
         $this->processAllDirectories($output);
     }
 
-    /**
-     * @param OutputInterface $output
-     */
     private function processAllDirectories(OutputInterface $output)
     {
         $this->processDirectory($this->root . DIRECTORY_SEPARATOR . 'folderWithPhpClasses', $output);
     }
 
-    /**
-     * @param $directory
-     * @param OutputInterface $output
-     */
-    private function processDirectory($directory, OutputInterface $output)
+    private function processDirectory(string $directory, OutputInterface $output)
     {
         $output->writeln('Directory: ' . $directory);
         $directoryIterator = new \RecursiveDirectoryIterator($directory);
@@ -132,11 +112,7 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
         }
     }
 
-    /**
-     * @param $fullpath
-     * @param OutputInterface $output
-     */
-    private function processFile($fullpath, OutputInterface $output)
+    private function processFile(string $fullpath, OutputInterface $output)
     {
         $output->writeln('Process file [' . $fullpath . ']');
 
@@ -152,9 +128,6 @@ class GenerateDependencyInjectionFactories extends \Symfony\Component\Console\Co
         }
     }
 
-    /**
-     * @param \Laminas\Code\Reflection\ClassReflection $class
-     */
     private function processClass(\Laminas\Code\Reflection\ClassReflection $class)
     {
         if (!$class->isInstantiable()) {
@@ -204,6 +177,7 @@ and the __construct method is private or protected.
 
 ```php
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Singleton;
 
 class Foo
 {
@@ -214,9 +188,7 @@ class Foo
     }
 }
 
-/**
- * @singleton
- */
+ #[Singleton]
 class Bar
 {
     private function __construct()
@@ -261,6 +233,7 @@ Inject Concrete Implementation
 
 ```php
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\ImplementedBy;
 
 class Foo
 {
@@ -268,9 +241,7 @@ class Foo
     protected Bar $bar;
 }
 
-/**
- * @implementedBy BarImpl
- */
+ #[ImplementedBy(className: BarImpl::class)]
 interface Bar
 {
 
@@ -298,6 +269,7 @@ Using Provider Classes
 
 ```php
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\ProvidedBy;
 
 class Foo
 {
@@ -305,9 +277,7 @@ class Foo
     protected Bar $bar;
 }
 
-/**
- * @providedBy BarProvider
- */
+ #[ProvidedBy(className: BarProvider::class)]
 interface Bar
 {
 
@@ -345,6 +315,8 @@ Passing fixed data to providers
 
 ```php
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\ProvidedBy;
+use rg\injektor\attributes\Param;
 
 class Foo
 {
@@ -352,9 +324,7 @@ class Foo
     protected Bar $bar;
 }
 
-/**
- * @providedBy BarProvider {'foo' : 'bar'}
- */
+#[ProvidedBy(className: BarProvider::class, overwriteParams: [new Param('foo', 'bar')])]
 interface Bar
 {
 
@@ -403,6 +373,7 @@ Inject as Singleton
 
 ```php
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Singleton;
 
 class Foo
 {
@@ -410,9 +381,7 @@ class Foo
     protected Bar $bar;
 }
 
-/**
- * @singleton
- */
+#[Singleton]
 class Bar
 {
 
@@ -438,15 +407,16 @@ the wanted instance is already created or not.
 That means in this example:
 
 ```php
+use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Singleton;
+
 class Foo
 {
     #[Inject]
     protected Bar $bar;
 }
 
-/**
- * @singleton
- */
+#[Singleton]
 class Bar
 {
     public function __construct($arg)
@@ -466,15 +436,16 @@ Injecting as service
 --------------------
 
 ```php
+use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Singleton;
+
 class Foo
 {
     #[Inject]
     protected Bar $bar;
 }
 
-/**
- * @service
- */
+#[Service]
 class Bar
 {
 
@@ -498,6 +469,7 @@ In contrast to singletons, In a service this example
 
 ```php
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Service;
 
 class Foo
 {
@@ -505,9 +477,7 @@ class Foo
     protected Bar $bar;
 }
 
-/**
- * @service
- */
+#[Service]
 class Bar
 {
     public function __construct($arg)
@@ -529,6 +499,7 @@ method in the configuration instead of letting the container guess them from typ
 
 ```php
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Singleton;
 
 class Foo
 {
@@ -539,9 +510,7 @@ class Foo
     }
 }
 
-/**
- * @singleton
- */
+#[Singleton]
 class Bar
 {
     private function __construct()
@@ -585,29 +554,30 @@ Alternatively you can also configure this with annotations
 
 ```php
 use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Singleton;
+use rg\injektor\attributes\Param;
 
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar {"foo":456,"buzz":"content"}
-     */
-    protected $propertyInjection;
+     #[Inject(overwriteParams: [
+        new Param('foo', 456),
+        new Param('buzz', 'content')
+     ])]
+    protected Bar $propertyInjection;
 
 
-    /**
-     * @inject
-     * @param Bar $bar {"foo":123,"buzz":"content"}
-     */
-    public function __construct(Bar $bar)
-    {
+    public function __construct(
+        #[Inject(overwriteParams: [)]
+            new Param('foo', 123),
+            new Param('buzz', 'content')
+        ])]
+        Bar $bar
+    ) {
 
     }
 }
 
-/**
- * @singleton
- */
+#[Singleton]
 class Bar
 {
     private function __construct()
@@ -722,11 +692,11 @@ Configuration:
 You can also configure this directly with annotations
 
 ```php
-/**
- * @implementedBy BarImplDefault
- * @implementedBy barOne BarImplOne
- * @implementedBy barTwo BarImplTwo
- */
+use rg\injektor\attributes\ImplementedBy;
+
+#[ImplementedBy(className: BarImplDefault::class)]
+#[ImplementedBy(className: BarImplOne::class, named: 'barOne')]
+#[ImplementedBy(className: BarImplTwo::class, named: 'barTwo')]
 interface Bar
 {
 
@@ -752,11 +722,11 @@ It is also possible to name the default implementation, so that our configuratio
 same:
 
 ```php
-/**
- * @implementedBy default BarImplDefault
- * @implementedBy barOne  BarImplOne
- * @implementedBy barTwo  BarImplTwo
- */
+use rg\injektor\attributes\ImplementedBy;
+
+#[ImplementedBy(BarImplDefault::class)]
+#[ImplementedBy(className: BarImplOne::class, named: 'barOne')]
+#[ImplementedBy(className: BarImplTwo::class, named: 'barTwo')]
 interface Bar
 {
 
@@ -816,11 +786,12 @@ Configuration:
 You can also configure this directly with annotations
 
 ```php
-/**
- * @providedBy BarProvider
- * @providedBy barOne BarProvider {"name" : "barOne"}
- * @providedBy barTwo BarProvider {"name" : "barOne"}
- */
+use rg\injektor\attributes\ProvidedBy;
+use rg\injektor\attributes\Param;
+
+#[ProvidedBy(BarProvider::class)]
+#[ProvidedBy(BarProvider::class, named: 'barOne', overwriteParams: [new Param('name', 'barOne')])]
+#[ProvidedBy(BarProvider::class, named: 'barTwo', overwriteParams: [new Param('name', 'barTwo')])]
 interface Bar
 {
 
@@ -868,11 +839,12 @@ It is also possible to name the default provider, so that our configuration look
 same:
 
 ```php
-/**
- * @providedBy default BarProvider
- * @providedBy barOne BarProvider {"name" : "barOne"}
- * @providedBy barTwo BarProvider {"name" : "barOne"}
- */
+use rg\injektor\attributes\ProvidedBy;
+use rg\injektor\attributes\Param;
+
+#[ProvidedBy(BarProvider::class, named: 'default')]
+#[ProvidedBy(BarProvider::class, named: 'barOne', overwriteParams: [new Param('name', 'barOne')])]
+#[ProvidedBy(BarProvider::class, named: 'barTwo', overwriteParams: [new Param('name', 'barTwo')])]
 interface Bar
 {
 
