@@ -9,6 +9,7 @@
  */
 namespace rg\injektor\generators;
 
+use rg\injektor\attributes\Inject;
 use rg\injektor\FactoryDependencyInjectionContainer;
 use rg\injektor\Configuration;
 
@@ -417,9 +418,9 @@ class FGTestClassOne {
     public $three;
 
     /**
-     * @inject
      * @var \rg\injektor\generators\FGTestClassThree
      */
+    #[Inject]
     protected $four;
 
     /**
@@ -430,21 +431,21 @@ class FGTestClassOne {
     }
 
     /**
-     * @inject
      * @param FGTestClassTwo $two
      * @param FGTestClassThree $three
      */
+    #[Inject]
     public function __construct(FGTestClassTwo $two, FGTestClassThree $three) {
         $this->two = $two;
         $this->three = $three;
     }
 
     /**
-     * @inject
      * @param FGTestClassTwo $two
      * @param FGTestClassThree $three
      * @return string
      */
+    #[Inject]
     public function getSomething(FGTestClassTwo $two, FGTestClassThree $three) {
         return $two->getSomething() . $three->getSomething();
     }
@@ -458,9 +459,9 @@ class FGTestClassOne {
     }
 
     /**
-     * @inject
      * @param mixed $two
      */
+    #[Inject]
     public function methodRestriction($two = null) {
 
     }
@@ -473,9 +474,9 @@ class FGTestClassTwo {
      */
     public $three;
     /**
-     * @inject
      * @param FGTestClassThree $three
      */
+    #[Inject]
     public function __construct(FGTestClassThree $three) {
         $this->three = $three;
     }
@@ -499,9 +500,9 @@ class FGTestClassThree {
 class FGTestClassFour {
 
     /**
-     * @inject
      * @var \rg\injektor\generators\FGTestClassSimple
      */
+    #[Inject]
     protected $injectedProperty;
 
     private function __construct() {
@@ -509,11 +510,11 @@ class FGTestClassFour {
     }
 
     /**
-     * @inject
      * @static
      * @param FGTestClassSimple $simple
      * @return FGTestClassFour
      */
+    #[Inject]
     public static function getInstance(FGTestClassSimple $simple) {
         return new FGTestClassFour();
     }

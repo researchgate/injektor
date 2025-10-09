@@ -171,12 +171,11 @@ Constructor Injection
 ---------------------
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     * @param Bar $bar
-     */
+    #[Inject]
     public function __construct(Bar $bar)
     {
 
@@ -194,7 +193,7 @@ $dic->getInstanceOfClass('Foo');
 An instance of Bar will be injected as the constructor argument $bar. Of course Bar could use dependency injection as
 well. The container can inject any classes that are injectable because:
 
-- they have a @inject annotation at the constructor
+- they have a @inject annotation or `rg\injektor\attributes\Inject` attribute at the constructor
 - they have a constructor without arguments
 - they have no constructor
 - the arguments are optional
@@ -204,12 +203,11 @@ A constructor can be either a __construct method or a static getInstance method 
 and the __construct method is private or protected.
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     * @param Bar $bar
-     */
+    #[Inject]
     public function __construct(Bar $bar)
     {
 
@@ -239,13 +237,12 @@ Property Injection
 ------------------
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar
-     */
-    protected $bar;
+    #[Inject]
+    protected Bar $bar;
 }
 
 class Bar
@@ -263,13 +260,12 @@ Inject Concrete Implementation
 ------------------------------
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar
-     */
-    protected $bar;
+    #[Inject]
+    protected Bar $bar;
 }
 
 /**
@@ -301,13 +297,12 @@ Using Provider Classes
 ----------------------
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar
-     */
-    protected $bar;
+    #[Inject]
+    protected Bar $bar;
 }
 
 /**
@@ -349,13 +344,12 @@ Passing fixed data to providers
 -------------------------------
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar
-     */
-    protected $bar;
+    #[Inject]
+    protected Bar $bar;
 }
 
 /**
@@ -374,9 +368,7 @@ class BarImpl implements Bar
 class BarProvider implements rg\injektor\Provider
 {
 
-    /**
-     * @inject
-     */
+    #[Inject]
     public function __construct(SomeClass $someClass, $foo)
     {
     }
@@ -410,13 +402,12 @@ Inject as Singleton
 -------------------
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar
-     */
-    protected $bar;
+    #[Inject]
+    protected Bar $bar;
 }
 
 /**
@@ -449,11 +440,8 @@ That means in this example:
 ```php
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar
-     */
-    protected $bar;
+    #[Inject]
+    protected Bar $bar;
 }
 
 /**
@@ -480,11 +468,8 @@ Injecting as service
 ```php
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar
-     */
-    protected $bar;
+    #[Inject]
+    protected Bar $bar;
 }
 
 /**
@@ -512,13 +497,12 @@ You can also configure this in the dependecy injection configuration instead of 
 In contrast to singletons, In a service this example
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     * @var Bar
-     */
-    protected $bar;
+    #[Inject]
+    protected Bar $bar;
 }
 
 /**
@@ -544,11 +528,11 @@ You can also configure the content of all or some parameters that the container 
 method in the configuration instead of letting the container guess them from typehints:
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     */
+    #[Inject]
     public function __construct($bar)
     {
 
@@ -565,9 +549,7 @@ class Bar
 
     }
 
-    /**
-     * @inject
-     */
+    #[Inject]
     public static function getInstance($foo, $buzz)
     {
 
@@ -602,6 +584,8 @@ Configuration:
 Alternatively you can also configure this with annotations
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
     /**
@@ -631,9 +615,7 @@ class Bar
 
     }
 
-    /**
-     * @inject
-     */
+    #[Inject]
     public static function getInstance($foo, $buzz)
     {
 
@@ -649,11 +631,11 @@ Pass additional parameters on runtime
 You also can pass some values to the new instance on runtime.
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     */
+    #[Inject]
     public function __construct($val, Bar $bar, Buzz $buzz)
     {
 
@@ -680,24 +662,24 @@ Named injection
 ---------------
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @var Bar
-     * @named barOne
-     */
-    protected $bar;
+    #[Inject(named: 'barOne')]
+    protected Bar $bar;
 
-    /**
-     * @inject
-     * @param Bar $one
-     * @param Bar $two
-     * @param Bar $default
-     * @named barOne $one
-     * @named barTwo $two
-     */
-    public function __construct(Bar $one, Bar $two, Bar $default)
-    {
+    #[Inject]
+    public function __construct(
+        #[Inject(named: 'barOne')]
+        Bar $one,
+        #[Inject(named: 'barTwo')]
+        Bar $two,
+        // default implementation, requires #[Inject] on the constructor level
+        Bar $default,
+        #[Inject] // works the same as above, but doesn't require #[Inject] on the constructor level
+        Bar $default2,
+    ) {
 
     }
 }
@@ -785,24 +767,21 @@ Named providers
 ---------------
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @var Bar
-     * @named barOne
-     */
-    protected $bar;
+    #[Inject(named: 'barOne')]
+    protected Bar $bar;
 
-    /**
-     * @inject
-     * @param Bar $one
-     * @param Bar $two
-     * @param Bar $default
-     * @named barOne $one
-     * @named barTwo $two
-     */
-    public function __construct(Bar $one, Bar $two, Bar $default)
-    {
+    #[Inject]
+    public function __construct(
+        #[Inject(named: 'barOne')]
+        Bar $one,
+        #[Inject(named: 'barTwo')]
+        Bar $two,
+        Bar $default,
+    ) {
     }
 }
 
@@ -906,11 +885,11 @@ Call method on object instance
 The container can also call methods on instances an inject all method arguments
 
 ```php
+use rg\injektor\attributes\Inject;
+
 class Foo
 {
-    /**
-     * @inject
-     */
+    #[Inject]
     public function doSomething(Bar $bar)
     {
     }
@@ -930,12 +909,11 @@ Of course you can also use named injections.
 It is also possible to add additional values to the method call, like with object creation:
 
 ```php
+use rg\injektor\attributes\Inject;
 
 class Foo
 {
-    /**
-     * @inject
-     */
+    #[Inject]
     public function doSomething(Bar $bar, $foo)
     {
     }

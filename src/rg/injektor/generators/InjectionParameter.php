@@ -9,9 +9,11 @@
  */
 namespace rg\injektor\generators;
 
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionParameter;
+use rg\injektor\attributes\Inject;
 use rg\injektor\Configuration;
 use rg\injektor\DependencyInjectionContainer;
 use rg\injektor\FactoryDependencyInjectionContainer;
@@ -25,6 +27,9 @@ class InjectionParameter {
     const MODE_STRING = 'string';
 
     private ReflectionParameter $parameter;
+
+    /** @var ReflectionAttribute[] */
+    protected array $attributes = [];
 
     protected array $classConfig;
 
@@ -69,6 +74,11 @@ class InjectionParameter {
         $this->additionalArguments = $this->dic->getParamsFromTypeHint($this->parameter);
         $this->mode = $mode;
 
+        $this->attributes = $parameter->getAttributes(Inject::class);
+        if ($this->attributes === []) {
+            $this->attributes = $parameter->getDeclaringFunction()->getAttributes(Inject::class);
+        }
+
         $this->analyze();
     }
 
@@ -100,7 +110,7 @@ class InjectionParameter {
     protected function analyze() {
         $argumentClass = null;
 
-        $isInjectable = $this->dic->isInjectable($this->docComment);
+        $isInjectable = $this->dic->isInjectable($this->docComment, $this->attributes);
 
         if (!empty($this->classConfig['params'][$this->name]['class'])) {
             $argumentClass = $this->classConfig['params'][$this->name]['class'];
@@ -114,6 +124,7 @@ class InjectionParameter {
 
             try {
                 $namedClass = $this->dic->getNamedClassOfArgument(
+                    $this->attributes,
                     $argumentClass,
                     $this->docComment,
                     $this->nameForAnnotationParsing
@@ -127,7 +138,7 @@ class InjectionParameter {
                 $this->defaultValue = '\\' . $argumentClass . '::getDefaultInstance()';
             } else {
                 $providerClassName = $this->dic->getProviderClassName($this->config->getClassConfig($argumentClass), new ReflectionClass($argumentClass),
-                    $this->dic->getImplementationName($this->docComment, $this->nameForAnnotationParsing));
+                    $this->dic->getImplementationName($this->docComment, $this->attributes, $this->nameForAnnotationParsing));
                 if ($providerClassName && $providerClassName->getClassName()) {
                     $argumentFactory = $this->dic->getFullFactoryClassName($providerClassName->getClassName());
                     $this->className = $providerClassName->getClassName();

@@ -1,6 +1,8 @@
 <?php
 namespace rg\injektor;
 
+use rg\injektor\attributes\Inject;
+
 class InjectionLoopDetectionTest extends \PHPUnit\Framework\TestCase {
 
     public function testInjectionLoopDetectionA() {
@@ -54,9 +56,9 @@ class InjectionLoopDetectionTest extends \PHPUnit\Framework\TestCase {
 class InjectionLoopDetectionTest_DepA {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_DepB $dep
      */
+    #[Inject]
     public function __construct(InjectionLoopDetectionTest_DepB $dep) {
 
     }
@@ -65,9 +67,9 @@ class InjectionLoopDetectionTest_DepA {
 class InjectionLoopDetectionTest_DepB {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_DepC $dep
      */
+    #[Inject]
     public function __construct(InjectionLoopDetectionTest_DepC $dep) {
 
     }
@@ -76,9 +78,9 @@ class InjectionLoopDetectionTest_DepB {
 class InjectionLoopDetectionTest_DepC {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_DepA $dep
      */
+    #[Inject]
     public function __construct(InjectionLoopDetectionTest_DepA $dep) {
 
     }
@@ -87,9 +89,9 @@ class InjectionLoopDetectionTest_DepC {
 class InjectionLoopDetectionTest_DepD {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_DepD $dep
      */
+    #[Inject]
     public function __construct(InjectionLoopDetectionTest_DepD $dep) {
 
     }
@@ -98,9 +100,9 @@ class InjectionLoopDetectionTest_DepD {
 class InjectionLoopDetectionTest_DepE {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_DepD $dep
      */
+    #[Inject]
     public function __construct(InjectionLoopDetectionTest_DepD $dep) {
 
     }
@@ -109,10 +111,10 @@ class InjectionLoopDetectionTest_DepE {
 class InjectionLoopDetectionTest_NoRecA {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_NoRecB $dep
      * @param InjectionLoopDetectionTest_NoRecC $dep2
      */
+    #[Inject]
     public function __construct(
         InjectionLoopDetectionTest_NoRecC $dep3,
          InjectionLoopDetectionTest_NoRecBA $dep2,
@@ -124,9 +126,9 @@ class InjectionLoopDetectionTest_NoRecA {
 class InjectionLoopDetectionTest_NoRecBA {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_NoRecB $dep
      */
+    #[Inject]
     public function __construct(InjectionLoopDetectionTest_NoRecB $dep) {
 
     }
@@ -135,9 +137,9 @@ class InjectionLoopDetectionTest_NoRecBA {
 class InjectionLoopDetectionTest_NoRecB {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_NoRecD $dep
      */
+    #[Inject]
     public function __construct(InjectionLoopDetectionTest_NoRecD $dep) {
 
     }
@@ -146,9 +148,9 @@ class InjectionLoopDetectionTest_NoRecB {
 class InjectionLoopDetectionTest_NoRecC {
 
     /**
-     * @inject
      * @param InjectionLoopDetectionTest_NoRecD $dep
      */
+    #[Inject]
     public function __construct(InjectionLoopDetectionTest_NoRecD $dep) {
 
     }
@@ -156,9 +158,7 @@ class InjectionLoopDetectionTest_NoRecC {
 
 class InjectionLoopDetectionTest_NoRecD {
 
-    /**
-     * @inject
-     */
+    #[Inject]
     public function __construct() {
 
     }

@@ -8,6 +8,8 @@
  */
 namespace issue  {
 
+    use rg\injektor\attributes\Inject;
+
     interface Class_With_Underscores {
 
     }
@@ -19,9 +21,9 @@ namespace issue  {
     class ClassWithDependencyToClassWithUnderscores {
 
         /**
-         * @inject
          * @var \issue\Class_With_Underscores
          */
+        #[Inject]
         protected $dependency;
 
         /**
@@ -49,11 +51,12 @@ namespace issue  {
 
 namespace issue9\name {
 
-    /**
-     * @implementedBy default issue9\name\D
-     * @implementedBy abc issue9\name\C
-     * @implementedBy abd issue9\name\D
-     */
+    use rg\injektor\attributes\ImplementedBy;
+    use rg\injektor\attributes\Inject;
+
+    #[ImplementedBy(className: 'issue9\name\D', named: 'default')]
+    #[ImplementedBy(className: 'issue9\name\C', named: 'abc')]
+    #[ImplementedBy(className: 'issue9\name\D', named: 'abd')]
     interface B {
 
     }
@@ -68,20 +71,19 @@ namespace issue9\name {
     class A {
 
         /**
-         * @inject
-         * @named abc
          * @var B
          */
+        #[Inject(named: 'abc')]
         protected $myB;
     }
 }
 
 namespace issueImplementedByOrder\name {
 
-    /**
-     * @implementedBy abc issueImplementedByOrder\name\C
-     * @implementedBy default issueImplementedByOrder\name\D
-     */
+    use rg\injektor\attributes\ImplementedBy;
+
+    #[ImplementedBy(className: 'issueImplementedByOrder\name\D', named: 'default')]
+    #[ImplementedBy(className: 'issueImplementedByOrder\name\C', named: 'abc')]
     interface B {
 
     }

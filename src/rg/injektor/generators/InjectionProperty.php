@@ -10,6 +10,7 @@
 namespace rg\injektor\generators;
 
 use ReflectionProperty;
+use rg\injektor\attributes\Inject;
 use rg\injektor\Configuration;
 use rg\injektor\DependencyInjectionContainer;
 use const PHP_VERSION_ID;
@@ -33,6 +34,7 @@ class InjectionProperty extends InjectionParameter {
         $this->docComment = $this->property->getDocComment();
 
         $this->additionalArguments = $this->dic->getParamsFromPropertyTypeHint($this->property, 'var');
+        $this->attributes = $property->getAttributes(Inject::class);
         $this->analyze();
     }
 

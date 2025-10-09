@@ -15,10 +15,19 @@ use ProxyManager\Factory\LazyLoadingValueHolderFactory;
 use ProxyManager\GeneratorStrategy\EvaluatingGeneratorStrategy;
 use ProxyManager\Proxy\LazyLoadingInterface;
 use Psr\Log\LoggerInterface;
+use ReflectionAttribute;
+use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
 use ReflectionProperty;
 use rg\injektor\annotations\Named;
+use rg\injektor\attributes\ImplementedBy;
+use rg\injektor\attributes\Inject;
+use rg\injektor\attributes\Lazy;
+use rg\injektor\attributes\NoLazy;
+use rg\injektor\attributes\ProvidedBy;
+use rg\injektor\attributes\Service;
+use rg\injektor\attributes\Singleton;
 use UnexpectedValueException;
 use function get_class;
 use function method_exists;
@@ -139,7 +148,7 @@ class DependencyInjectionContainer {
             return $configuredInstance;
         }
 
-        $classReflection = new \ReflectionClass($fullClassName);
+        $classReflection = new ReflectionClass($fullClassName);
 
         if ($providedClass = $this->getProvidedConfiguredClass($classConfig, $classReflection)) {
             $this->log('Got provided instance [' . spl_object_hash($providedClass) . '] of class [' . get_class($providedClass) . ']');
@@ -223,12 +232,12 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param callable $instanceConstructor
      *
      * @return object
      */
-    private function createNewInstance(array $classConfig, \ReflectionClass $classReflection, $instanceConstructor) {
+    private function createNewInstance(array $classConfig, ReflectionClass $classReflection, $instanceConstructor) {
         if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
             return $this->wrapInstanceWithLazyProxy($classReflection->getName(), $instanceConstructor);
         } else {
@@ -279,10 +288,10 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isSingleton(\ReflectionClass $classReflection) {
+    public function isSingleton(ReflectionClass $classReflection) {
         return $classReflection->hasMethod('__construct') &&
             !$classReflection->getMethod('__construct')->isPublic() &&
             $classReflection->hasMethod('getInstance') &&
@@ -291,7 +300,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param array $classConfig
      * @param array $defaultConstructorArguments
      * @param string $constructorMethod
@@ -322,7 +331,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param object $instance
      * @return object
      * @throws InjectionException
@@ -340,7 +349,7 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @throws InjectionException
      * @return array
      */
@@ -350,7 +359,8 @@ class DependencyInjectionContainer {
         $injectableProperties = array();
 
         foreach ($properties as $property) {
-            if ($this->isInjectable($property->getDocComment())) {
+            $attributes = $property->getAttributes(Inject::class);
+            if ($this->isInjectable($property->getDocComment(), $attributes)) {
                 if ($property->isPrivate()) {
                     throw new InjectionException('Property ' . $property->name . ' must not be private for property injection.');
                 }
@@ -377,9 +387,10 @@ class DependencyInjectionContainer {
         $arguments = $this->getParamsFromPropertyTypeHint($property);
 
         $argumentClassConfig = $this->config->getClassConfig($fullClassName);
-        $propertyInstance = $this->getNamedProvidedInstance($fullClassName, $argumentClassConfig, $property->getDocComment(), null, $arguments);
+        $attributes = $property->getAttributes(Inject::class);
+        $propertyInstance = $this->getNamedProvidedInstance($attributes, $fullClassName, $argumentClassConfig, $property->getDocComment(), null, $arguments);
         if (!$propertyInstance) {
-            $namedClass = $this->getNamedClassOfArgument($fullClassName, $property->getDocComment());
+            $namedClass = $this->getNamedClassOfArgument($attributes, $fullClassName, $property->getDocComment());
             if ($namedClass) {
                 $fullClassName = $namedClass;
             }
@@ -442,11 +453,11 @@ class DependencyInjectionContainer {
 
     /**
      * @param string $fullClassName
-     * @return \ReflectionClass
+     * @return ReflectionClass
      * @throws InjectionException
      */
     public function getClassReflection($fullClassName) {
-        $classReflection = new \ReflectionClass($fullClassName);
+        $classReflection = new ReflectionClass($fullClassName);
 
         if ($classReflection->isAbstract()) {
             throw new InjectionException('Can not instantiate abstract class ' . $fullClassName);
@@ -460,12 +471,42 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param string $name
      * @param array $additionalArgumentsForProvider
      * @return null|object
      */
-    public function getProvidedConfiguredClass($classConfig, \ReflectionClass $classReflection, $name = null, $additionalArgumentsForProvider = array()) {
+    public function getProvidedConfiguredClass($classConfig, ReflectionClass $classReflection, $name = null, $additionalArgumentsForProvider = array()) {
+        $pickDefault = $name === null || $name === 'default';
+
+        $attributes = $classReflection->getAttributes(ProvidedBy::class);
+        foreach ($attributes as $attr) {
+            /** @var ProvidedBy $inst */
+            $inst = $attr->newInstance();
+
+            if (($pickDefault && $inst->named === 'default') || $inst->named === $name) {
+                $params = [];
+                foreach ($inst->overwriteParams as $param) {
+                    $params[$param->name] = $param->value;
+                }
+
+                $namedAttribute = new Named();
+                $namedAttribute->setName($inst->named);
+                $namedAttribute->setClassName($inst->className);
+                $namedAttribute->setParameters($params);
+
+                $instanceConstructor = function () use ($namedAttribute, $classReflection, $additionalArgumentsForProvider) {
+                    return $this->getRealClassInstanceFromProvider($namedAttribute->getClassName(), $classReflection->name, array_merge($namedAttribute->getParameters(), $additionalArgumentsForProvider));
+                };
+
+                if ($this->supportsLazyLoading && $this->config->isLazyLoading() && $this->isConfiguredAsLazy($classConfig, $classReflection)) {
+                    return $this->wrapInstanceWithLazyProxy($classReflection->name, $instanceConstructor);
+                } else {
+                    return $instanceConstructor();
+                }
+            }
+        }
+
         if ($namedAnnotation = $this->getProviderClassName($classConfig, $classReflection, $name)) {
             $instanceConstructor = function () use ($namedAnnotation, $classReflection, $additionalArgumentsForProvider) {
                 return $this->getRealClassInstanceFromProvider($namedAnnotation->getClassName(), $classReflection->name, array_merge($namedAnnotation->getParameters(), $additionalArgumentsForProvider));
@@ -483,7 +524,7 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param string $name
      * @return annotations\Named
      */
@@ -505,15 +546,19 @@ class DependencyInjectionContainer {
             return $annotation;
         }
 
-        return $this->getProvidedByAnnotation($classReflection->getDocComment(), $name);
+        return $this->getProvidedByAnnotation(
+            $classReflection->getAttributes(ProvidedBy::class),
+            $classReflection->getDocComment(),
+            $name,
+        );
     }
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return string
      */
-    public function getRealConfiguredClassName($classConfig, \ReflectionClass $classReflection) {
+    public function getRealConfiguredClassName($classConfig, ReflectionClass $classReflection) {
         if (isset($classConfig['class'])) {
             return $classConfig['class'];
         }
@@ -527,14 +572,15 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param null $name
      * @return string
      */
-    private function getAnnotatedImplementationClass(\ReflectionClass $classReflection, $name = null) {
+    private function getAnnotatedImplementationClass(ReflectionClass $classReflection, $name = null) {
         $docComment = $classReflection->getDocComment();
 
-        if ($namedAnnotation = $this->getImplementedByAnnotation($docComment, $name)) {
+        $attributes = $classReflection->getAttributes(ImplementedBy::class);
+        if ($namedAnnotation = $this->getImplementedByAnnotation($attributes, $docComment, $name)) {
             return $namedAnnotation->getClassName();
         }
 
@@ -560,20 +606,64 @@ class DependencyInjectionContainer {
     }
 
     /**
+     * @param ReflectionAttribute[] $attributes
      * @param string $docComment
      * @param string $name
      * @return Named
      */
-    private function getImplementedByAnnotation($docComment, $name) {
+    private function getImplementedByAnnotation(array $attributes, $docComment, $name) {
+        $pickDefault = $name === null || $name === 'default';
+
+        foreach ($attributes as $attr) {
+            if ($attr->getName() !== ImplementedBy::class) {
+                continue;
+            }
+
+            /** @var ImplementedBy $inst */
+            $inst = $attr->newInstance();
+            if ($inst->named === $name || ($inst->named === 'default' && $pickDefault)) {
+                $named = new Named();
+                $named->setName($name);
+                $named->setClassName($inst->className);
+
+                return $named;
+            }
+        }
+
         return $this->getMatchingAnnotationByNamedPatter($docComment, '@implementedBy', $name);
     }
 
     /**
+     * @param ReflectionAttribute[] $attributes
      * @param string $docComment
      * @param string $name
      * @return Named
      */
-    private function getProvidedByAnnotation($docComment, $name) {
+    private function getProvidedByAnnotation($attributes, $docComment, $name) {
+        $pickDefault = $name === null || $name === 'default';
+
+        foreach ($attributes as $attr) {
+            if ($attr->getName() !== ProvidedBy::class) {
+                continue;
+            }
+
+            /** @var ProvidedBy $inst */
+            $inst = $attr->newInstance();
+
+            if (($pickDefault && $inst->named === 'default') || $inst->named === $name) {
+                $named = new Named();
+                $named->setName($inst->named);
+                $named->setClassName($inst->className);
+                $params = [];
+                foreach ($inst->overwriteParams as $param) {
+                    $params[$param->name] = $param->value;
+                }
+                $named->setParameters($params);
+
+                return $named;
+            }
+        }
+
         return $this->getMatchingAnnotationByNamedPatter($docComment, '@providedBy', $name);
     }
 
@@ -627,12 +717,17 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isConfiguredAsSingleton(array $classConfig, \ReflectionClass $classReflection) {
+    public function isConfiguredAsSingleton(array $classConfig, ReflectionClass $classReflection) {
         if (isset($classConfig['singleton'])) {
             return (bool) $classConfig['singleton'];
+        }
+
+        $attributes = $classReflection->getAttributes(Singleton::class);
+        if ($attributes !== []) {
+            return true;
         }
 
         $classComment = $classReflection->getDocComment();
@@ -642,12 +737,17 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isConfiguredAsService(array $classConfig, \ReflectionClass $classReflection) {
+    public function isConfiguredAsService(array $classConfig, ReflectionClass $classReflection) {
         if (isset($classConfig['service'])) {
             return (bool) $classConfig['service'];
+        }
+
+        $attributes = $classReflection->getAttributes(Service::class);
+        if ($attributes !== []) {
+            return true;
         }
 
         $classComment = $classReflection->getDocComment();
@@ -657,10 +757,10 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isConfiguredAsLazy(array $classConfig, \ReflectionClass $classReflection) {
+    public function isConfiguredAsLazy(array $classConfig, ReflectionClass $classReflection) {
         // Force no lazy loading
         if ($this->isConfiguredAsNoLazy($classConfig, $classReflection)) {
             return false;
@@ -680,6 +780,10 @@ class DependencyInjectionContainer {
             return (bool) $classConfig['lazy'];
         }
 
+        $attributes = $classReflection->getAttributes(Lazy::class);
+        if ($attributes !== []) {
+            return true;
+        }
         $classComment = $classReflection->getDocComment();
 
         return strpos($classComment, '@lazy') !== false;
@@ -687,12 +791,17 @@ class DependencyInjectionContainer {
 
     /**
      * @param array $classConfig
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @return bool
      */
-    public function isConfiguredAsNoLazy(array $classConfig, \ReflectionClass $classReflection) {
+    public function isConfiguredAsNoLazy(array $classConfig, ReflectionClass $classReflection) {
         if (isset($classConfig['noLazy'])) {
             return (bool) $classConfig['noLazy'];
+        }
+
+        $attributes = $classReflection->getAttributes(NoLazy::class);
+        if ($attributes !== []) {
+            return true;
         }
 
         $classComment = $classReflection->getDocComment();
@@ -723,12 +832,12 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param \ReflectionClass $classReflection
+     * @param ReflectionClass $classReflection
      * @param string $methodName
      * @return null|\ReflectionMethod
      * @throws InjectionException
      */
-    private function getMethodReflection(\ReflectionClass $classReflection, $methodName) {
+    private function getMethodReflection(ReflectionClass $classReflection, $methodName) {
         if (!$classReflection->hasMethod($methodName)) {
             if ($methodName === '__construct') {
                 return null;
@@ -749,17 +858,38 @@ class DependencyInjectionContainer {
     public function getMethodArguments(\ReflectionMethod $methodReflection, array $defaultArguments = array()) {
         $arguments = $methodReflection->getParameters();
 
-        $methodIsMarkedInjectible = $this->isInjectable($methodReflection->getDocComment());
+        $attributes = $methodReflection->getAttributes(Inject::class);
+        $methodIsMarkedInjectible = $this->isInjectable($methodReflection->getDocComment(), $attributes);
 
         $argumentValues = array();
 
         $isNumericDefaultArguments = !(bool) count(array_filter(array_keys($defaultArguments), 'is_string'));
         foreach ($arguments as $key => $argument) {
             /** @var ReflectionParameter $argument */
+
+            $argumentAttributes = $argument->getAttributes(Inject::class);
+
             if ($isNumericDefaultArguments && array_key_exists($key, $defaultArguments)) {
                 $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$key]);
             } else if (array_key_exists($argument->name, $defaultArguments)) {
                 $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$argument->name]);
+            } else if ($argumentAttributes !== []) {
+                foreach ($argumentAttributes as $attr) {
+                    /** @var Inject $instance */
+                    $instance = $attr->newInstance();
+
+                    if ($instance->named !== null) {
+                        if (array_key_exists($instance->named, $defaultArguments)) {
+                            $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$instance->named]);
+                        } else {
+                            $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
+                        }
+                    }
+
+                    if ($instance->overwriteParams !== []) {
+                        $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
+                    }
+                }
             } else if ($methodIsMarkedInjectible) {
                 $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
             } else if ($argument->isOptional()) {
@@ -807,12 +937,13 @@ class DependencyInjectionContainer {
 
         $arguments = $this->getParamsFromTypeHint($argument);
 
-        $providedInstance = $this->getNamedProvidedInstance($className, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name, $arguments);
+        $attributes = $argument->getAttributes(Inject::class);
+        $providedInstance = $this->getNamedProvidedInstance($attributes, $className, $argumentClassConfig, $argument->getDeclaringFunction()->getDocComment(), $argument->name, $arguments);
         if ($providedInstance) {
             return $providedInstance;
         }
 
-        $namedClassName = $this->getNamedClassOfArgument($className, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
+        $namedClassName = $this->getNamedClassOfArgument($attributes, $className, $argument->getDeclaringFunction()->getDocComment(), $argument->name);
 
         if ($namedClassName) {
             return $this->getInstanceOfClass($namedClassName, $arguments);
@@ -826,6 +957,12 @@ class DependencyInjectionContainer {
      * @return array
      */
     public function getParamsFromTypeHint(ReflectionParameter $argument) {
+        $attributes = $argument->getAttributes(Inject::class);
+        $params = $this->getOverwrittenParamsFromAttributes($attributes);
+        if ($params !== []) {
+            return $params;
+        }
+
         return $this->annotationReader->getParamsFromTypeHint($argument->getDeclaringFunction()->getDocComment(), $argument->name, 'param');
     }
 
@@ -834,10 +971,36 @@ class DependencyInjectionContainer {
      * @return array
      */
     public function getParamsFromPropertyTypeHint(\ReflectionProperty $property) {
+        $attributes = $property->getAttributes(Inject::class);
+        $params = $this->getOverwrittenParamsFromAttributes($attributes);
+
+        if ($params !== []) {
+            return $params;
+        }
+
         return $this->annotationReader->getParamsFromTypeHint($property->getDocComment(), $property->name, 'var');
     }
 
+    private function getOverwrittenParamsFromAttributes(array $attributes): array
+    {
+        $arguments = [];
+        foreach ($attributes as $attr) {
+            /** @var Inject $inst */
+            $inst = $attr->newInstance();
+            if ($inst->overwriteParams === []) {
+                continue;
+            }
+
+            foreach ($inst->overwriteParams as $arg) {
+                $arguments[$arg->name] = $arg->value;
+            }
+        }
+
+        return $arguments;
+    }
+
     /**
+     * @param ReflectionAttribute[] $attributes
      * @param string $argumentClass
      * @param array $classConfig
      * @param string$docComment
@@ -845,22 +1008,23 @@ class DependencyInjectionContainer {
      * @param array $additionalArgumentsForProvider
      * @return null|object
      */
-    public function getNamedProvidedInstance($argumentClass, array $classConfig, $docComment, $argumentName = null, $additionalArgumentsForProvider = array()) {
-        $implementationName = $this->getImplementationName($docComment, $argumentName);
+    public function getNamedProvidedInstance(array $attributes, string $argumentClass, array $classConfig, $docComment, $argumentName = null, $additionalArgumentsForProvider = array()) {
+        $implementationName = $this->getImplementationName($docComment, $attributes, $argumentName);
 
-        return $this->getProvidedConfiguredClass($classConfig, new \ReflectionClass($argumentClass), $implementationName, $additionalArgumentsForProvider);
+        return $this->getProvidedConfiguredClass($classConfig, new ReflectionClass($argumentClass), $implementationName, $additionalArgumentsForProvider);
     }
 
     /**
+     * @param ReflectionAttribute[] $attributes
      * @param string $argumentClass
      * @param string $docComment
      * @param string $argumentName
      * @return string
      */
-    public function getNamedClassOfArgument($argumentClass, $docComment, $argumentName = null) {
+    public function getNamedClassOfArgument(array $attributes, $argumentClass, $docComment, $argumentName = null) {
         $argumentClassConfig = $this->config->getClassConfig($argumentClass);
 
-        $implementationName = $this->getImplementationName($docComment, $argumentName);
+        $implementationName = $this->getImplementationName($docComment, $attributes, $argumentName);
 
         if ($implementationName) {
             return $this->getImplementingClassBecauseOfName($argumentClass, $argumentClassConfig, $implementationName);
@@ -870,10 +1034,20 @@ class DependencyInjectionContainer {
 
     /**
      * @param string $docComment
+     * @param ReflectionAttribute[] $attributes
      * @param string $argumentName
      * @return string
      */
-    public function getImplementationName($docComment, $argumentName) {
+    public function getImplementationName($docComment, array $attributes = [], $argumentName) {
+        foreach ($attributes as $attr) {
+            if ($attr->getName() === Inject::class) {
+                $inject = $attr->newInstance();
+                if ($inject->named !== null) {
+                    return $inject->named;
+                }
+            }
+        }
+
         $matches = array();
         $pattern = '@named\s+([a-zA-Z0-9\\\]+)';
         if ($argumentName) {
@@ -896,7 +1070,17 @@ class DependencyInjectionContainer {
      */
     private function getImplementingClassBecauseOfName($argumentClass, $classConfig, $name) {
         if (!isset($classConfig['named']) || !isset($classConfig['named'][$name])) {
-            $classReflection = new \ReflectionClass($argumentClass);
+            $classReflection = new ReflectionClass($argumentClass);
+
+            $attributes = $classReflection->getAttributes(ImplementedBy::class);
+            foreach ($attributes as $attr) {
+                /** @var ImplementedBy $inst */
+                $inst = $attr->newInstance();
+                if ($inst->named === $name) {
+                    return $inst->className;
+                }
+            }
+
             $annotatedConfigurationClassName = $this->getAnnotatedImplementationClass($classReflection, $name);
             if ($annotatedConfigurationClassName) {
                 return $annotatedConfigurationClassName;
@@ -929,11 +1113,19 @@ class DependencyInjectionContainer {
     }
 
     /**
-     * @param $docComment
+     * @param string $docComment
+     * @param ReflectionAttribute[] $attributes
      * @return bool
      */
-    public function isInjectable($docComment) {
-        return strpos($docComment, '@inject') !== false;
+    public function isInjectable($docComment, $attributes = []) {
+        foreach ($attributes as $attr) {
+            if ($attr->getName() === Inject::class) {
+                return true;
+            }
+        }
+
+        // For backwards compatibility check with @inject doc annotation
+        return str_contains($docComment, '@inject');
     }
 
     /**

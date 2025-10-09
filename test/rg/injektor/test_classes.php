@@ -9,6 +9,13 @@
  */
 namespace rg\injektor {
 
+    use rg\injektor\attributes\Lazy;
+    use rg\injektor\attributes\Param;
+    use rg\injektor\attributes\Inject;
+    use rg\injektor\attributes\ProvidedBy;
+    use rg\injektor\attributes\Service;
+    use rg\injektor\attributes\Singleton;
+
     require_once 'test_classes_not_injectable.php';
 
     class DICTestClassOne {
@@ -24,9 +31,9 @@ namespace rg\injektor {
         public $three;
 
         /**
-         * @inject
          * @var \rg\injektor\DICTestClassThree
          */
+        #[Inject]
         protected $four;
 
         /**
@@ -37,31 +44,31 @@ namespace rg\injektor {
         }
 
         /**
-         * @inject
          * @param DICTestClassTwo $two
          * @param DICTestClassThree $three
          */
+        #[Inject]
         public function __construct(DICTestClassTwo $two, DICTestClassThree $three = null) {
             $this->two = $two;
             $this->three = $three;
         }
 
         /**
-         * @inject
          * @param DICTestClassTwo $two
          * @param DICTestClassThree $three
          * @return string
          */
+        #[Inject]
         public function getSomething(DICTestClassTwo $two, DICTestClassThree $three) {
             return $two->getSomething() . $three->getSomething();
         }
 
         /**
-         * @inject
          * @param DICTestClassTwo $two
          * @param $three
          * @return string
          */
+        #[Inject]
         public function getSomethingTwo(DICTestClassTwo $two, $three) {
             return $two->getSomething() . $three->getSomething();
         }
@@ -87,9 +94,9 @@ namespace rg\injektor {
         public $three;
 
         /**
-         * @inject
          * @param DICTestClassThree $three
          */
+        #[Inject]
         public function __construct(DICTestClassThree $three) {
             $this->three = $three;
         }
@@ -139,32 +146,34 @@ namespace rg\injektor {
 
         public $methodClass;
 
-        /**
-         * @inject
-         * @var \rg\injektor\DICProvidedTestClassNoTypeHint {"one":"foo","two":"bar"}
-         */
-        public $injectedProperty;
+        #[Inject(overwriteParams: [
+            new Param(name: 'one', value: 'foo'),
+            new Param(name: 'two', value: 'bar'),
+        ])]
+        public \rg\injektor\DICProvidedTestClassNoTypeHint $injectedProperty;
 
-        /**
-         * @inject
-         * @param DICProvidedTestClassNoTypeHint $class {"one":"foo","two":"bar"}
-         */
-        public function __construct(DICProvidedTestClassNoTypeHint $class) {
+        public function __construct(
+            #[Inject(overwriteParams: [
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
+            ])]
+            DICProvidedTestClassNoTypeHint $class
+        ) {
             $this->class = $class;
         }
 
-        /**
-         * @inject
-         * @param DICProvidedTestClassNoTypeHint $class {"one":"foo","two":"bar"}
-         */
-        public function someMethod(DICProvidedTestClassNoTypeHint $class) {
+        public function someMethod(
+            #[Inject(overwriteParams: [
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
+            ])]
+            DICProvidedTestClassNoTypeHint $class
+        ) {
             $this->methodClass = $class;
         }
     }
 
-    /**
-     * @providedBy \rg\injektor\DICProvidedTestClassNoTypeHintProvider
-     */
+    #[ProvidedBy(className: DICProvidedTestClassNoTypeHintProvider::class)]
     class DICProvidedTestClassNoTypeHint {
 
         public $one;
@@ -179,26 +188,29 @@ namespace rg\injektor {
 
     class DICProvidedTestClassNoTypeHintNamedUserDefault {
         /**
-         * @inject
          * @var \rg\injektor\DICProvidedTestClassNoTypeHintNamed
          */
+        #[Inject]
         public $provided;
     }
 
     class DICProvidedTestClassNoTypeHintNamedUserSomeName {
 
         /**
-         * @inject
          * @var \rg\injektor\DICProvidedTestClassNoTypeHintNamed
-         * @named someName
          */
+        #[Inject(named: 'someName')]
         public $provided;
     }
 
-    /**
-     * @providedBy default \rg\injektor\DICProvidedTestClassNoTypeHintProvider {"one":1,"two":2}
-     * @providedBy someName \rg\injektor\DICProvidedTestClassNoTypeHintProvider {"one":3,"two":4}
-     */
+    #[ProvidedBy(className: DICProvidedTestClassNoTypeHintProvider::class, overwriteParams: [
+        new Param(name: 'one', value: 1),
+        new Param(name: 'two', value: 2),
+    ])]
+    #[ProvidedBy(className: DICProvidedTestClassNoTypeHintProvider::class, named: 'someName', overwriteParams: [
+        new Param(name: 'one', value: 3),
+        new Param(name: 'two', value: 4),
+    ])]
     class DICProvidedTestClassNoTypeHintNamed {
 
         public $one;
@@ -217,25 +229,29 @@ namespace rg\injektor {
 
         public $methodClass;
 
-        /**
-         * @inject
-         * @var \rg\injektor\DICTestClassNoTypeHint {"one":"foo","two":"bar"}
-         */
-        public $injectedProperty;
+        #[Inject(overwriteParams: [
+            new Param(name: 'one', value: 'foo'),
+            new Param(name: 'two', value: 'bar'),
+        ])]
+        public DICTestClassNoTypeHint $injectedProperty;
 
-        /**
-         * @inject
-         * @param DICTestClassNoTypeHint $class {"one":"foo","two":"bar"}
-         */
-        public function __construct(DICTestClassNoTypeHint $class) {
+        public function __construct(
+            #[Inject(overwriteParams: [
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
+            ])]
+            DICTestClassNoTypeHint $class
+        ) {
             $this->class = $class;
         }
 
-        /**
-         * @inject
-         * @param DICTestClassNoTypeHint $class {"one":"foo","two":"bar"}
-         */
-        public function someMethod(DICTestClassNoTypeHint $class) {
+        public function someMethod(
+            #[Inject(overwriteParams: [
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
+            ])]
+            DICTestClassNoTypeHint $class
+        ) {
             $this->methodClass = $class;
         }
     }
@@ -246,9 +262,7 @@ namespace rg\injektor {
 
         public $two;
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public function __construct($one, $two) {
             $this->one = $one;
             $this->two = $two;
@@ -272,28 +286,26 @@ namespace rg\injektor {
 
     class DICTestClassNoParamTypeHint {
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public $two;
     }
 
     class DICTestClassPrivateProperty {
 
         /**
-         * @inject
          * @var DICTestClassNoConstructor
          */
+        #[Inject]
         private $two;
     }
 
     class DICTestClassPropertyDoubledAnnotation {
 
         /**
-         * @inject
          * @var \rg\injektor\DICTestClassNoConstructor
          * @var \rg\injektor\DICTestClassPrivateProperty
          */
+        #[Inject]
         public $two;
     }
 
@@ -320,30 +332,31 @@ namespace rg\injektor {
 
         public $one;
 
-        /**
-         * @inject
-         * @var \rg\injektor\DICTestAnnotatedInterface
-         * @named implTwo
-         */
-        public $two;
+        #[Inject(named: 'implTwo')]
+        public DICTestAnnotatedInterface $two;
 
-        /**
-         * @inject
-         * @param DICTestAnnotatedInterface $one
-         * @named implOne $one
-         */
-        public function __construct(DICTestAnnotatedInterface $one) {
+        public function __construct(
+            #[Inject(named: 'implOne')]
+            DICTestAnnotatedInterface $one
+        ) {
             $this->one = $one;
         }
 
-        /**
-         * @inject
-         * @param DICTestAnnotatedInterface $one
-         * @named implOne $one
-         * @return \rg\injektor\DICTestAnnotatedInterface
-         */
-        public function doSomething(DICTestAnnotatedInterface $one) {
+        public function doSomething(
+            #[Inject(named: 'implOne')]
+            DICTestAnnotatedInterface $one
+        ) {
             return $one;
+        }
+    }
+
+    class DICTestNamedAndDefault {
+        #[Inject]
+        public function __construct(
+            #[Inject(named: 'implOne')]
+            public DICTestAnnotatedInterface $one,
+            public DICTestAnnotatedInterfaceImplTwo $two, // Notice this is autowired, we require #[Inject] at the constructor
+        ) {
         }
     }
 
@@ -364,28 +377,22 @@ namespace rg\injektor {
         public $one;
 
         /**
-         * @inject
          * @var \rg\injektor\DICTestAnnotatedInterfaceNamedConfig
-         * @named implTwo
          */
+        #[Inject(named: 'implTwo')]
         public $two;
 
-        /**
-         * @inject
-         * @param DICTestAnnotatedInterfaceNamedConfig $one
-         * @named implOne $one
-         */
-        public function __construct(DICTestAnnotatedInterfaceNamedConfig $one) {
+        public function __construct(
+            #[Inject(named: 'implOne')]
+            DICTestAnnotatedInterfaceNamedConfig $one
+        ) {
             $this->one = $one;
         }
 
-        /**
-         * @inject
-         * @param DICTestAnnotatedInterfaceNamedConfig $one
-         * @named implOne $one
-         * @return \rg\injektor\DICTestAnnotatedInterfaceNamedConfig
-         */
-        public function doSomething(DICTestAnnotatedInterfaceNamedConfig $one) {
+        public function doSomething(
+            #[Inject(named: 'implOne')]
+            DICTestAnnotatedInterfaceNamedConfig $one
+        ) {
             return $one;
         }
     }
@@ -397,9 +404,9 @@ namespace rg\injektor {
         public $instance;
 
         /**
-         * @inject
          * @var \rg\injektor\DICTestClassNoConstructor
          */
+        #[Inject]
         public $injectedProperty;
 
         private function __construct($foo, $instance) {
@@ -408,19 +415,17 @@ namespace rg\injektor {
         }
 
         /**
-         * @inject
          * @static
          * @param DICTestClassNoConstructor $instance
          * @return DICTestSingleton
          */
+        #[Inject]
         public static function getInstance(DICTestClassNoConstructor $instance) {
             return new static('foo', $instance);
         }
     }
 
-    /**
-     * @singleton
-     */
+    #[Singleton]
     class DICTestAnnotatedSingleton {
 
     }
@@ -432,9 +437,7 @@ namespace rg\injektor {
         }
     }
 
-    /**
-     * @service
-     */
+    #[Service]
     class DICTestAnnotatedService {
         public function __construct($arg) {
 
@@ -450,9 +453,7 @@ namespace rg\injektor {
         }
     }
 
-    /**
-     * @lazy
-     */
+    #[Lazy]
     class DICTestAnnotatedLazy {
         public function __construct($arg) {
 
@@ -471,10 +472,8 @@ namespace rg\injektor {
         }
     }
 
-    /**
-     * @lazy
-     * @service
-     */
+    #[Service]
+    #[Lazy]
     class DICTestAnnotatedLazyService {
         public function __construct($arg) {
 
@@ -524,12 +523,12 @@ namespace rg\injektor {
 
         public $providedInterface2;
 
-        /**
-         * @inject
-         * @named impl1 $providedInterface1
-         * @named impl2 $providedInterface2
-         */
-        public function __construct(DICTestProvidedInterface $providedInterface1, DICTestProvidedInterface $providedInterface2) {
+        public function __construct(
+            #[Inject(named: 'impl1')]
+            DICTestProvidedInterface $providedInterface1,
+            #[Inject(named: 'impl2')]
+            DICTestProvidedInterface $providedInterface2
+        ) {
             $this->providedInterface1 = $providedInterface1;
             $this->providedInterface2 = $providedInterface2;
         }
@@ -539,17 +538,15 @@ namespace rg\injektor {
 
         public $providedInterface;
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public function __construct(DICTestSimpleProvidedInterface $providedInterface) {
             $this->providedInterface = $providedInterface;
         }
 
         /**
-         * @inject
          * @param DICTestSimpleProvidedInterface $providedInterface
          */
+        #[Inject]
         public function someMethod(DICTestSimpleProvidedInterface $providedInterface) {
             return $providedInterface;
         }
@@ -561,9 +558,7 @@ namespace rg\injektor {
 
         private $name;
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public function __construct(DICTestProvidedDecorator $decorator, $name = null) {
             $this->decorator = $decorator;
             $this->name = $name;
@@ -588,9 +583,7 @@ namespace rg\injektor {
 
         private $name;
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public function __construct(DICTestProvidedDecorator $decorator, $name = null) {
             $this->decorator = $decorator;
             $this->name = $name;
@@ -616,9 +609,7 @@ namespace rg\injektor {
 
         private $name;
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public function __construct(DICTestSimpleProvidedDecorator $decorator, $name = null) {
             $this->decorator = $decorator;
             $this->name = $name;
@@ -640,9 +631,9 @@ namespace rg\injektor {
     class DICTestInterfaceDependency {
 
         /**
-         * @inject
          * @var \rg\injektor\DICTestInterface
          */
+        #[Inject]
         public $dependency;
     }
 
@@ -650,11 +641,10 @@ namespace rg\injektor {
 
         public $dependency;
 
-        /**
-         * @inject
-         * @named impl1 $dependency
-         */
-        public function __construct(DICTestProvidedInterface $dependency) {
+        public function __construct(
+            #[Inject(named: 'impl1')]
+            DICTestProvidedInterface $dependency
+        ) {
             $this->dependency = $dependency;
         }
     }
@@ -663,11 +653,10 @@ namespace rg\injektor {
 
         public $dependency;
 
-        /**
-         * @inject
-         * @named impl1 $dependency
-         */
-        public function __construct(\rg\injektor\DICTestProvidedInterfaceNoConfig $dependency) {
+        public function __construct(
+            #[Inject(named: 'impl1')]
+            \rg\injektor\DICTestProvidedInterfaceNoConfig $dependency
+        ) {
             $this->dependency = $dependency;
         }
     }
@@ -680,9 +669,9 @@ namespace rg\injektor {
         public $dependency;
 
         /**
-         * @inject
          * @param DICTestSimpleProvidedInterface $dependency
          */
+        #[Inject]
         public function __construct(DICTestSimpleProvidedInterface $dependency) {
             $this->dependency = $dependency;
         }
@@ -691,9 +680,9 @@ namespace rg\injektor {
     class DICTestAnnotatedInterfacePropertyInjection {
 
         /**
-         * @inject
          * @var \rg\injektor\DICTestAnnotatedInterface
          */
+        #[Inject]
         public $dependency;
     }
 
@@ -708,19 +697,13 @@ namespace rg\injektor {
 
     class DICTestClassWithTypedProperties {
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public DICTestClassOne $one;
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public \rg\injektor\DICTestClassTwo $two;
 
-        /**
-         * @inject
-         */
+        #[Inject]
         public ?DICTestClassThree $three;
     }
 }
@@ -732,6 +715,7 @@ namespace {
 
 namespace some\other\name\space {
 
+    use rg\injektor\attributes\Inject;
     use rg\injektor\DICTestClassNoConstructor;
 
     use rg\injektor\DICTestAnnotatedInterface as SomeInterface;
@@ -741,45 +725,45 @@ namespace some\other\name\space {
     class ClassPropertyInjectionWithUseStatementSupport {
 
         /**
-         * @inject
          * @var DICTestClassNoConstructor
          */
+        #[Inject]
         public $dependency;
 
         /**
-         * @inject
          * @var DICTestClassThatAlsoExistsInPublicNamespace
          */
+        #[Inject]
         public $dependencyWithOtherClassInPublicNamespace;
 
         /**
-         * @inject
          * @var \rg\injektor\DICTestClassThatAlsoExistsInPublicNamespace
          */
+        #[Inject]
         public $dependencyWithOtherClassInPublicNamespaceFq;
 
         /**
-         * @inject
          * @var \DICTestClassThatAlsoExistsInPublicNamespace
          */
+        #[Inject]
         public $dependencyWithOtherClassInPublicNamespaceFqPublic;
 
         /**
-         * @inject
          * @var DependencySameNamespace
          */
+        #[Inject]
         public $dependencySameNamespace;
 
         /**
-         * @inject
          * @var SomeInterface
          */
+        #[Inject]
         public $dependencyInterfaceWithAlias;
 
         /**
-         * @inject
          * @var injektorNamespace\DICTestAnnotatedSingleton
          */
+        #[Inject]
         public $dependencyWithAlias;
     }
 
