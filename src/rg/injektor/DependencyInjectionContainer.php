@@ -1038,7 +1038,7 @@ class DependencyInjectionContainer {
      * @param string $argumentName
      * @return string
      */
-    public function getImplementationName($docComment, array $attributes = [], $argumentName) {
+    public function getImplementationName($docComment, array $attributes, $argumentName) {
         foreach ($attributes as $attr) {
             if ($attr->getName() === Inject::class) {
                 $inject = $attr->newInstance();
