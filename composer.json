@@ -19,7 +19,7 @@
     "php": ">=8.1",
     "doctrine/annotations": "^1.12|^2.0.0",
     "laminas/laminas-code": "^4.13",
-    "psr/log": "^1.0.0"
+    "psr/log": "^1 | ^2 | ^3"
   },
   "require-dev": {
     "friendsofphp/proxy-manager-lts": "^1.0",
