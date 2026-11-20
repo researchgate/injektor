@@ -359,6 +359,9 @@ class DependencyInjectionContainer {
         $injectableProperties = array();
 
         foreach ($properties as $property) {
+            if ($property->isPromoted()) {
+                continue;
+            }
             $attributes = $property->getAttributes(Inject::class);
             if ($this->isInjectable($property->getDocComment(), $attributes)) {
                 if ($property->isPrivate()) {
@@ -878,15 +881,9 @@ class DependencyInjectionContainer {
                     /** @var Inject $instance */
                     $instance = $attr->newInstance();
 
-                    if ($instance->named !== null) {
-                        if (array_key_exists($instance->named, $defaultArguments)) {
-                            $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$instance->named]);
-                        } else {
-                            $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
-                        }
-                    }
-
-                    if ($instance->overwriteParams !== []) {
+                    if ($instance->named !== null && array_key_exists($instance->named, $defaultArguments)) {
+                        $argumentValues[$argument->name] = $this->getValueOfDefaultArgument($defaultArguments[$instance->named]);
+                    } else {
                         $argumentValues[$argument->name] = $this->getInstanceOfArgument($argument);
                     }
                 }

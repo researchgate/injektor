@@ -11,6 +11,7 @@ namespace rg\injektor {
 
     use PHPUnit\Framework\MockObject\MockObject;
     use rg\injektor\attributes\Inject;
+    use rg\injektor\attributes\Param;
 
     require_once 'test_classes.php';
 
@@ -24,5 +25,35 @@ namespace rg\injektor {
 
         #[Inject]
         public DICTestClassThree|MockObject|null $three;
+    }
+
+    class DICTestClassWithPromotedProperties {
+
+        public function __construct(
+            #[Inject(overwriteParams: [
+                new Param(name: 'one', value: 'foo'),
+                new Param(name: 'two', value: 'bar'),
+            ])]
+            private readonly DICProvidedTestClassNoTypeHint $withOverwriteParams,
+            #[Inject(named: 'implOne')]
+            private readonly DICTestAnnotatedInterface $withNamed,
+            #[Inject]
+            private readonly DICTestClassOne $plain,
+            #[Inject]
+            public readonly DICTestClassTwo $publicPlain,
+        ) {
+        }
+
+        public function getWithOverwriteParams(): DICProvidedTestClassNoTypeHint {
+            return $this->withOverwriteParams;
+        }
+
+        public function getWithNamed(): DICTestAnnotatedInterface {
+            return $this->withNamed;
+        }
+
+        public function getPlain(): DICTestClassOne {
+            return $this->plain;
+        }
     }
 }
