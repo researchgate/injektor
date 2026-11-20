@@ -874,6 +874,31 @@ class DependencyInjectionContainerTest extends TestCase {
         $this->assertInstanceOf('rg\injektor\DICTestClassThree', $instance->three);
     }
 
+    public function test_getInstanceOfClass_givenClassWithPromotedProperties_injectsCorrectClasses() {
+        include_once 'test_classes_php80.php';
+
+        $config = new Configuration(null, __DIR__ . '/_factories');
+        $config->setClassConfig('rg\injektor\DICTestAnnotatedInterface', [
+            'named' => [
+                'implOne' => 'rg\injektor\DICTestAnnotatedInterfaceImplOne',
+            ]
+        ]);
+
+        $dic = $this->getContainer($config);
+
+        /** @var DICTestClassWithPromotedProperties $instance */
+        $instance = $dic->getInstanceOfClass('rg\injektor\DICTestClassWithPromotedProperties');
+
+        $this->assertInstanceOf('rg\injektor\DICTestClassWithPromotedProperties', $instance);
+
+        $this->assertInstanceOf('rg\injektor\DICProvidedTestClassNoTypeHint', $instance->getWithOverwriteParams());
+        $this->assertEquals('foof', $instance->getWithOverwriteParams()->one);
+        $this->assertEquals('barf', $instance->getWithOverwriteParams()->two);
+        $this->assertInstanceOf('rg\injektor\DICTestAnnotatedInterfaceImplOne', $instance->getWithNamed());
+        $this->assertInstanceOf('rg\injektor\DICTestClassOne', $instance->getPlain());
+        $this->assertInstanceOf('rg\injektor\DICTestClassTwo', $instance->publicPlain);
+    }
+
     public function testClearDoesNotThrow() {
         $config = new Configuration(null, __DIR__ . '/_factories');
         $dic = $this->getContainer($config);
