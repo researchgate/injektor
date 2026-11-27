@@ -516,7 +516,7 @@ class FileGenerator {
     private function createProxyClass($proxyName, \ReflectionClass $classReflection) {
         $proxyClass = new AttributeAwareClassGenerator($proxyName);
         $proxyClass->setExtendedClass($this->fullClassName);
-        $proxyClass->setAttributes($this->formatClassAttributes($classReflection));
+        $proxyClass->setClassAttributes($this->formatClassAttributes($classReflection));
         foreach ($this->injectableArguments as $injectableArgument) {
             $injectorMethod = new \Laminas\Code\Generator\MethodGenerator('propertyInjection' . $injectableArgument->getName());
             $injectorMethod->setBody($injectableArgument->getProcessingBody());

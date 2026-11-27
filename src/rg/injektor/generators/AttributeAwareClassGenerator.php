@@ -15,21 +15,21 @@ class AttributeAwareClassGenerator extends ClassGenerator {
     /**
      * @var string[]
      */
-    private array $attributes = [];
+    private array $classAttributes = [];
 
     /**
-     * @param string[] $attributes
+     * @param string[] $classAttributes
      */
-    public function setAttributes(array $attributes): void {
-        $this->attributes = $attributes;
+    public function setClassAttributes(array $classAttributes): void {
+        $this->classAttributes = $classAttributes;
     }
 
     public function generate() {
         $output = parent::generate();
-        if (!$this->attributes) {
+        if (!$this->classAttributes) {
             return $output;
         }
 
-        return implode(self::LINE_FEED, $this->attributes) . self::LINE_FEED . $output;
+        return implode(self::LINE_FEED, $this->classAttributes) . self::LINE_FEED . $output;
     }
 }
