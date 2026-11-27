@@ -246,10 +246,10 @@ class FileGenerator {
             if (count($this->injectableProperties) > 0) {
                 $proxyName = $this->dic->getProxyClassName($this->fullClassName);
                 if ($this->dic->isSingleton($classReflection)) {
-                    $file->setClass($this->createProxyClass($proxyName));
+                    $file->setClass($this->createProxyClass($proxyName, $classReflection));
                     $createInstanceBody .= PHP_EOL . '$instance = ' . $proxyName . '::getInstance(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 } else {
-                    $file->setClass($this->createProxyClass($proxyName));
+                    $file->setClass($this->createProxyClass($proxyName, $classReflection));
                     $createInstanceBody .= PHP_EOL . '$instance = new ' . $proxyName . '(' . implode(', ', $this->constructorArgumentStringParts) . ');' . PHP_EOL;
                 }
             } else {
@@ -510,16 +510,76 @@ class FileGenerator {
 
     /**
      * @param string $proxyName
+     * @param \ReflectionClass $classReflection
      * @return \Laminas\Code\Generator\ClassGenerator
      */
-    private function createProxyClass($proxyName) {
-        $proxyClass = new Generator\ClassGenerator($proxyName);
+    private function createProxyClass($proxyName, \ReflectionClass $classReflection) {
+        $proxyClass = new AttributeAwareClassGenerator($proxyName);
         $proxyClass->setExtendedClass($this->fullClassName);
+        $proxyClass->setClassAttributes($this->formatClassAttributes($classReflection));
         foreach ($this->injectableArguments as $injectableArgument) {
             $injectorMethod = new \Laminas\Code\Generator\MethodGenerator('propertyInjection' . $injectableArgument->getName());
             $injectorMethod->setBody($injectableArgument->getProcessingBody());
             $proxyClass->addMethodFromGenerator($injectorMethod);
         }
         return $proxyClass;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function formatClassAttributes(\ReflectionClass $classReflection): array {
+        $formatted = [];
+        foreach ($classReflection->getAttributes() as $attribute) {
+            $rendered = $this->formatAttribute($attribute);
+            if ($rendered !== null) {
+                $formatted[] = $rendered;
+            }
+        }
+        return $formatted;
+    }
+
+    private function formatAttribute(\ReflectionAttribute $attribute): ?string {
+        $name = '\\' . $attribute->getName();
+        $arguments = $attribute->getArguments();
+        if (!$arguments) {
+            return '#[' . $name . ']';
+        }
+
+        $parts = [];
+        foreach ($arguments as $key => $value) {
+            $exported = $this->exportAttributeValue($value);
+            if ($exported === null) {
+                return null;
+            }
+            $parts[] = is_string($key) ? ($key . ': ' . $exported) : $exported;
+        }
+
+        return '#[' . $name . '(' . implode(', ', $parts) . ')]';
+    }
+
+    private function exportAttributeValue(mixed $value): ?string {
+        if ($value === null || is_bool($value) || is_int($value) || is_float($value) || is_string($value)) {
+            return var_export($value, true);
+        }
+
+        if ($value instanceof \UnitEnum) {
+            return '\\' . $value::class . '::' . $value->name;
+        }
+
+        if (is_array($value)) {
+            $isList = array_is_list($value);
+            $items = [];
+            foreach ($value as $k => $v) {
+                $exported = $this->exportAttributeValue($v);
+                if ($exported === null) {
+                    return null;
+                }
+                $items[] = $isList ? $exported : (var_export($k, true) . ' => ' . $exported);
+            }
+            return '[' . implode(', ', $items) . ']';
+        }
+
+        return null;
     }
 }
