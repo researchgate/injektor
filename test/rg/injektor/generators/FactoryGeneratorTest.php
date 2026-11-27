@@ -50,6 +50,23 @@ class FactoryGeneratorTest extends \PHPUnit\Framework\TestCase {
         $this->assertEquals($content, $factoryGenerator->files[$file]);
     }
 
+    public function testGenerateProxyPreservesClassAttributes() {
+        FactoryDependencyInjectionContainer::$prefix = '';
+
+        $config = new Configuration(null, '');
+        $factoryGenerator = new TestingFactoryGenerator($config, '');
+        $factoryGenerator->processFileForClass(FGTestClassWithAttributes::class);
+
+        $generated = $factoryGenerator->files[FGTestClassWithAttributes::class];
+        $expectedProxyHeader = <<<'EOF'
+#[\rg\injektor\generators\FGTestMarkerAttribute]
+#[\rg\injektor\generators\FGTestParamAttribute('hello', named: ['a', 'b'])]
+class rg_injektor_generators_FGTestClassWithAttributesProxy extends \rg\injektor\generators\FGTestClassWithAttributes
+EOF;
+        $this->assertStringContainsString($expectedProxyHeader, $generated);
+        $this->assertStringNotContainsString('FGTestObjectAttribute', $generated);
+    }
+
     public function provider() {
         $expected = array(
             'rg\\injektor\\generators\\FGTestClassSimple' => <<<EOF
@@ -522,4 +539,28 @@ class FGTestClassFour {
 
 class FGTestClassSimple {
 
+}
+
+#[\Attribute(\Attribute::TARGET_CLASS)]
+class FGTestMarkerAttribute {
+}
+
+#[\Attribute(\Attribute::TARGET_CLASS)]
+class FGTestParamAttribute {
+    public function __construct(public string $value, public array $named = []) {
+    }
+}
+
+#[\Attribute(\Attribute::TARGET_CLASS)]
+class FGTestObjectAttribute {
+    public function __construct(public object $obj) {
+    }
+}
+
+#[FGTestMarkerAttribute]
+#[FGTestParamAttribute('hello', named: ['a', 'b'])]
+#[FGTestObjectAttribute(new \stdClass())]
+class FGTestClassWithAttributes {
+    #[Inject]
+    protected FGTestClassSimple $simple;
 }
